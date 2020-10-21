@@ -383,7 +383,9 @@ version = "0.1.0"
 dependencies = [
  "printpdf",
  "regex",
- "xml-rs",
+ "serde",
+ "serde-xml-rs",
+ "serde_derive",
  "zip-extract",
 ]
 
@@ -506,6 +508,21 @@ name = "serde"
 version = "1.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b88fa983de7720629c9387e9f517353ed404164b1e482c970a90c1a4aaf7dc1a"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde-xml-rs"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efe415925cf3d0bbb2fc47d09b56ce03eef51c5d56846468a39bcc293c7a846c"
+dependencies = [
+ "log",
+ "serde",
+ "thiserror",
+ "xml-rs",
+]
 
 [[package]]
 name = "serde_derive"
