@@ -23,12 +23,12 @@ fn real_main() -> Result<i32,std::io::Error> {
     // Decrompress idml file into a directory
     let idml_dir = decompressor::decompress_idml(file_path).unwrap();
     
-    let _idml_package = IDMLPackage::from_dir(&idml_dir);
+    let idml_package = IDMLPackage::from_dir(&idml_dir);
 
-    //println!("{:#?}", idml_package);
+    println!("{:#?}", idml_package);
 
     // Remove idml directory
-    remove_dir_all(idml_dir)?;
+    //remove_dir_all(idml_dir)?;
 
     return Ok(1);
 }
