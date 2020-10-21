@@ -1,47 +1,96 @@
-use std::fs::{File, remove_dir_all};
+use std::fs::{File};
 use std::io::{BufReader};
 use std::path::{Path};
 use xml::reader::{EventReader, XmlEvent};
 
-struct IDMLPackage {
-    DirPath: Path,
-    Mimetype: String,
-    Designmap: Vec<String>,
-    Resources: IDMLResources,
-    MasterSpreads: Vec<Spread>,
-    Spreads: Vec<Spread>,
-    Stories: Vec<Story>,
+#[derive(Debug)]
+pub struct IDMLPackage<'a> {
+    dir_path: &'a Path,
+    mimetype: String,
+    designmap: Vec<String>,
+    resources: IDMLResources,
+    master_spreads: Vec<Spread>,
+    spreads: Vec<Spread>,
+    stories: Vec<Story>,
+    xml: IdmlXml, 
+    meta_inf: MetaInf,
 }
 
+
+#[derive(Debug)]
 struct IDMLResources {
-    Fonts: Vec<String>,
-    Styles: Vec<String>,
-    Graphic: Vec<String>,
-    Preferences: Vec<String>,
+    fonts: Vec<String>,
+    styles: Vec<String>,
+    graphic: Vec<String>,
+    preferences: Vec<String>,
 }
 
+#[derive(Debug)]
 struct Spread {
-    Id: String,
+    id: String,
+    pages: Vec<Page>,
 }
 
+#[derive(Debug)]
+struct Page {
+    attributes: Vec<String>,
+}
+
+#[derive(Debug)]
 struct Story {
-    Id: String,
-    Content: String,
+    id: String,
+    content: String,
 }
 
-struct IDML_XML {
-    BackingStory: Vec<String>,
-    Mapping: Vec<String>,
-    Tags: Vec<String>,
+#[derive(Debug)]
+struct IdmlXml {
+    backing_story: Vec<String>,
+    mapping: Vec<String>,
+    tags: Vec<String>,
 }
 
-impl IDMLPackage {
-    pub fn from_dir() -> IDMLFile {
+#[derive(Debug)]
+struct MetaInf {
+    container: String
+}
 
+impl IDMLPackage<'_> {
+    pub fn from_dir(path: &Path) -> IDMLPackage {
+        IDMLPackage {
+            dir_path: path.clone(),
+            mimetype: "MIMETYPE".to_string(), 
+            designmap: vec!("Designmap dummy".to_string()),  
+            resources: IDMLResources {
+                fonts: vec!("Fonts dummy".to_string()),
+                styles: vec!("Styles dummy".to_string()),
+                graphic: vec!("Graphic dummy".to_string()),
+                preferences: vec!("Preferences dummy".to_string()),
+            }, 
+            master_spreads: vec!( Spread { 
+                id: "Id dummy".to_string(),
+                pages: vec!( Page { 
+                    attributes: vec!("Attribute dummy".to_string())
+                })
+            }), 
+            spreads: vec!(Spread { 
+                id: "Id dummy".to_string(),
+                pages: vec!( Page { 
+                    attributes: vec!("Attribute dummy".to_string())
+                })
+            }), 
+            stories: vec!(Story{
+                id: "Id dummy".to_string(),
+                content: "Content dummy".to_string()
+            }), 
+            xml: IdmlXml {
+                backing_story: vec!("BackingStory dummy".to_string()),
+                mapping: vec!("Mapping dummy".to_string()),
+                tags: vec!("Tags dummy".to_string()),
+            },
+            meta_inf: MetaInf { container: "Container dummy".to_string() }
+        }
     }
 }
-
-
 
 
 fn read_idml(idml_dir:&Path) {
