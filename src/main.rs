@@ -29,6 +29,8 @@ fn real_main() -> Result<i32,std::io::Error> {
     // Get a IDML Package object 
     let idml_package = IDMLPackage::from_dir(&idml_dir);
 
+    println!("{:#?}", idml_package);
+
     // Pass it to printer object
     let pdf_printer = PDFPrinter::new(idml_package).unwrap();
 
@@ -36,7 +38,7 @@ fn real_main() -> Result<i32,std::io::Error> {
     pdf_printer.print_pdf(pdf_path).unwrap();
 
     // Remove idml directory
-    remove_dir_all(idml_dir)?;
+    //remove_dir_all(idml_dir)?;
 
     return Ok(1);
 }

@@ -68,7 +68,7 @@ impl IDMLPackage<'_> {
         // Parse DesignMap
         let design_map = DesignMap::new(path).unwrap();
         
-        // Parse spreads
+        // Parse master spreads
         let mut master_spreads = HashMap::new();
         for (id, src) in &design_map.master_spreads_src {
             master_spreads.insert(id.to_string(),Spread::from_file(Path::new(&src)));
