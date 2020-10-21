@@ -3,26 +3,79 @@ use std::path::Path;
 
 #[derive(Deserialize,Debug)]
 pub struct Story {
-    // Self: String,
-    // UserText: bool,
-    // StoryTitle: String,
+    // #[serde(rename="Self")]
+    // id: String,
+    #[serde(default)]
+    UserText: bool,
+
+    #[serde(default)]
+    StoryTitle: String,
+    
+    #[serde(default)]
+    StoryPreference: StoryPreference,
+
+    #[serde(default)]
+    InCopyExportOption: InCopyExportOption,
+
+    #[serde(default)]
     #[serde(rename="ParagraphStyleRange")]
     ParagraphStyleRanges: Vec<ParagraphStyleRange>
 }
 
 #[derive(Deserialize,Debug)]
+pub struct StoryPreference {
+    #[serde(default)]
+    OpticalMarginAlignment: bool,
+}
+
+impl Default for StoryPreference {
+    fn default() -> Self{
+        StoryPreference {
+            OpticalMarginAlignment: true
+        }
+    }
+}
+
+#[derive(Deserialize,Debug)]
+pub struct InCopyExportOption {
+    #[serde(default)]
+    IncludeGraphicProxies: bool,
+}
+
+impl Default for InCopyExportOption {
+    fn default() -> Self{
+        InCopyExportOption {
+            IncludeGraphicProxies: false
+        }
+    }
+}
+
+#[derive(Deserialize,Debug)]
 pub struct ParagraphStyleRange {
+    #[serde(default)]
     AppliedParagraphStyle: String,
+
+    #[serde(default)]
+    Justification: String,
+    
+    #[serde(default)]
     #[serde(rename="CharacterStyleRange")]
     CharacterStyleRanges: Vec<CharacterStyleRange>
 }
 
 #[derive(Deserialize,Debug)]
 pub struct CharacterStyleRange {
+    #[serde(default)]
     AppliedCharacterStyle: String,
-    // FillColor: String,
-    // FontStyle: String, 
-    // PointSize: String,
+
+    #[serde(default)]
+    FillColor: String,
+
+    #[serde(default)]
+    FontStyle: String, 
+
+    #[serde(default)]
+    PointSize: String,
     #[serde(rename="Content")]
     Contents: Vec<Content>
 }
@@ -45,8 +98,8 @@ pub fn parse_story_from_path(path: &Path) -> Story {
      </CharacterStyleRange>
     </ParagraphStyleRange></Story>"##;
 
-    // let story = serde_xml_rs::from_str(std::fs::read_to_string(path).unwrap().as_str()).unwrap();
-    let story = serde_xml_rs::from_str(test_xml).unwrap();
+     let story = serde_xml_rs::from_str(std::fs::read_to_string(path).unwrap().as_str()).unwrap();
+    //let story = serde_xml_rs::from_str(test_xml).unwrap();
 
     story
 }
