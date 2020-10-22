@@ -28,16 +28,15 @@ fn real_main() -> Result<i32,std::io::Error> {
     let file_path = &*args[1].to_string();
     let pdf_path = &*args[2].to_string();
     
-    
     // Decrompress idml file into a directory
     let idml_dir = decompressor::decompress_idml(file_path).unwrap();
     
-    let mut test_story_path = PathBuf::from(idml_dir);
-    test_story_path.push("Stories/Story_u2a1.xml");
+    // let mut test_story_path = PathBuf::from(idml_dir);
+    // test_story_path.push("Stories/Story_u2a1.xml");
 
     let story = story_parser::parse_story_from_path(&test_story_path);
     println!("{:#?}", story);
-    
+
     // // Get a IDML Package object 
     // let idml_package = IDMLPackage::from_dir(&idml_dir);
 
