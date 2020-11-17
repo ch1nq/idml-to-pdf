@@ -4,19 +4,19 @@ use std::path::Path;
 #[derive(Default, Deserialize,Debug)]
 #[serde(rename="idPkg:Story")]
 #[serde(rename_all="PascalCase")]
-pub struct StoryWrapper {
+pub struct SpreadWrapper {
     #[serde(rename="DOMVersion")]
     dom_version: Option<f32>,
-    story: Option<Story>,
+    spread: Option<Spread>,
 }
 
 #[derive(Default, Deserialize,Debug)]
 #[serde(rename_all="PascalCase")]
-pub struct Story {
+pub struct Spread {
     #[serde(rename="Self")]
     id: String,
     user_text: Option<bool>,
-    story_title: Option<String>,
+    spread_title: Option<String>,
     #[serde(rename="ParagraphStyleRange")]
     paragraph_style_ranges: Option<Vec<ParagraphStyleRange>>
 }
@@ -55,9 +55,19 @@ pub struct Content {
     text: String,
 }
 
-pub fn parse_story_from_path(path: &Path) -> StoryWrapper {
+pub fn parse_spread_from_path(path: &Path) -> Result<SpreadWrapper, serde_xml_rs::Error> {
     let xml = std::fs::read_to_string(path).unwrap();
-    let story = serde_xml_rs::from_str(xml.as_str()).unwrap();
-    
-    story
+    serde_xml_rs::from_str(xml.as_str())
+}
+
+impl SpreadWrapper {
+    pub fn get_spread(self) -> Option<Spread> {
+        self.spread
+    }
+}
+
+impl Spread {
+    pub fn get_id(self) -> &str {
+        &self.id
+    }
 }

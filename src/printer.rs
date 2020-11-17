@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
 
-use crate::parser::IDMLPackage;
+use super::idml_parser::package_parser::IDMLPackage;
 
 // use parser::IDMLPackage;
 
