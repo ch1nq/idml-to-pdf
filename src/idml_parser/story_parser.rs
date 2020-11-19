@@ -107,7 +107,7 @@ impl StoryWrapper {
 }
 
 impl Story {
-    pub fn get_id(self) -> String {
-        self.id
-    }
+    // pub fn get_id(self) -> String {
+    //     self.id
+    // }
 }

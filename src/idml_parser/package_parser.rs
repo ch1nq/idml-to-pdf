@@ -61,7 +61,7 @@ impl IDMLPackage {
             stories_src: HashMap::new()
         };
 
-        // TODO: Parse each file in parallel
+        // TODO: Parse each file in parallel for easy performance boost
 
         // Parse stories
         let mut story_dir = PathBuf::from(path);

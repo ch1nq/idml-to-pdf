@@ -9,7 +9,7 @@ extern crate serde;
 extern crate quick_xml;
 extern crate printpdf;
 
-use std::fs::remove_dir_all;
+// use std::fs::remove_dir_all;
 use idml_parser::package_parser::IDMLPackage;
 use printer::PDFPrinter;
 
@@ -32,9 +32,6 @@ fn real_main() -> Result<i32,std::io::Error> {
     
     // Get a IDML Package object 
     let idml_package = IDMLPackage::from_dir(&idml_dir)?;
-
-    println!("{:#?}", idml_package);
-    println!("{:#?}", idml_dir);
 
     // Pass it to printer object
     let pdf_printer = PDFPrinter::new(idml_package).unwrap();
