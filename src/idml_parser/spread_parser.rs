@@ -17,14 +17,26 @@ pub struct SpreadWrapper {
 pub struct Spread {
     #[serde(rename="Self")]
     id: String,
-    // page_count: u32, 
+    flattener_override: Option<String>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
+    show_master_items: Option<bool>,
+    page_count: Option<i32>,
+    binding_location: Option<i32>,
+    allow_page_shuffle: Option<bool>,
+    applied_master: Option<String>,
+    name: Option<String>,
+    name_prefix: Option<String>,
+    base_name: Option<String>,
+    page_transition_direction: Option<String>,
+    page_transition_type: Option<String>,
+    // #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    // page_color: Option<Vec<f64>>,
     #[serde(rename = "$value")]
     contents: Vec<SpreadContent>
 }
 
-// #[derive(Debug)]
 #[derive(Deserialize,Debug)]
-// #[serde(untagged)]
 pub enum SpreadContent {
     FlattenerPreference(FlattenerPreference),
     Page(Page),
@@ -33,18 +45,21 @@ pub enum SpreadContent {
     Oval(Oval),
     Group(Group),
     TextFrame(TextFrame),
-    Other
+    #[serde(other)]
+    NotImplementedYet
 }
 
 #[derive(Default,Deserialize,Debug)]
 #[serde(rename_all="PascalCase")]
 pub struct Page {
-    // #[serde(rename="Self")]
-    // id: String,
-    // // geometric_bounds: Vec<i32>,
-    applied_master: Option<String>,
-    margin_preference: MarginPreference,
-    // applied_paragraph_style: Option<String>,
+    name: String,
+    applied_trap_preset: String,
+    applied_master: String,
+    override_list: Option<String>,
+    tab_order: Option<String>,
+    grid_starting_point: Option<String>,
+    use_master_grid: bool,
+    margin_preference: MarginPreference
 }
 
 #[derive(Default,Deserialize,Debug)]
@@ -59,7 +74,6 @@ pub struct MarginPreference {
     column_direction: String,
     #[serde(deserialize_with="deserialize_space_seperated_vec")]
     columns_positions: Vec<i32>,
-    // margin_preference: MarginPreference,
 }
 
 fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
@@ -85,13 +99,6 @@ where
     match deserialize_space_seperated_vec(deserializer) {
         Ok(v) => Ok(Some(v)),
         Err(e) => Err(e)
-    }
-}
-
-
-impl Default for SpreadContent {
-    fn default() -> Self {
-        SpreadContent::Other
     }
 }
 
