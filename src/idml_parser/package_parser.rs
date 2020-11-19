@@ -2,8 +2,8 @@ use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::{fs, io};
 
-use idml_parser::spread_parser;
-use idml_parser::story_parser;
+use super::spread_parser::{self, Spread};
+use super::story_parser::{self, Story};
 
 #[derive(Deserialize,Debug)]
 pub struct IDMLPackage {
@@ -12,7 +12,7 @@ pub struct IDMLPackage {
     designmap: DesignMap,
     resources: IDMLResources,
     master_spreads: HashMap<String, Spread>,
-    spreads: HashMap<String, Spread>,
+    spreads: Vec<Spread>,
     stories: Vec<Story>,
     xml: IdmlXml, 
     meta_inf: MetaInf,
@@ -31,12 +31,6 @@ struct IDMLResources {
     styles: Vec<String>,
     graphic: Vec<String>,
     preferences: Vec<String>,
-}
-
-#[derive(Deserialize,Debug)]
-struct Spread {
-    id: String,
-    pages: Vec<Page>,
 }
 
 #[derive(Deserialize,Debug)]
@@ -83,12 +77,12 @@ impl IDMLPackage {
         
         // Parse spreads
         let mut spread_dir = PathBuf::from(path);
-        story_dir.push("Spreads");
+        spread_dir.push("Spreads");
         let spreads = (fs::read_dir(spread_dir)?).map(|entry| {
             let path = &entry.unwrap().path();
             // println!("{:?}", path);
-            let story_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
-            story_wrapper.get_story().unwrap()
+            let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
+            spread_wrapper.get_spread().unwrap()
         }).collect();
         
         Ok(IDMLPackage {

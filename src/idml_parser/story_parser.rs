@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::path::Path;
 use serde::de::{self, Deserialize, Deserializer};
+use quick_xml::de::{from_str, DeError};
 
 #[derive(Default, Deserialize,Debug)]
 #[serde(rename="idPkg:Story")]
@@ -75,7 +76,7 @@ pub struct Content {
 //     text: String,
 // }
 
-pub fn parse_story_from_path(path: &Path) -> Result<StoryWrapper, serde_xml_rs::Error> {
+pub fn parse_story_from_path(path: &Path) -> Result<StoryWrapper, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
     
     // let xml = r##"
@@ -97,7 +98,8 @@ pub fn parse_story_from_path(path: &Path) -> Result<StoryWrapper, serde_xml_rs::
     // </idPkg:Story>
     // "##.to_string();
     
-    serde_xml_rs::from_str(xml.as_str())
+    // serde_xml_rs::from_str(xml.as_str())
+    from_str(xml.as_str())
 }
 
 impl StoryWrapper {
@@ -107,7 +109,7 @@ impl StoryWrapper {
 }
 
 impl Story {
-    pub fn get_id(self) -> String{
+    pub fn get_id(self) -> String {
         self.id
     }
 }

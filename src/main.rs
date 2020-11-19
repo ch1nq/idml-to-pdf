@@ -5,7 +5,8 @@ mod printer;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-extern crate serde_xml_rs;
+// extern crate serde_xml_rs;
+extern crate quick_xml;
 extern crate printpdf;
 
 use std::fs::remove_dir_all;

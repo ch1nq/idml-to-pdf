@@ -1,5 +1,8 @@
 use std::fs::File;
 use std::path::Path;
+use serde::de::{Deserialize, Deserializer, Visitor, Error, IntoDeserializer};
+use std::collections::HashMap;
+use quick_xml::de::{from_str, DeError};
 
 #[derive(Default, Deserialize,Debug)]
 #[serde(rename="idPkg:Story")]
@@ -11,53 +14,106 @@ pub struct SpreadWrapper {
 }
 
 #[derive(Default, Deserialize,Debug)]
+// #[derive(Default,Debug)]
 #[serde(rename_all="PascalCase")]
 pub struct Spread {
+    // #[serde(rename="Self")]
+    // id: String,
+    // page_count: u32, 
+    #[serde(rename = "$value")]
+    contents: Vec<Option<PageContent>>
+}
+
+#[derive(Default,Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct Page {
+    // #[serde(rename="Self")]
+    // id: String,
+    // // geometric_bounds: Vec<i32>,
+    applied_master: Option<String>,
+    // applied_paragraph_style: Option<String>,
+}
+
+// #[derive(Debug)]
+#[derive(Deserialize,Debug)]
+// #[serde(untagged)]
+pub enum PageContent {
+    FlattenerPreference(FlattenerPreference),
+    Page(Page),
+    Rectangle(Rectangle),
+    Polygon(Polygon),
+    Oval(Oval),
+    Group(Group),
+    TextFrame(TextFrame),
+    Other
+}
+
+impl Default for PageContent {
+    fn default() -> Self {
+        PageContent::Other
+    }
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct FlattenerPreference {
+    // #[serde(rename="Self")]
+    // id: String,
+    // fill_color: Option<String>,
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct Rectangle {
     #[serde(rename="Self")]
     id: String,
-    user_text: Option<bool>,
-    spread_title: Option<String>,
-    #[serde(rename="ParagraphStyleRange")]
-    paragraph_style_ranges: Option<Vec<ParagraphStyleRange>>
-}
-
-#[derive(Default,Deserialize,Debug)]
-#[serde(rename_all="PascalCase")]
-pub struct ParagraphStyleRange {
-    applied_paragraph_style: Option<String>,
-    justification: Option<String>,
-    #[serde(rename="CharacterStyleRange")]
-    character_style_ranges: Option<Vec<CharacterStyleRange>>
-}
-
-#[derive(Default,Deserialize,Debug)]
-#[serde(rename_all="PascalCase")]
-pub struct CharacterStyleRange {
-    applied_character_style: Option<String>,
     fill_color: Option<String>,
-    font_style: Option<String>, 
-    point_size: Option<String>,
-    properties: Option<Properties>,
-    #[serde(rename="Content")]
-    contents: Option<Vec<Content>>
+    // text_wrap_preference: Option<String>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Deserialize,Debug)]
 #[serde(rename_all="PascalCase")]
-struct Properties {
-    applied_font: Option<String> 
+pub struct Polygon {
+    #[serde(rename="Self")]
+    id: String,
+    // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Deserialize,Debug)]
 #[serde(rename_all="PascalCase")]
-pub struct Content {
-    #[serde(rename="$value")]
-    text: String,
+pub struct Oval {
+    #[serde(rename="Self")]
+    id: String,
+    // fill_color: Option<String>,
 }
 
-pub fn parse_spread_from_path(path: &Path) -> Result<SpreadWrapper, serde_xml_rs::Error> {
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct Group {
+    #[serde(rename="Self")]
+    id: String,
+    // fill_color: Option<String>,
+    // #[serde(rename="$value")]
+    // contents: Vec<PageContent>
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct TextFrame {
+    #[serde(rename="Self")]
+    id: String,
+    fill_color: Option<String>,
+    parent_story: Option<String>,
+    previous_text_frame: Option<String>,
+    next_text_frame: Option<String>,
+}
+
+
+
+pub fn parse_spread_from_path(path: &Path) -> Result<SpreadWrapper, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
-    serde_xml_rs::from_str(xml.as_str())
+    // serde_xml_rs::from_str(xml.as_str())
+    from_str(xml.as_str())
 }
 
 impl SpreadWrapper {
@@ -67,7 +123,8 @@ impl SpreadWrapper {
 }
 
 impl Spread {
-    pub fn get_id(self) -> &str {
-        &self.id
+    pub fn get_id(self) -> String {
+        // self.id
+        "dummy".to_owned()
     }
 }
