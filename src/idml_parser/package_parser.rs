@@ -61,13 +61,13 @@ impl IDMLPackage {
             stories_src: HashMap::new()
         };
 
+        // TODO: Parse each file in parallel
 
         // Parse stories
         let mut story_dir = PathBuf::from(path);
         story_dir.push("Stories");
         let stories = (fs::read_dir(story_dir)?).map(|entry| {
             let path = &entry.unwrap().path();
-            // println!("{:?}", path);
             let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
             story_wrapper.get_story().unwrap()
         }).collect();
@@ -80,7 +80,6 @@ impl IDMLPackage {
         spread_dir.push("Spreads");
         let spreads = (fs::read_dir(spread_dir)?).map(|entry| {
             let path = &entry.unwrap().path();
-            // println!("{:?}", path);
             let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
             spread_wrapper.get_spread().unwrap()
         }).collect();

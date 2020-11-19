@@ -1,7 +1,4 @@
-use std::fs::File;
 use std::path::Path;
-use serde::de::{Deserialize, Deserializer, Visitor, Error, IntoDeserializer};
-use std::collections::HashMap;
 use quick_xml::de::{from_str, DeError};
 
 #[derive(Default, Deserialize,Debug)]
@@ -17,8 +14,8 @@ pub struct SpreadWrapper {
 // #[derive(Default,Debug)]
 #[serde(rename_all="PascalCase")]
 pub struct Spread {
-    // #[serde(rename="Self")]
-    // id: String,
+    #[serde(rename="Self")]
+    id: String,
     // page_count: u32, 
     #[serde(rename = "$value")]
     contents: Vec<Option<PageContent>>
@@ -68,6 +65,7 @@ pub struct Rectangle {
     #[serde(rename="Self")]
     id: String,
     fill_color: Option<String>,
+    properties: Option<Properties>,
     // text_wrap_preference: Option<String>
 }
 
@@ -108,6 +106,42 @@ pub struct TextFrame {
     next_text_frame: Option<String>,
 }
 
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct Properties {
+    applied_font: Option<String>,
+    path_geometry: Option<PathGeometry>
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct PathGeometry {
+    geometry_path_type: GeometryPathType
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct GeometryPathType {
+    path_open: bool,
+    #[serde(rename="PathPointArray")]
+    path_point_arrays: Vec<PathPointArray>
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct PathPointArray {
+    #[serde(rename="$value")]
+    path_point_array: Vec<PathPointType>
+}
+
+#[derive(Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct PathPointType {
+    anchor: Option<String>,
+    left_direction: Option<String>,
+    right_direction: Option<String>
+}
+
 
 
 pub fn parse_spread_from_path(path: &Path) -> Result<SpreadWrapper, DeError> {
@@ -124,7 +158,6 @@ impl SpreadWrapper {
 
 impl Spread {
     pub fn get_id(self) -> String {
-        // self.id
-        "dummy".to_owned()
+        self.id
     }
 }
