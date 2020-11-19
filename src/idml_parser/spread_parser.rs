@@ -1,6 +1,7 @@
 use std::path::Path;
 use quick_xml::de::{from_str, DeError};
 
+
 #[derive(Default, Deserialize,Debug)]
 #[serde(rename="idPkg:Story")]
 #[serde(rename_all="PascalCase")]
@@ -18,23 +19,13 @@ pub struct Spread {
     id: String,
     // page_count: u32, 
     #[serde(rename = "$value")]
-    contents: Vec<Option<PageContent>>
-}
-
-#[derive(Default,Deserialize,Debug)]
-#[serde(rename_all="PascalCase")]
-pub struct Page {
-    // #[serde(rename="Self")]
-    // id: String,
-    // // geometric_bounds: Vec<i32>,
-    applied_master: Option<String>,
-    // applied_paragraph_style: Option<String>,
+    contents: Vec<SpreadContent>
 }
 
 // #[derive(Debug)]
 #[derive(Deserialize,Debug)]
 // #[serde(untagged)]
-pub enum PageContent {
+pub enum SpreadContent {
     FlattenerPreference(FlattenerPreference),
     Page(Page),
     Rectangle(Rectangle),
@@ -45,9 +36,62 @@ pub enum PageContent {
     Other
 }
 
-impl Default for PageContent {
+#[derive(Default,Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct Page {
+    // #[serde(rename="Self")]
+    // id: String,
+    // // geometric_bounds: Vec<i32>,
+    applied_master: Option<String>,
+    margin_preference: MarginPreference,
+    // applied_paragraph_style: Option<String>,
+}
+
+#[derive(Default,Deserialize,Debug)]
+#[serde(rename_all="PascalCase")]
+pub struct MarginPreference {
+    column_count: i32,
+    column_gutter: i32,
+    top: i32,
+    bottom: i32,
+    left: i32,
+    right: i32,
+    column_direction: String,
+    #[serde(deserialize_with="deserialize_space_seperated_vec")]
+    columns_positions: Vec<i32>,
+    // margin_preference: MarginPreference,
+}
+
+fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+    N: std::str::FromStr + std::fmt::Debug,
+    <N as std::str::FromStr>::Err: std::fmt::Debug,
+{
+    let s: std::borrow::Cow<str> = serde::de::Deserialize::deserialize(deserializer)?;
+    let vec = s.split(' ').map(|e| 
+        e.to_string().parse::<N>().expect(format!("Failed to parse string '{}'", e).as_str())
+    ).collect();
+
+    Ok(vec)
+}
+
+fn deserialize_space_seperated_opt_vec<'de, D, N>(deserializer: D) -> Result<Option<Vec<N>>, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+    N: std::str::FromStr + std::fmt::Debug,
+    <N as std::str::FromStr>::Err: std::fmt::Debug,
+{
+    match deserialize_space_seperated_vec(deserializer) {
+        Ok(v) => Ok(Some(v)),
+        Err(e) => Err(e)
+    }
+}
+
+
+impl Default for SpreadContent {
     fn default() -> Self {
-        PageContent::Other
+        SpreadContent::Other
     }
 }
 
@@ -137,9 +181,12 @@ pub struct PathPointArray {
 #[derive(Deserialize,Debug)]
 #[serde(rename_all="PascalCase")]
 pub struct PathPointType {
-    anchor: Option<String>,
-    left_direction: Option<String>,
-    right_direction: Option<String>
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    anchor: Option<Vec<f32>>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    left_direction: Option<Vec<f32>>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    right_direction: Option<Vec<f32>>
 }
 
 
