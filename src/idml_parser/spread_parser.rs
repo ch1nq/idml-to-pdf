@@ -18,8 +18,8 @@ pub struct Spread {
     #[serde(rename="Self")]
     id: Option<String>,
     flattener_override: Option<String>,
-    // #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    // item_transform: Option<Vec<f64>>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
     show_master_items: Option<bool>,
     page_count: Option<i32>,
     binding_location: Option<i32>,
@@ -96,6 +96,7 @@ where
     N: std::str::FromStr + std::fmt::Debug,
     <N as std::str::FromStr>::Err: std::fmt::Debug,
 {
+    // FIXME: Cannot handle cases where field does not exist
     match deserialize_space_seperated_vec(deserializer) {
         Ok(v) => Ok(Some(v)),
         Err(e) => Err(e)
@@ -196,51 +197,14 @@ pub struct PathPointType {
     right_direction: Option<Vec<f32>>
 }
 
-
-// pub trait HasSpread {
-//     fn get_spread(&self) -> Spread;
-// }
-
-// impl HasSpread for MasterSpreadWrapper {
-//     fn get_spread(&self) -> Spread {
-//         self.spread
-//     }
-// }
-
-// impl HasSpread for SpreadWrapper {
-//     fn get_spread(&self) -> Spread {
-//         self.spread
-//     }
-// }
-
 pub fn parse_spread_from_path(path: &Path) -> Result<IdPkgSpread, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
-    // let spread_wrapper = quick_xml::de::from_str(xml.as_str())?;
     quick_xml::de::from_str(xml.as_str())
-    // match spread_wrapper {
-    //     SpreadWrapperEnum::MasterSpreadWrapper(spread) => Ok(spread),
-    //     SpreadWrapperEnum::SpreadWrapper(spread) => Ok(spread)
-    // }
-    // spread_wrapper.unwrap().get_spread()
 }
 
-// impl SpreadWrapperEnum {
-//     pub fn get_spread(self) -> Spread {
-//         self.spread
-//     }
-// }
 
 impl IdPkgSpread {
     pub fn get_spread(self) -> Spread {
         self.spread
     }
 }
-
-
-
-
-// impl Spread {
-//     // pub fn get_id(self) -> String {
-//     //     self.id
-//     // }
-// }
