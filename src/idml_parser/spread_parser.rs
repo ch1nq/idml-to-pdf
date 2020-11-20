@@ -1,25 +1,25 @@
 use std::path::Path;
-use quick_xml::de::{from_str, DeError};
-
+use quick_xml::de::{DeError};
 
 #[derive(Default, Deserialize,Debug)]
-#[serde(rename="idPkg:Story")]
+#[serde(rename="idPkg:MasterSpread")]
 #[serde(rename_all="PascalCase")]
-pub struct SpreadWrapper {
+pub struct IdPkgSpread {
     #[serde(rename="DOMVersion")]
     dom_version: Option<f32>,
-    spread: Option<Spread>,
+    #[serde(rename="$value")]
+    spread: Spread,
 }
 
 #[derive(Default, Deserialize,Debug)]
-// #[derive(Default,Debug)]
+#[serde(rename="MasterSpread")]
 #[serde(rename_all="PascalCase")]
 pub struct Spread {
     #[serde(rename="Self")]
-    id: String,
+    id: Option<String>,
     flattener_override: Option<String>,
-    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    item_transform: Option<Vec<f64>>,
+    // #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    // item_transform: Option<Vec<f64>>,
     show_master_items: Option<bool>,
     page_count: Option<i32>,
     binding_location: Option<i32>,
@@ -84,7 +84,7 @@ where
 {
     let s: std::borrow::Cow<str> = serde::de::Deserialize::deserialize(deserializer)?;
     let vec = s.split(' ').map(|e| 
-        e.to_string().parse::<N>().expect(format!("Failed to parse string '{}'", e).as_str())
+        e.to_string().parse::<N>().expect(format!("Failed to parse string '{}' into number", e).as_str())
     ).collect();
 
     Ok(vec)
@@ -197,21 +197,50 @@ pub struct PathPointType {
 }
 
 
+// pub trait HasSpread {
+//     fn get_spread(&self) -> Spread;
+// }
 
-pub fn parse_spread_from_path(path: &Path) -> Result<SpreadWrapper, DeError> {
+// impl HasSpread for MasterSpreadWrapper {
+//     fn get_spread(&self) -> Spread {
+//         self.spread
+//     }
+// }
+
+// impl HasSpread for SpreadWrapper {
+//     fn get_spread(&self) -> Spread {
+//         self.spread
+//     }
+// }
+
+pub fn parse_spread_from_path(path: &Path) -> Result<IdPkgSpread, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
-    // serde_xml_rs::from_str(xml.as_str())
-    from_str(xml.as_str())
+    // let spread_wrapper = quick_xml::de::from_str(xml.as_str())?;
+    quick_xml::de::from_str(xml.as_str())
+    // match spread_wrapper {
+    //     SpreadWrapperEnum::MasterSpreadWrapper(spread) => Ok(spread),
+    //     SpreadWrapperEnum::SpreadWrapper(spread) => Ok(spread)
+    // }
+    // spread_wrapper.unwrap().get_spread()
 }
 
-impl SpreadWrapper {
-    pub fn get_spread(self) -> Option<Spread> {
+// impl SpreadWrapperEnum {
+//     pub fn get_spread(self) -> Spread {
+//         self.spread
+//     }
+// }
+
+impl IdPkgSpread {
+    pub fn get_spread(self) -> Spread {
         self.spread
     }
 }
 
-impl Spread {
-    // pub fn get_id(self) -> String {
-    //     self.id
-    // }
-}
+
+
+
+// impl Spread {
+//     // pub fn get_id(self) -> String {
+//     //     self.id
+//     // }
+// }

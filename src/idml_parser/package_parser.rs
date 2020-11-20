@@ -11,7 +11,7 @@ pub struct IDMLPackage {
     mimetype: String,
     designmap: DesignMap,
     resources: IDMLResources,
-    master_spreads: HashMap<String, Spread>,
+    master_spreads: Vec<Spread>,
     spreads: Vec<Spread>,
     stories: Vec<Story>,
     xml: IdmlXml, 
@@ -73,7 +73,13 @@ impl IDMLPackage {
         }).collect();
         
         // Parse master spreads
-        let master_spreads = HashMap::new();
+        let mut spread_dir = PathBuf::from(path);
+        spread_dir.push("MasterSpreads");
+        let master_spreads = (fs::read_dir(spread_dir)?).map(|entry| {
+            let path = &entry.unwrap().path();
+            let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
+            spread_wrapper.get_spread()
+        }).collect();
         
         // Parse spreads
         let mut spread_dir = PathBuf::from(path);
@@ -81,7 +87,7 @@ impl IDMLPackage {
         let spreads = (fs::read_dir(spread_dir)?).map(|entry| {
             let path = &entry.unwrap().path();
             let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
-            spread_wrapper.get_spread().unwrap()
+            spread_wrapper.get_spread()
         }).collect();
         
         Ok(IDMLPackage {
