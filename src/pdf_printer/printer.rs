@@ -1,11 +1,8 @@
-use printpdf::*;
 use std::fs::File;
 use std::io::BufWriter;
-// use std::path::Path;
-
-use super::idml_parser::package_parser::IDMLPackage;
-
-// use parser::IDMLPackage;
+use printpdf::*;
+// use crate::idml_parser::IDMLPackage;
+use crate::idml_parser::package_parser::IDMLPackage;
 
 pub struct PDFPrinter {
     idml_package: IDMLPackage,

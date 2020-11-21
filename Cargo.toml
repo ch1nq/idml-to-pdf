@@ -1,7 +1,7 @@
 [package]
-name = "pdf-test"
+name = "idml_to_pdf"
 version = "0.1.0"
-authors = ["askepen <aske@vhg26.dk>"]
+authors = ["askepen <aske@daske.dk>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

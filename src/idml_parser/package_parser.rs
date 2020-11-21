@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::{fs, io};
+use serde::Deserialize;
 
 use super::spread_parser::{self, Spread};
 use super::story_parser::{self, Story};

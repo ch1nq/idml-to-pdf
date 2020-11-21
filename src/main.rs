@@ -1,16 +1,7 @@
-mod decompressor;
-mod idml_parser;
-mod printer;
-
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate quick_xml;
-extern crate printpdf;
-
 // use std::fs::remove_dir_all;
-use idml_parser::package_parser::IDMLPackage;
-use printer::PDFPrinter;
+use idml_to_pdf::idml_parser::package_parser::IDMLPackage;
+use idml_to_pdf::pdf_printer::printer::PDFPrinter;
+use idml_to_pdf::decompressor;
 
 fn main() {
     std::process::exit(real_main().unwrap());

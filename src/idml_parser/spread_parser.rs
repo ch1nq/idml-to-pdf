@@ -1,5 +1,6 @@
 use std::path::Path;
 use quick_xml::de::{DeError};
+use serde::Deserialize;
 
 #[derive(Default, Deserialize,Debug)]
 #[serde(rename="idPkg:MasterSpread")]
