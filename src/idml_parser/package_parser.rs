@@ -112,5 +112,13 @@ impl IDMLPackage {
             meta_inf: MetaInf { container: "Container dummy".to_string() }
         })
     }
+
+    pub fn spreads(&self) -> &Vec<Spread> {
+        &self.spreads
+    }
+
+    pub fn master_spreads(&self) -> &Vec<Spread> {
+        &self.master_spreads
+    }
 }
 

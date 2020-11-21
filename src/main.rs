@@ -27,7 +27,7 @@ fn real_main() -> Result<i32,std::io::Error> {
     let pdf_printer = PDFPrinter::new(idml_package).unwrap();
 
     // Print a pdf to specified path
-    pdf_printer.print_pdf(pdf_path).unwrap();
+    pdf_printer.save_pdf(pdf_path).unwrap();
 
     // Remove idml directory
     // remove_dir_all(idml_dir)?;

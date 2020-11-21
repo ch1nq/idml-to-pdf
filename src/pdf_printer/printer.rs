@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::BufWriter;
 use printpdf::*;
-// use crate::idml_parser::IDMLPackage;
 use crate::idml_parser::package_parser::IDMLPackage;
 
 pub struct PDFPrinter {
@@ -22,10 +21,10 @@ impl PDFPrinter {
         })
     }
 
-    pub fn print_pdf(self, path: &str) -> Result<(), Error> {
+    pub fn save_pdf(self, path: &str) -> Result<(), Error> {
         
-        println!("{:#?}", self.idml_package);
-
+        println!("{:#?}", self.idml_package.master_spreads());
+        
         self.pdf_doc.save(&mut BufWriter::new(File::create(path).unwrap()))?;
 
         Ok(())
