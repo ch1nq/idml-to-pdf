@@ -128,7 +128,7 @@ pub struct MarginPreference {
     right: i32,
     column_direction: String,
     #[serde(deserialize_with="deserialize_space_seperated_vec")]
-    columns_positions: Vec<i32>,
+    columns_positions: Vec<f64>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq)]
