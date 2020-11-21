@@ -2,7 +2,7 @@
 Building a IDML parser using Rust, that will eventually be able to produce PDFs similar ones exported directly from InDesign.
 
 ## Examples
-Currently no examples 😢 but they will be added continously, as more features are supported. 
+No examples at the moment 😢 but they will be added continuously, as more features are supported. 
 
 ## Roadmap
 It should ideally support the full IDML Specification, but for now I am starting simple with getting basic examples up and running. 
