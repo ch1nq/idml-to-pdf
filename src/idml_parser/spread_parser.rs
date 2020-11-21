@@ -2,7 +2,7 @@ use std::path::Path;
 use quick_xml::de::{DeError};
 use serde::Deserialize;
 
-#[derive(Default, Deserialize,Debug)]
+#[derive(Default, Deserialize,Debug,PartialEq)]
 #[serde(rename="idPkg:MasterSpread")]
 #[serde(rename_all="PascalCase")]
 pub struct IdPkgSpread {
@@ -12,7 +12,7 @@ pub struct IdPkgSpread {
     spread: Spread,
 }
 
-#[derive(Default, Deserialize,Debug)]
+#[derive(Default, Deserialize,Debug,PartialEq)]
 #[serde(rename="MasterSpread")]
 #[serde(rename_all="PascalCase")]
 pub struct Spread {
@@ -37,7 +37,28 @@ pub struct Spread {
     contents: Vec<SpreadContent>
 }
 
-#[derive(Deserialize,Debug)]
+impl Spread {
+    pub fn pages(&self) -> Vec<Option<&Page>> {
+        let pages: Vec<Option<&Page>> = self.contents()
+        .into_iter()
+        .map(|content| 
+            match content { 
+                SpreadContent::Page(p) => Some(p),
+                _ => None
+            }
+        ).collect();
+
+        // pages.retain(|&c| c.is_some());
+
+        pages
+    }
+
+    pub fn contents(&self) -> &Vec<SpreadContent> {
+        &self.contents
+    }
+}
+
+#[derive(Deserialize,Debug,PartialEq)]
 pub enum SpreadContent {
     FlattenerPreference(FlattenerPreference),
     Page(Page),
@@ -50,7 +71,7 @@ pub enum SpreadContent {
     NotImplementedYet
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct Page {
     applied_alternate_layout: Option<String>,
@@ -75,7 +96,13 @@ pub struct Page {
     properties: Properties
 }
 
-#[derive(Deserialize,Debug)]
+impl Page {
+    pub fn geometric_bounds(&self) -> &Vec<f64> {
+        &self.geometric_bounds
+    } 
+}
+
+#[derive(Deserialize,Debug,PartialEq)]
 pub enum PageColorOptions {
     UseMasterColor,
     Color(Color),
@@ -83,14 +110,14 @@ pub enum PageColorOptions {
     Nothing
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 pub struct Color {
     r: f64,
     g: f64,
     b: f64
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct MarginPreference {
     column_count: i32,
@@ -104,7 +131,7 @@ pub struct MarginPreference {
     columns_positions: Vec<i32>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct FlattenerPreference {
     // #[serde(rename="Self")]
@@ -112,7 +139,7 @@ pub struct FlattenerPreference {
     // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct Rectangle {
     #[serde(rename="Self")]
@@ -122,7 +149,7 @@ pub struct Rectangle {
     // text_wrap_preference: Option<String>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct Polygon {
     #[serde(rename="Self")]
@@ -130,7 +157,7 @@ pub struct Polygon {
     // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct Oval {
     #[serde(rename="Self")]
@@ -138,7 +165,7 @@ pub struct Oval {
     // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct Group {
     #[serde(rename="Self")]
@@ -148,7 +175,7 @@ pub struct Group {
     // contents: Vec<PageContent>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct TextFrame {
     #[serde(rename="Self")]
@@ -159,7 +186,7 @@ pub struct TextFrame {
     next_text_frame: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct Properties {
     applied_font: Option<String>,
@@ -199,13 +226,13 @@ pub struct Properties {
 //     }
 // }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct PathGeometry {
     geometry_path_type: GeometryPathType
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct GeometryPathType {
     path_open: bool,
@@ -213,14 +240,14 @@ pub struct GeometryPathType {
     path_point_arrays: Vec<PathPointArray>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct PathPointArray {
     #[serde(rename="$value")]
     path_point_array: Vec<PathPointType>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,PartialEq)]
 #[serde(rename_all="PascalCase")]
 pub struct PathPointType {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]

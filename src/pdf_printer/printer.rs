@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use printpdf::*;
 use crate::idml_parser::package_parser::IDMLPackage;
+use crate::idml_parser::spread_parser::*;
 
 pub struct PDFPrinter {
     idml_package: IDMLPackage,
@@ -23,11 +24,37 @@ impl PDFPrinter {
 
     pub fn save_pdf(self, path: &str) -> Result<(), Error> {
         
-        println!("{:#?}", self.idml_package.master_spreads());
+        // println!("{:#?}", self.idml_package.master_spreads());
+        
+        let master_spreads = self.idml_package.master_spreads();
+        
+        for spread in master_spreads.into_iter() {
+            self.render_spread(spread);
+        } 
         
         self.pdf_doc.save(&mut BufWriter::new(File::create(path).unwrap()))?;
 
         Ok(())
+    }
+
+    fn render_spread(&self, spread: &Spread) {
+        let pages = spread.pages();
+
+        for page in pages.into_iter() {
+            if let Some(p) = page { 
+                self.render_blank_page(p) 
+            }
+        }
+    }
+
+    fn render_blank_page(&self, page: &Page) {
+
+        if let [y1, x1, y2, x2] = page.geometric_bounds().as_slice() {
+            println!("({} {}) ({} {})", y1, x1, y2, x2);
+        } else {
+            println!("Match refuted.");
+        }
+        
     }
 }
 
