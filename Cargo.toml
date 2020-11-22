@@ -13,3 +13,5 @@ serde = { version="^1.0.117", features = ["derive"] }
 quick-xml = { version = "^0.20.0", features = ["serialize"] }
 zip-extract = "0.1.0"
 regex = "1"
+derive-getters = "^0.2.0"
+ndarray = "^0.13.1"

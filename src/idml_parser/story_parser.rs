@@ -1,8 +1,9 @@
 use std::path::Path;
 use quick_xml::de::{from_str, DeError};
 use serde::Deserialize;
+use derive_getters::Getters;
 
-#[derive(Default, Deserialize,Debug)]
+#[derive(Default, Deserialize,Debug,Getters)]
 #[serde(rename="idPkg:Story")]
 #[serde(rename_all="PascalCase")]
 pub struct StoryWrapper {
@@ -11,7 +12,7 @@ pub struct StoryWrapper {
     story: Option<Story>,
 }
 
-#[derive(Default, Deserialize,Debug)]
+#[derive(Default, Deserialize,Debug,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Story {
     #[serde(rename="Self")]
@@ -22,7 +23,7 @@ pub struct Story {
     paragraph_style_ranges: Option<Vec<ParagraphStyleRange>>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct ParagraphStyleRange {
     applied_paragraph_style: Option<String>,
@@ -31,7 +32,7 @@ pub struct ParagraphStyleRange {
     character_style_ranges: Option<Vec<CharacterStyleRange>>
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct CharacterStyleRange {
     applied_character_style: Option<String>,
@@ -43,14 +44,14 @@ pub struct CharacterStyleRange {
     contents: Option<Vec<StoryContent>>,
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,Getters)]
 #[serde(rename_all="PascalCase")]
-struct Properties {
+pub struct Properties {
     applied_font: Option<String> 
 }
 
 #[derive(Deserialize,Debug)]
-enum StoryContent {
+pub enum StoryContent {
     Properties(Properties),
     Content(String),
     Br,
@@ -58,7 +59,7 @@ enum StoryContent {
     NotImplementedYet
 }
 
-#[derive(Default,Deserialize,Debug)]
+#[derive(Default,Deserialize,Debug,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Content {
     #[serde(rename="$value")]
@@ -76,10 +77,4 @@ impl StoryWrapper {
     pub fn get_story(self) -> Option<Story> {
         self.story
     }
-}
-
-impl Story {
-    // pub fn get_id(self) -> String {
-    //     self.id
-    // }
 }

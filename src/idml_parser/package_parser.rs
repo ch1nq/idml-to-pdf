@@ -70,7 +70,7 @@ impl IDMLPackage {
         let stories = (fs::read_dir(story_dir)?).map(|entry| {
             let path = &entry.unwrap().path();
             let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
-            story_wrapper.get_story().unwrap()
+            story_wrapper.get_story().expect("No story found")
         }).collect();
         
         // Parse master spreads

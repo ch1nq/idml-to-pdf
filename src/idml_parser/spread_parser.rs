@@ -1,8 +1,9 @@
 use std::path::Path;
 use quick_xml::de::{DeError};
 use serde::Deserialize;
+use derive_getters::Getters;
 
-#[derive(Default, Deserialize,Debug,PartialEq)]
+#[derive(Default, Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename="idPkg:MasterSpread")]
 #[serde(rename_all="PascalCase")]
 pub struct IdPkgSpread {
@@ -12,15 +13,15 @@ pub struct IdPkgSpread {
     spread: Spread,
 }
 
-#[derive(Default, Deserialize,Debug,PartialEq)]
+#[derive(Default, Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename="MasterSpread")]
 #[serde(rename_all="PascalCase")]
 pub struct Spread {
     #[serde(rename="Self")]
     id: Option<String>,
     flattener_override: Option<String>,
-    // #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    // item_transform: Option<Vec<f64>>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
     show_master_items: Option<bool>,
     page_count: Option<i32>,
     binding_location: Option<i32>,
@@ -52,10 +53,6 @@ impl Spread {
 
         pages
     }
-
-    pub fn contents(&self) -> &Vec<SpreadContent> {
-        &self.contents
-    }
 }
 
 #[derive(Deserialize,Debug,PartialEq)]
@@ -71,9 +68,11 @@ pub enum SpreadContent {
     NotImplementedYet
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Page {
+    #[serde(rename="Self")]
+    id: String,
     applied_alternate_layout: Option<String>,
     applied_master: Option<String>,
     applied_trap_preset: Option<String>,
@@ -96,12 +95,6 @@ pub struct Page {
     properties: Properties
 }
 
-impl Page {
-    pub fn geometric_bounds(&self) -> &Vec<f64> {
-        &self.geometric_bounds
-    } 
-}
-
 #[derive(Deserialize,Debug,PartialEq)]
 pub enum PageColorOptions {
     UseMasterColor,
@@ -110,14 +103,14 @@ pub enum PageColorOptions {
     Nothing
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 pub struct Color {
     r: f64,
     g: f64,
     b: f64
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct MarginPreference {
     column_count: i32,
@@ -131,7 +124,7 @@ pub struct MarginPreference {
     columns_positions: Vec<f64>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct FlattenerPreference {
     // #[serde(rename="Self")]
@@ -139,17 +132,19 @@ pub struct FlattenerPreference {
     // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Rectangle {
     #[serde(rename="Self")]
     id: String,
     fill_color: Option<String>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
     // text_wrap_preference: Option<String>
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Polygon {
     #[serde(rename="Self")]
@@ -157,7 +152,7 @@ pub struct Polygon {
     // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Oval {
     #[serde(rename="Self")]
@@ -165,7 +160,7 @@ pub struct Oval {
     // fill_color: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Group {
     #[serde(rename="Self")]
@@ -175,7 +170,7 @@ pub struct Group {
     // contents: Vec<PageContent>
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct TextFrame {
     #[serde(rename="Self")]
@@ -186,13 +181,14 @@ pub struct TextFrame {
     next_text_frame: Option<String>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct Properties {
     applied_font: Option<String>,
     path_geometry: Option<PathGeometry>,
     // descriptor: Option<Descriptor>, 
 }
+
 
 // #[derive(Default,Deserialize,Debug)]
 // #[serde(rename_all="PascalCase")]
@@ -226,13 +222,13 @@ pub struct Properties {
 //     }
 // }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct PathGeometry {
     geometry_path_type: GeometryPathType
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct GeometryPathType {
     path_open: bool,
@@ -240,33 +236,27 @@ pub struct GeometryPathType {
     path_point_arrays: Vec<PathPointArray>
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct PathPointArray {
     #[serde(rename="$value")]
     path_point_array: Vec<PathPointType>
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq)]
+#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]
 pub struct PathPointType {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    anchor: Option<Vec<f32>>,
+    anchor: Option<Vec<f64>>,
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    left_direction: Option<Vec<f32>>,
+    left_direction: Option<Vec<f64>>,
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    right_direction: Option<Vec<f32>>
+    right_direction: Option<Vec<f64>>
 }
 
 pub fn parse_spread_from_path(path: &Path) -> Result<IdPkgSpread, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
     quick_xml::de::from_str(xml.as_str())
-}
-
-impl IdPkgSpread {
-    pub fn get_spread(self) -> Spread {
-        self.spread
-    }
 }
 
 fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
@@ -293,5 +283,11 @@ where
     match deserialize_space_seperated_vec(deserializer) {
         Ok(v) => Ok(Some(v)),
         Err(e) => Err(e)
+    }
+}
+
+impl IdPkgSpread {
+    pub fn get_spread(self) -> Spread {
+        self.spread
     }
 }
