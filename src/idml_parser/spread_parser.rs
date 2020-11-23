@@ -141,7 +141,6 @@ pub struct Rectangle {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
-    // text_wrap_preference: Option<String>
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -149,7 +148,10 @@ pub struct Rectangle {
 pub struct Polygon {
     #[serde(rename="Self")]
     id: String,
-    // fill_color: Option<String>,
+    fill_color: Option<String>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
+    properties: Option<Properties>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -157,7 +159,10 @@ pub struct Polygon {
 pub struct Oval {
     #[serde(rename="Self")]
     id: String,
-    // fill_color: Option<String>,
+    fill_color: Option<String>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
+    properties: Option<Properties>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -179,6 +184,9 @@ pub struct TextFrame {
     parent_story: Option<String>,
     previous_text_frame: Option<String>,
     next_text_frame: Option<String>,
+    #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
+    item_transform: Option<Vec<f64>>,
+    properties: Option<Properties>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]

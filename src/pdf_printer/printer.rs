@@ -103,6 +103,18 @@ impl PDFPrinter {
                 self.render_rectangle(r, page_transform, page_index, layer_index)
                 .expect(format!("Failed to render rectangle '{}'", r.id()).as_str())
             }
+            SpreadContent::Polygon(p) => { 
+                self.render_polygon(p, page_transform, page_index, layer_index)
+                .expect(format!("Failed to render polygon '{}'", p.id()).as_str())
+            }
+            SpreadContent::TextFrame(t) => { 
+                self.render_textframe(t, page_transform, page_index, layer_index)
+                .expect(format!("Failed to render textframe '{}'", t.id()).as_str())
+            }
+            SpreadContent::Oval(o) => { 
+                self.render_oval(o, page_transform, page_index, layer_index)
+                .expect(format!("Failed to render oval '{}'", o.id()).as_str())
+            }
             _ => {}
         }
             
@@ -113,11 +125,11 @@ impl PDFPrinter {
 
         if let [y1, x1, y2, x2] = page.geometric_bounds().as_slice() {
 
-            let point1 = page_transform.dot(&arr2(&[[x1.to_owned()], [y1.to_owned()], [0_f64]]));
-            let point2 = page_transform.dot(&arr2(&[[x2.to_owned()], [y2.to_owned()], [0_f64]]));
+            let point1 = page_transform.dot(&arr2(&[[x1.to_owned()], [y1.to_owned()], [1_f64]]));
+            let point2 = page_transform.dot(&arr2(&[[x2.to_owned()], [y2.to_owned()], [1_f64]]));
 
-            println!("{:#?}", point1);
-            println!("{:#?}", point2);
+            // println!("{:#?}", point1);
+            // println!("{:#?}", point2);
             
             let ids = self.pdf_doc.add_page(Mm::from(Pt(point2[[0,0]]-point1[[0,0]])), Mm::from(Pt(point2[[1,0]]-point1[[1,0]])), "New page");
 
@@ -133,10 +145,6 @@ impl PDFPrinter {
         -> Result<(), String> 
     {
         let item_transform = item_transform_matrix_from_opt_vec!(rect.item_transform());
-
-        // println!("Parent tranform {:#?}", parent_transform);
-        // println!("Tranform {:#?}", item_transform);
-        // println!("Combined\n {:#?}", item_transform.dot(parent_transform));
         
         let points = rect.properties().into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
@@ -148,16 +156,9 @@ impl PDFPrinter {
                     .filter_map(|path_point_type| path_point_type.anchor().as_ref())
                 )
             )
-            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [0_f64]])))
-            .map(|a| (
-                Point::new(
-                    Mm::from(Pt(a[[0,0]])), 
-                    Mm::from(Pt(a[[1,0]]))), 
-                false)
-            )
+            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
+            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false) )
             .collect();
-
-        println!("Points: {:#?}", points);
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
         let line = Line {
@@ -167,14 +168,6 @@ impl PDFPrinter {
             has_stroke: true,
             is_clipping_path: false,
         };
-        
-
-        // let path_open = rect.properties()
-        //                     .as_ref()
-        //                     .unwrap()
-        //                     .path_geometry()
-        //                     .
-        //                     ;
 
         // let fill_color = printpdf::Color::Rgb(rect.fill_color());
         let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
@@ -192,6 +185,163 @@ impl PDFPrinter {
         layer.set_fill_color(fill_color);
         layer.set_outline_color(line_color);
         layer.set_outline_thickness(10.0);
+
+        // Draw first line
+        layer.add_shape(line);
+
+        Ok(())
+    }
+
+    fn render_oval(&self, oval: &Oval, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+        -> Result<(), String> 
+    {
+        let item_transform = item_transform_matrix_from_opt_vec!(oval.item_transform());
+        
+        let points = oval.properties().into_iter()
+            .filter_map(|point| point.path_geometry().as_ref())
+            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
+            .flat_map(|path_point_arrays| 
+                path_point_arrays.into_iter()
+                .flat_map(|path_point_array| 
+                    path_point_array.path_point_array().into_iter()
+                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
+                )
+            )
+            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
+            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true) )
+            .collect();
+
+        // Is the shape stroked? Is the shape closed? Is the shape filled?
+        let line = Line {
+            points: points,
+            is_closed: true,
+            has_fill: false,
+            has_stroke: true,
+            is_clipping_path: false,
+        };
+
+        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
+        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
+        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
+        
+        let layer = match (page_index, layer_index) {
+            (&Some(page_id), &Some(layer_id)) => {
+                self.pdf_doc.get_page(page_id).get_layer(layer_id)
+            },
+            (&Some(_), &None) => return Err("No layer index provided".to_string()),
+            (&None, &Some(_)) => return Err("No page index provided".to_string()),
+            (&None, &None) => return Err("No page and layer index provided".to_string()),
+        };
+
+        layer.set_fill_color(fill_color);
+        layer.set_outline_color(line_color);
+        layer.set_outline_thickness(10.0);
+
+        // Draw first line
+        layer.add_shape(line);
+
+        Ok(())
+    }
+
+    fn render_polygon(&self, polygon: &Polygon, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+        -> Result<(), String> 
+    {
+        let item_transform = item_transform_matrix_from_opt_vec!(polygon.item_transform());
+        
+        let points = polygon.properties().into_iter()
+            .filter_map(|point| point.path_geometry().as_ref())
+            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
+            .flat_map(|path_point_arrays| 
+                path_point_arrays.into_iter()
+                .flat_map(|path_point_array| 
+                    path_point_array.path_point_array().into_iter()
+                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
+                )
+            )
+            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
+            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false) )
+            .collect();
+
+        // Is the shape stroked? Is the shape closed? Is the shape filled?
+        let line = Line {
+            points: points,
+            is_closed: true,
+            has_fill: false,
+            has_stroke: true,
+            is_clipping_path: false,
+        };
+
+        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
+        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
+        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
+        
+        let layer = match (page_index, layer_index) {
+            (&Some(page_id), &Some(layer_id)) => {
+                self.pdf_doc.get_page(page_id).get_layer(layer_id)
+            },
+            (&Some(_), &None) => return Err("No layer index provided".to_string()),
+            (&None, &Some(_)) => return Err("No page index provided".to_string()),
+            (&None, &None) => return Err("No page and layer index provided".to_string()),
+        };
+
+        layer.set_fill_color(fill_color);
+        layer.set_outline_color(line_color);
+        layer.set_outline_thickness(3.0);
+
+        // Draw first line
+        layer.add_shape(line);
+
+        Ok(())
+    }
+
+    fn render_textframe(&self, polygon: &TextFrame, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+        -> Result<(), String> 
+    {
+        let item_transform = item_transform_matrix_from_opt_vec!(polygon.item_transform());
+
+        // println!("Parent tranform {:#?}", parent_transform);
+        // println!("Tranform {:#?}", item_transform);
+        // println!("Combined\n {:#?}", item_transform.dot(parent_transform));
+        
+        let points = polygon.properties().into_iter()
+            .filter_map(|point| point.path_geometry().as_ref())
+            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
+            .flat_map(|path_point_arrays| 
+                path_point_arrays.into_iter()
+                .flat_map(|path_point_array| 
+                    path_point_array.path_point_array().into_iter()
+                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
+                )
+            )
+            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
+            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false) )
+            .collect();
+
+        // Is the shape stroked? Is the shape closed? Is the shape filled?
+        let line = Line {
+            points: points,
+            is_closed: true,
+            has_fill: false,
+            has_stroke: true,
+            is_clipping_path: false,
+        };
+
+        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
+        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
+        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
+        
+        let layer = match (page_index, layer_index) {
+            (&Some(page_id), &Some(layer_id)) => {
+                self.pdf_doc.get_page(page_id).get_layer(layer_id)
+            },
+            (&Some(_), &None) => return Err("No layer index provided".to_string()),
+            (&None, &Some(_)) => return Err("No page index provided".to_string()),
+            (&None, &None) => return Err("No page and layer index provided".to_string()),
+        };
+
+        layer.set_fill_color(fill_color);
+        layer.set_outline_color(line_color);
+        layer.set_outline_thickness(3.0);
 
         // Draw first line
         layer.add_shape(line);
