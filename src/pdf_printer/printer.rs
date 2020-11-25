@@ -101,19 +101,19 @@ impl PDFPrinter {
 
             }
             SpreadContent::Rectangle(r) => { 
-                self.render_rectangle(r, page_transform, page_index, layer_index)
+                r.render(page_transform, &self.pdf_doc, page_index, layer_index)
                 .expect(format!("Failed to render rectangle '{}'", r.id()).as_str())
             }
             SpreadContent::Polygon(p) => { 
-                self.render_polygon(p, page_transform, page_index, layer_index)
+                p.render(page_transform, &self.pdf_doc, page_index, layer_index)
                 .expect(format!("Failed to render polygon '{}'", p.id()).as_str())
             }
             SpreadContent::TextFrame(t) => { 
-                self.render_textframe(t, page_transform, page_index, layer_index)
+                t.render(page_transform, &self.pdf_doc, page_index, layer_index)
                 .expect(format!("Failed to render textframe '{}'", t.id()).as_str())
             }
             SpreadContent::Oval(o) => { 
-                self.render_oval(o, page_transform, page_index, layer_index)
+                o.render(page_transform, &self.pdf_doc, page_index, layer_index)
                 .expect(format!("Failed to render oval '{}'", o.id()).as_str())
             }
             _ => {}
@@ -121,7 +121,7 @@ impl PDFPrinter {
             
         Ok(())
     }
-        
+
     fn render_blank_page(&self, page: &Page, page_transform: &Array2<f64>) -> Result<(PdfPageIndex,PdfLayerIndex), String> {
 
         if let [y1, x1, y2, x2] = page.geometric_bounds().as_slice() {
@@ -142,12 +142,74 @@ impl PDFPrinter {
         }
     }
 
-    fn render_rectangle(&self, rect: &Rectangle, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
-        -> Result<(), String> 
-    {
-        let item_transform = item_transform_matrix_from_opt_vec!(rect.item_transform());
+    pub fn save_pdf(self, path: &str) -> Result<(), Error> {
         
-        let mut points: Vec<(Point, bool)> = rect.properties().into_iter()
+        // println!("{:#?}", self.idml_package.master_spreads());
+                
+        self.pdf_doc.save(&mut BufWriter::new(File::create(path).unwrap()))?;
+        
+        Ok(())
+    }
+}
+
+
+pub trait IsPolygon {
+    fn get_properties(&self) -> &Option<Properties>;
+    fn get_item_transform(&self) -> &Option<Vec<f64>>;
+}
+
+impl IsPolygon for Polygon {
+    fn get_properties(&self) -> &Option<Properties> {
+        &self.properties()
+    }
+
+    fn get_item_transform(&self) -> &Option<Vec<f64>> {
+        &self.item_transform()
+    }
+}
+
+impl IsPolygon for Rectangle {
+    fn get_properties(&self) -> &Option<Properties> {
+        &self.properties()
+    }
+
+    fn get_item_transform(&self) -> &Option<Vec<f64>> {
+        &self.item_transform()
+    }
+}
+
+impl IsPolygon for Oval {
+    fn get_properties(&self) -> &Option<Properties> {
+        &self.properties()
+    }
+
+    fn get_item_transform(&self) -> &Option<Vec<f64>> {
+        &self.item_transform()
+    }
+}
+
+impl IsPolygon for TextFrame {
+    fn get_properties(&self) -> &Option<Properties> {
+        &self.properties()
+    }
+
+    fn get_item_transform(&self) -> &Option<Vec<f64>> {
+        &self.item_transform()
+    }
+}
+
+pub trait RenderPolygon {
+    fn render(&self, parent_transform: &Array2<f64>, pdf_doc: &PdfDocumentReference, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+        -> Result<(), String>;
+}
+
+impl<T: IsPolygon> RenderPolygon for T {
+    fn render(&self, parent_transform: &Array2<f64>, pdf_doc: &PdfDocumentReference, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+        -> Result<(), String>
+    {
+        let item_transform = item_transform_matrix_from_opt_vec!(self.get_item_transform());
+        
+        let mut points: Vec<(Point, bool)> = self.get_properties().into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
             .flat_map(|path_point_arrays| 
@@ -199,7 +261,7 @@ impl PDFPrinter {
         
         let layer = match (page_index, layer_index) {
             (&Some(page_id), &Some(layer_id)) => {
-                self.pdf_doc.get_page(page_id).get_layer(layer_id)
+                pdf_doc.get_page(page_id).get_layer(layer_id)
             },
             (&Some(_), &None) => return Err("No layer index provided".to_string()),
             (&None, &Some(_)) => return Err("No page index provided".to_string()),
@@ -213,218 +275,6 @@ impl PDFPrinter {
         // Draw first line
         layer.add_shape(line);
 
-        Ok(())
-    }
-
-    fn render_oval(&self, oval: &Oval, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
-        -> Result<(), String> 
-    {
-        let item_transform = item_transform_matrix_from_opt_vec!(oval.item_transform());
-        
-        let mut points: Vec<(Point, bool)> = oval.properties().into_iter()
-            .filter_map(|point| point.path_geometry().as_ref())
-            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
-            .flat_map(|path_point_arrays| 
-                path_point_arrays.into_iter()
-                .flat_map(|path_point_array| 
-                    path_point_array.path_point_array().into_iter()
-                    .map(|path_point_type| 
-                        [
-                            path_point_type.anchor().as_ref(), 
-                            path_point_type.left_direction().as_ref(),
-                            path_point_type.right_direction().as_ref()
-                        ] 
-                    )
-                    .filter(|[a,l,r]| a.is_some() && l.is_some() && r.is_some())
-                    .map(|[a,l,r]| [a.unwrap(), l.unwrap(), r.unwrap()] )
-                )
-            )
-            .map(|[a,l,r]| 
-                [
-                    item_transform.dot(parent_transform).dot(&arr2(&[[a[0]], [a[1]], [1_f64]])),
-                    item_transform.dot(parent_transform).dot(&arr2(&[[l[0]], [l[1]], [1_f64]])),
-                    item_transform.dot(parent_transform).dot(&arr2(&[[r[0]], [r[1]], [1_f64]])),
-                ]
-            )
-            .flat_map(|[a,l,r]| 
-                vec![
-                    (Point{x: Pt(l[[0,0]]), y: Pt(l[[1,0]])}, true),    // Left handle
-                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false),   // Anchor
-                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true),   // Anchor
-                    (Point{x: Pt(r[[0,0]]), y: Pt(r[[1,0]])}, true),    // Right handle
-                ].into_iter()
-            )
-            .collect();
-        
-        points.rotate_right(2);
-
-        // Is the shape stroked? Is the shape closed? Is the shape filled?
-        let line = Line {
-            points: points,
-            is_closed: true,
-            has_fill: false,
-            has_stroke: true,
-            is_clipping_path: false,
-        };
-
-        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
-        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
-        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
-        
-        let layer = match (page_index, layer_index) {
-            (&Some(page_id), &Some(layer_id)) => {
-                self.pdf_doc.get_page(page_id).get_layer(layer_id)
-            },
-            (&Some(_), &None) => return Err("No layer index provided".to_string()),
-            (&None, &Some(_)) => return Err("No page index provided".to_string()),
-            (&None, &None) => return Err("No page and layer index provided".to_string()),
-        };
-
-        layer.set_fill_color(fill_color);
-        layer.set_outline_color(line_color);
-        layer.set_outline_thickness(3.0);
-
-        // Draw first line
-        layer.add_shape(line);
-
-        Ok(())
-    }
-
-    fn render_polygon(&self, polygon: &Polygon, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
-        -> Result<(), String> 
-    {
-        let item_transform = item_transform_matrix_from_opt_vec!(polygon.item_transform());
-        
-        let mut points: Vec<(Point, bool)> = polygon.properties().into_iter()
-            .filter_map(|point| point.path_geometry().as_ref())
-            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
-            .flat_map(|path_point_arrays| 
-                path_point_arrays.into_iter()
-                .flat_map(|path_point_array| 
-                    path_point_array.path_point_array().into_iter()
-                    .map(|path_point_type| 
-                        [
-                            path_point_type.anchor().as_ref(), 
-                            path_point_type.left_direction().as_ref(),
-                            path_point_type.right_direction().as_ref()
-                        ] 
-                    )
-                    .filter(|[a,l,r]| a.is_some() && l.is_some() && r.is_some())
-                    .map(|[a,l,r]| [a.unwrap(), l.unwrap(), r.unwrap()] )
-                )
-            )
-            .map(|[a,l,r]| 
-                [
-                    item_transform.dot(parent_transform).dot(&arr2(&[[a[0]], [a[1]], [1_f64]])),
-                    item_transform.dot(parent_transform).dot(&arr2(&[[l[0]], [l[1]], [1_f64]])),
-                    item_transform.dot(parent_transform).dot(&arr2(&[[r[0]], [r[1]], [1_f64]])),
-                ]
-            )
-            .flat_map(|[a,l,r]| 
-                vec![
-                    (Point{x: Pt(l[[0,0]]), y: Pt(l[[1,0]])}, true),    // Left handle
-                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false),   // Anchor
-                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true),   // Anchor
-                    (Point{x: Pt(r[[0,0]]), y: Pt(r[[1,0]])}, true),    // Right handle
-                ].into_iter()
-            )
-            .collect();
-        
-        points.rotate_right(2);
-
-        // Is the shape stroked? Is the shape closed? Is the shape filled?
-        let line = Line {
-            points: points,
-            is_closed: true,
-            has_fill: false,
-            has_stroke: true,
-            is_clipping_path: false,
-        };
-
-        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
-        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
-        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
-        
-        let layer = match (page_index, layer_index) {
-            (&Some(page_id), &Some(layer_id)) => {
-                self.pdf_doc.get_page(page_id).get_layer(layer_id)
-            },
-            (&Some(_), &None) => return Err("No layer index provided".to_string()),
-            (&None, &Some(_)) => return Err("No page index provided".to_string()),
-            (&None, &None) => return Err("No page and layer index provided".to_string()),
-        };
-
-        layer.set_fill_color(fill_color);
-        layer.set_outline_color(line_color);
-        layer.set_outline_thickness(3.0);
-
-        // Draw first line
-        layer.add_shape(line);
-
-        Ok(())
-    }
-
-    fn render_textframe(&self, polygon: &TextFrame, parent_transform: &Array2<f64>, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
-        -> Result<(), String> 
-    {
-        let item_transform = item_transform_matrix_from_opt_vec!(polygon.item_transform());
-
-        // println!("Parent tranform {:#?}", parent_transform);
-        // println!("Tranform {:#?}", item_transform);
-        // println!("Combined\n {:#?}", item_transform.dot(parent_transform));
-        
-        let points = polygon.properties().into_iter()
-            .filter_map(|point| point.path_geometry().as_ref())
-            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
-            .flat_map(|path_point_arrays| 
-                path_point_arrays.into_iter()
-                .flat_map(|path_point_array| 
-                    path_point_array.path_point_array().into_iter()
-                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
-                )
-            )
-            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
-            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false) )
-            .collect();
-
-        // Is the shape stroked? Is the shape closed? Is the shape filled?
-        let line = Line {
-            points: points,
-            is_closed: true,
-            has_fill: false,
-            has_stroke: true,
-            is_clipping_path: false,
-        };
-
-        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
-        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
-        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
-        
-        let layer = match (page_index, layer_index) {
-            (&Some(page_id), &Some(layer_id)) => {
-                self.pdf_doc.get_page(page_id).get_layer(layer_id)
-            },
-            (&Some(_), &None) => return Err("No layer index provided".to_string()),
-            (&None, &Some(_)) => return Err("No page index provided".to_string()),
-            (&None, &None) => return Err("No page and layer index provided".to_string()),
-        };
-
-        layer.set_fill_color(fill_color);
-        layer.set_outline_color(line_color);
-        layer.set_outline_thickness(3.0);
-
-        // Draw first line
-        layer.add_shape(line);
-
-        Ok(())
-    }
-
-    pub fn save_pdf(self, path: &str) -> Result<(), Error> {
-        
-        // println!("{:#?}", self.idml_package.master_spreads());
-                
-        self.pdf_doc.save(&mut BufWriter::new(File::create(path).unwrap()))?;
-        
         Ok(())
     }
 }
