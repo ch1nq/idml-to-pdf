@@ -89,6 +89,7 @@ impl PDFPrinter {
                 // Update page tranformation matrix
                 *page_transform = item_transform_matrix_from_opt_vec!(p.item_transform());
                 *page_transform = page_transform.dot(spread_transform);
+                
 
                 // Make a new page
                 let (page_id, layer_id) = self.render_blank_page(p, page_transform)
@@ -146,19 +147,42 @@ impl PDFPrinter {
     {
         let item_transform = item_transform_matrix_from_opt_vec!(rect.item_transform());
         
-        let points = rect.properties().into_iter()
+        let mut points: Vec<(Point, bool)> = rect.properties().into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
             .flat_map(|path_point_arrays| 
                 path_point_arrays.into_iter()
                 .flat_map(|path_point_array| 
                     path_point_array.path_point_array().into_iter()
-                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
+                    .map(|path_point_type| 
+                        [
+                            path_point_type.anchor().as_ref(), 
+                            path_point_type.left_direction().as_ref(),
+                            path_point_type.right_direction().as_ref()
+                        ] 
+                    )
+                    .filter(|[a,l,r]| a.is_some() && l.is_some() && r.is_some())
+                    .map(|[a,l,r]| [a.unwrap(), l.unwrap(), r.unwrap()] )
                 )
             )
-            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
-            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false) )
+            .map(|[a,l,r]| 
+                [
+                    item_transform.dot(parent_transform).dot(&arr2(&[[a[0]], [a[1]], [1_f64]])),
+                    item_transform.dot(parent_transform).dot(&arr2(&[[l[0]], [l[1]], [1_f64]])),
+                    item_transform.dot(parent_transform).dot(&arr2(&[[r[0]], [r[1]], [1_f64]])),
+                ]
+            )
+            .flat_map(|[a,l,r]| 
+                vec![
+                    (Point{x: Pt(l[[0,0]]), y: Pt(l[[1,0]])}, true),    // Left handle
+                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false),   // Anchor
+                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true),   // Anchor
+                    (Point{x: Pt(r[[0,0]]), y: Pt(r[[1,0]])}, true),    // Right handle
+                ].into_iter()
+            )
             .collect();
+        
+        points.rotate_right(2);
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
         let line = Line {
@@ -197,19 +221,42 @@ impl PDFPrinter {
     {
         let item_transform = item_transform_matrix_from_opt_vec!(oval.item_transform());
         
-        let points = oval.properties().into_iter()
+        let mut points: Vec<(Point, bool)> = oval.properties().into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
             .flat_map(|path_point_arrays| 
                 path_point_arrays.into_iter()
                 .flat_map(|path_point_array| 
                     path_point_array.path_point_array().into_iter()
-                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
+                    .map(|path_point_type| 
+                        [
+                            path_point_type.anchor().as_ref(), 
+                            path_point_type.left_direction().as_ref(),
+                            path_point_type.right_direction().as_ref()
+                        ] 
+                    )
+                    .filter(|[a,l,r]| a.is_some() && l.is_some() && r.is_some())
+                    .map(|[a,l,r]| [a.unwrap(), l.unwrap(), r.unwrap()] )
                 )
             )
-            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
-            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true) )
+            .map(|[a,l,r]| 
+                [
+                    item_transform.dot(parent_transform).dot(&arr2(&[[a[0]], [a[1]], [1_f64]])),
+                    item_transform.dot(parent_transform).dot(&arr2(&[[l[0]], [l[1]], [1_f64]])),
+                    item_transform.dot(parent_transform).dot(&arr2(&[[r[0]], [r[1]], [1_f64]])),
+                ]
+            )
+            .flat_map(|[a,l,r]| 
+                vec![
+                    (Point{x: Pt(l[[0,0]]), y: Pt(l[[1,0]])}, true),    // Left handle
+                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false),   // Anchor
+                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true),   // Anchor
+                    (Point{x: Pt(r[[0,0]]), y: Pt(r[[1,0]])}, true),    // Right handle
+                ].into_iter()
+            )
             .collect();
+        
+        points.rotate_right(2);
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
         let line = Line {
@@ -235,7 +282,7 @@ impl PDFPrinter {
 
         layer.set_fill_color(fill_color);
         layer.set_outline_color(line_color);
-        layer.set_outline_thickness(10.0);
+        layer.set_outline_thickness(3.0);
 
         // Draw first line
         layer.add_shape(line);
@@ -248,19 +295,42 @@ impl PDFPrinter {
     {
         let item_transform = item_transform_matrix_from_opt_vec!(polygon.item_transform());
         
-        let points = polygon.properties().into_iter()
+        let mut points: Vec<(Point, bool)> = polygon.properties().into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
             .flat_map(|path_point_arrays| 
                 path_point_arrays.into_iter()
                 .flat_map(|path_point_array| 
                     path_point_array.path_point_array().into_iter()
-                    .filter_map(|path_point_type| path_point_type.anchor().as_ref())
+                    .map(|path_point_type| 
+                        [
+                            path_point_type.anchor().as_ref(), 
+                            path_point_type.left_direction().as_ref(),
+                            path_point_type.right_direction().as_ref()
+                        ] 
+                    )
+                    .filter(|[a,l,r]| a.is_some() && l.is_some() && r.is_some())
+                    .map(|[a,l,r]| [a.unwrap(), l.unwrap(), r.unwrap()] )
                 )
             )
-            .map(|p| item_transform.dot(parent_transform).dot(&arr2(&[[p[0]], [p[1]], [1_f64]])))
-            .map(|a| (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false) )
+            .map(|[a,l,r]| 
+                [
+                    item_transform.dot(parent_transform).dot(&arr2(&[[a[0]], [a[1]], [1_f64]])),
+                    item_transform.dot(parent_transform).dot(&arr2(&[[l[0]], [l[1]], [1_f64]])),
+                    item_transform.dot(parent_transform).dot(&arr2(&[[r[0]], [r[1]], [1_f64]])),
+                ]
+            )
+            .flat_map(|[a,l,r]| 
+                vec![
+                    (Point{x: Pt(l[[0,0]]), y: Pt(l[[1,0]])}, true),    // Left handle
+                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false),   // Anchor
+                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true),   // Anchor
+                    (Point{x: Pt(r[[0,0]]), y: Pt(r[[1,0]])}, true),    // Right handle
+                ].into_iter()
+            )
             .collect();
+        
+        points.rotate_right(2);
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
         let line = Line {
