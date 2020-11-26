@@ -1,3 +1,4 @@
+use std::path::Path;
 use serde::Deserialize;
 use derive_getters::Getters;
 use super::formats::*;
@@ -51,6 +52,11 @@ pub enum ColorOverride {
 #[derive(Deserialize,Debug,PartialEq)]
 pub enum ColorModel {
     Spot,
-    Process
+    Process,
+    Registration
 }
 
+pub fn parse_graphic_from_path(path: &Path) -> Result<IdPkgGraphic, quick_xml::DeError> {
+    let xml = std::fs::read_to_string(path).unwrap();
+    quick_xml::de::from_str(xml.as_str())
+}

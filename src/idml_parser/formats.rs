@@ -5,7 +5,13 @@ where
     <N as std::str::FromStr>::Err: std::fmt::Debug,
 {
     let s: std::borrow::Cow<str> = serde::de::Deserialize::deserialize(deserializer)?;
-    let vec = s.split(' ').map(|e| 
+    let s_trimmed = s.trim();
+    
+    if s_trimmed.is_empty() {
+        return Ok(vec![]);
+    }
+    
+    let vec = s_trimmed.split(' ').map(|e| 
         e.to_string().parse::<N>().expect(format!("Failed to parse string '{}' into number", e).as_str())
     ).collect();
 
