@@ -4,35 +4,7 @@ use printpdf::*;
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use crate::idml_parser::package_parser::IDMLPackage;
 use crate::idml_parser::spread_parser::*;
-use ndarray::{arr2, Array2};
-
-macro_rules! arr_identity {
-    ($n:expr) => {
-        arr2(&[[1_f64, 0_f64, 0_f64],
-               [0_f64, 1_f64, 0_f64],
-               [0_f64, 0_f64, 1_f64]])
-    }
-}
-
-macro_rules! item_transform_matrix {
-    ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr, $f:expr) => {
-        arr2(&[[-$a.to_owned(), $b.to_owned(), 0_f64],
-               [$c.to_owned(), -$d.to_owned(), 0_f64],
-               [$e.to_owned(), $f.to_owned(), 1_f64]])        
-    }
-}
-
-macro_rules! item_transform_matrix_from_opt_vec {
-    ($opt_transform:expr) => {
-        match $opt_transform {
-            Some(transform) => match transform.as_slice() {
-                [a,b,c,d,e,f] => item_transform_matrix!(a,b,c,d,e,f),
-                _ => arr_identity!(3)
-            }
-            _ => arr_identity!(3)
-        }
-    }
-}
+use super::transforms::{self, Transform};
 
 pub struct PDFPrinter {
     idml_package: IDMLPackage,
@@ -65,14 +37,16 @@ impl PDFPrinter {
     
     fn render_spread(&self, spread: &Spread) -> Result<(), Error> {
 
-        // They are updated everytime a new page is created
+        // References to page and layer index 
+        // Udated everytime a new page is created
         let mut current_page_index = None;
         let mut current_layer_index = None;
         
         // Make transformation matrices
-        let mut page_transform: Array2<f64> = arr_identity!(3);
-        let spread_transform: Array2<f64> = item_transform_matrix_from_opt_vec!(spread.item_transform());
-        
+        let invert_y_axis = transforms::from_values(1_f64,0_f64,0_f64,-1_f64,0_f64,0_f64);
+        let spread_transform = transforms::from_vec(spread.item_transform()).combine_with(&invert_y_axis);
+        let mut page_transform = transforms::identity();
+
         for content in spread.contents().into_iter() {
             self.render_spread_content(content, &spread_transform, &mut page_transform, &mut current_page_index, &mut current_layer_index)?;
         }
@@ -80,16 +54,14 @@ impl PDFPrinter {
         Ok(())
     }
     
-    fn render_spread_content(&self, content: &SpreadContent, spread_transform: &Array2<f64>, page_transform: &mut Array2<f64>, page_index: &mut Option<PdfPageIndex>, layer_index: &mut Option<PdfLayerIndex>) 
+    fn render_spread_content(&self, content: &SpreadContent, spread_transform: &Transform, page_transform: &mut Transform, page_index: &mut Option<PdfPageIndex>, layer_index: &mut Option<PdfLayerIndex>) 
         -> Result<(), Error> 
     {
-        
         match content {
             SpreadContent::Page(p) => {
                 // Update page tranformation matrix
-                *page_transform = item_transform_matrix_from_opt_vec!(p.item_transform());
-                *page_transform = page_transform.dot(spread_transform);
-                
+                *page_transform = transforms::from_vec(p.item_transform()).reverse();
+                *page_transform = page_transform.combine_with(spread_transform);
 
                 // Make a new page
                 let (page_id, layer_id) = self.render_blank_page(p, page_transform)
@@ -122,20 +94,16 @@ impl PDFPrinter {
         Ok(())
     }
 
-    fn render_blank_page(&self, page: &Page, page_transform: &Array2<f64>) -> Result<(PdfPageIndex,PdfLayerIndex), String> {
+    fn render_blank_page(&self, page: &Page, page_transform: &Transform) -> Result<(PdfPageIndex,PdfLayerIndex), String> {
 
         if let [y1, x1, y2, x2] = page.geometric_bounds().as_slice() {
+            // Top left and bottom right corners of page
+            let point1 = page_transform.apply_to_point(x1,y1);
+            let point2 = page_transform.apply_to_point(x2,y2);
 
-            let point1 = page_transform.dot(&arr2(&[[x1.to_owned()], [y1.to_owned()], [1_f64]]));
-            let point2 = page_transform.dot(&arr2(&[[x2.to_owned()], [y2.to_owned()], [1_f64]]));
+            // Generate the page in the PDF
+            let ids = self.pdf_doc.add_page(Mm::from(Pt(point2[0]-point1[0])), Mm::from(Pt(point2[1]-point1[1])), "New page");
 
-            // println!("{:#?}", point1);
-            // println!("{:#?}", point2);
-            
-            let ids = self.pdf_doc.add_page(Mm::from(Pt(point2[[0,0]]-point1[[0,0]])), Mm::from(Pt(point2[[1,0]]-point1[[1,0]])), "New page");
-
-            // println!("Page bounds: ({:#?}) ({:#?})", Mm::from(Pt(point2[[0,0]]-point1[[0,0]])), Mm::from(Pt(point2[[1,0]]-point1[[1,0]])));
-            
             return Ok(ids)
         } else {
             return Err(format!("Geometric bounds '{:?}' did not match [y1, x1, y2, x2]", page.geometric_bounds().as_slice()));
@@ -143,15 +111,10 @@ impl PDFPrinter {
     }
 
     pub fn save_pdf(self, path: &str) -> Result<(), Error> {
-        
-        // println!("{:#?}", self.idml_package.master_spreads());
-                
-        self.pdf_doc.save(&mut BufWriter::new(File::create(path).unwrap()))?;
-        
+        self.pdf_doc.save(&mut BufWriter::new(File::create(path).unwrap()))?;   
         Ok(())
     }
 }
-
 
 pub trait IsPolygon {
     fn get_properties(&self) -> &Option<Properties>;
@@ -199,16 +162,17 @@ impl IsPolygon for TextFrame {
 }
 
 pub trait RenderPolygon {
-    fn render(&self, parent_transform: &Array2<f64>, pdf_doc: &PdfDocumentReference, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+    fn render(&self, parent_transform: &Transform, pdf_doc: &PdfDocumentReference, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
         -> Result<(), String>;
 }
 
 impl<T: IsPolygon> RenderPolygon for T {
-    fn render(&self, parent_transform: &Array2<f64>, pdf_doc: &PdfDocumentReference, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
+    fn render(&self, parent_transform: &Transform, pdf_doc: &PdfDocumentReference, page_index: &Option<PdfPageIndex>, layer_index: &Option<PdfLayerIndex>) 
         -> Result<(), String>
     {
-        let item_transform = item_transform_matrix_from_opt_vec!(self.get_item_transform());
+        let item_transform = transforms::from_vec(self.get_item_transform());
         
+        // Parse the points and apply the relevant transformations
         let mut points: Vec<(Point, bool)> = self.get_properties().into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
@@ -218,6 +182,7 @@ impl<T: IsPolygon> RenderPolygon for T {
                     path_point_array.path_point_array().into_iter()
                     .map(|path_point_type| 
                         [
+                            // Get anchor point and its two handles for the beizer curve
                             path_point_type.anchor().as_ref(), 
                             path_point_type.left_direction().as_ref(),
                             path_point_type.right_direction().as_ref()
@@ -225,25 +190,29 @@ impl<T: IsPolygon> RenderPolygon for T {
                     )
                     .filter(|[a,l,r]| a.is_some() && l.is_some() && r.is_some())
                     .map(|[a,l,r]| [a.unwrap(), l.unwrap(), r.unwrap()] )
+                    .map(|[a,l,r]| 
+                        [
+                            // Apply item and parent transformation matrices
+                            item_transform.combine_with(&parent_transform).apply_to_point(&a[0],&a[1]),
+                            item_transform.combine_with(&parent_transform).apply_to_point(&l[0],&l[1]),
+                            item_transform.combine_with(&parent_transform).apply_to_point(&r[0],&r[1]),
+                        ]
+                    )
+                    .flat_map(|[a,l,r]| 
+                        // PDF library wants beizer curves like this:
+                        vec![
+                            (Point{x: Pt(l[0]), y: Pt(l[1])}, true),    // Left handle
+                            (Point{x: Pt(a[0]), y: Pt(a[1])}, false),   // Anchor
+                            (Point{x: Pt(a[0]), y: Pt(a[1])}, true),    // Anchor
+                            (Point{x: Pt(r[0]), y: Pt(r[1])}, true),    // Right handle
+                        ].into_iter()
+                    )
                 )
-            )
-            .map(|[a,l,r]| 
-                [
-                    item_transform.dot(parent_transform).dot(&arr2(&[[a[0]], [a[1]], [1_f64]])),
-                    item_transform.dot(parent_transform).dot(&arr2(&[[l[0]], [l[1]], [1_f64]])),
-                    item_transform.dot(parent_transform).dot(&arr2(&[[r[0]], [r[1]], [1_f64]])),
-                ]
-            )
-            .flat_map(|[a,l,r]| 
-                vec![
-                    (Point{x: Pt(l[[0,0]]), y: Pt(l[[1,0]])}, true),    // Left handle
-                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, false),   // Anchor
-                    (Point{x: Pt(a[[0,0]]), y: Pt(a[[1,0]])}, true),   // Anchor
-                    (Point{x: Pt(r[[0,0]]), y: Pt(r[[1,0]])}, true),    // Right handle
-                ].into_iter()
             )
             .collect();
         
+        // The PDF library wants the points in a slightly different order
+        // We just need to rotate the vec twice 
         points.rotate_right(2);
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
@@ -270,7 +239,7 @@ impl<T: IsPolygon> RenderPolygon for T {
 
         layer.set_fill_color(fill_color);
         layer.set_outline_color(line_color);
-        layer.set_outline_thickness(10.0);
+        layer.set_outline_thickness(2.0);
 
         // Draw first line
         layer.add_shape(line);
