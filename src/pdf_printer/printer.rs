@@ -5,6 +5,7 @@ use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use crate::idml_parser::package_parser::IDMLPackage;
 use crate::idml_parser::spread_parser::*;
 use super::transforms::{self, Transform};
+use super::color_manager;
 
 pub struct PDFPrinter {
     idml_package: IDMLPackage,
@@ -95,7 +96,6 @@ impl PDFPrinter {
     }
 
     fn render_blank_page(&self, page: &Page, page_transform: &Transform) -> Result<(PdfPageIndex,PdfLayerIndex), String> {
-
         if let [y1, x1, y2, x2] = page.geometric_bounds().as_slice() {
             // Top left and bottom right corners of page
             let point1 = page_transform.apply_to_point(x1,y1);
@@ -104,9 +104,9 @@ impl PDFPrinter {
             // Generate the page in the PDF
             let ids = self.pdf_doc.add_page(Mm::from(Pt(point2[0]-point1[0])), Mm::from(Pt(point2[1]-point1[1])), "New page");
 
-            return Ok(ids)
+            Ok(ids)
         } else {
-            return Err(format!("Geometric bounds '{:?}' did not match [y1, x1, y2, x2]", page.geometric_bounds().as_slice()));
+            Err(format!("Geometric bounds '{:?}' did not match [y1, x1, y2, x2]", page.geometric_bounds().as_slice()))
         }
     }
 
@@ -119,46 +119,36 @@ impl PDFPrinter {
 pub trait IsPolygon {
     fn get_properties(&self) -> &Option<Properties>;
     fn get_item_transform(&self) -> &Option<Vec<f64>>;
+    fn get_fill_color(&self) -> &Option<String>;
+    fn get_stroke_color(&self) -> &Option<String>;
 }
 
 impl IsPolygon for Polygon {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
+    fn get_properties(&self) -> &Option<Properties> { &self.properties() }
+    fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
+    fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
+    fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
 }
 
 impl IsPolygon for Rectangle {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
+    fn get_properties(&self) -> &Option<Properties> { &self.properties() }
+    fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
+    fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
+    fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
 }
 
 impl IsPolygon for Oval {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
+    fn get_properties(&self) -> &Option<Properties> { &self.properties() }
+    fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
+    fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
+    fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
 }
 
 impl IsPolygon for TextFrame {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
+    fn get_properties(&self) -> &Option<Properties> { &self.properties() }
+    fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
+    fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
+    fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
 }
 
 pub trait RenderPolygon {
@@ -199,8 +189,8 @@ impl<T: IsPolygon> RenderPolygon for T {
                         ]
                     )
                     .flat_map(|[a,l,r]| 
-                        // PDF library wants beizer curves like this:
                         vec![
+                            // PDF library wants beizer curves in this order:
                             (Point{x: Pt(l[0]), y: Pt(l[1])}, true),    // Left handle
                             (Point{x: Pt(a[0]), y: Pt(a[1])}, false),   // Anchor
                             (Point{x: Pt(a[0]), y: Pt(a[1])}, true),    // Anchor
@@ -219,15 +209,21 @@ impl<T: IsPolygon> RenderPolygon for T {
         let line = Line {
             points: points,
             is_closed: true,
-            has_fill: false,
+            has_fill: true,
             has_stroke: true,
             is_clipping_path: false,
         };
-
-        // let fill_color = printpdf::Color::Rgb(rect.fill_color());
-        let fill_color = printpdf::Color::Rgb(Rgb::new(0.7, 0.2, 0.3, None));
-        let line_color = printpdf::Color::Rgb(Rgb::new(0.3, 0.8, 0.7, None));
         
+        let fill_color = match self.get_fill_color() {
+            Some(id) => color_manager::color_from_id(id),
+            None => color_manager::color_from_id(&"Swatch/None".to_string())
+        };
+
+        let stroke_color = match self.get_stroke_color() {
+            Some(id) => color_manager::color_from_id(id),
+            None => color_manager::color_from_id(&"Swatch/None".to_string())
+        };
+
         let layer = match (page_index, layer_index) {
             (&Some(page_id), &Some(layer_id)) => {
                 pdf_doc.get_page(page_id).get_layer(layer_id)
@@ -238,7 +234,7 @@ impl<T: IsPolygon> RenderPolygon for T {
         };
 
         layer.set_fill_color(fill_color);
-        layer.set_outline_color(line_color);
+        layer.set_outline_color(stroke_color);
         layer.set_outline_thickness(2.0);
 
         // Draw first line

@@ -2,6 +2,7 @@ use std::path::Path;
 use quick_xml::de::{DeError};
 use serde::Deserialize;
 use derive_getters::Getters;
+use super::formats::*;
 
 #[derive(Default, Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename="idPkg:MasterSpread")]
@@ -141,6 +142,7 @@ pub struct Rectangle {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
+    stroke_color: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -152,6 +154,7 @@ pub struct Polygon {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
+    stroke_color: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -163,6 +166,7 @@ pub struct Oval {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
+    stroke_color: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -187,6 +191,7 @@ pub struct TextFrame {
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
+    stroke_color: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -265,33 +270,6 @@ pub struct PathPointType {
 pub fn parse_spread_from_path(path: &Path) -> Result<IdPkgSpread, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
     quick_xml::de::from_str(xml.as_str())
-}
-
-fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
-where
-    D: serde::de::Deserializer<'de>,
-    N: std::str::FromStr + std::fmt::Debug,
-    <N as std::str::FromStr>::Err: std::fmt::Debug,
-{
-    let s: std::borrow::Cow<str> = serde::de::Deserialize::deserialize(deserializer)?;
-    let vec = s.split(' ').map(|e| 
-        e.to_string().parse::<N>().expect(format!("Failed to parse string '{}' into number", e).as_str())
-    ).collect();
-
-    Ok(vec)
-}
-
-fn deserialize_space_seperated_opt_vec<'de, D, N>(deserializer: D) -> Result<Option<Vec<N>>, D::Error>
-where
-    D: serde::de::Deserializer<'de>,
-    N: std::str::FromStr + std::fmt::Debug,
-    <N as std::str::FromStr>::Err: std::fmt::Debug,
-{
-    // FIXME: Cannot handle cases where field does not exist
-    match deserialize_space_seperated_vec(deserializer) {
-        Ok(v) => Ok(Some(v)),
-        Err(e) => Err(e)
-    }
 }
 
 impl IdPkgSpread {

@@ -49,7 +49,7 @@ pub fn transform_point(x:&f64, y:&f64, transform:&Transform) -> Vec<f64> {
     vec![point[[0]], point[[1]]]
 }
 
-pub fn transform_point_reverse(x:&f64, y:&f64, transform:&Transform) -> Vec<f64> {
+pub fn _transform_point_reverse(x:&f64, y:&f64, transform:&Transform) -> Vec<f64> {
     transform_point(x, y, &reverse(transform))
 }
 
