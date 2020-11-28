@@ -11,6 +11,7 @@ pub trait IsPolygon {
     fn get_item_transform(&self) -> &Option<Vec<f64>>;
     fn get_fill_color(&self) -> &Option<String>;
     fn get_stroke_color(&self) -> &Option<String>;
+    fn get_stroke_weight(&self) -> &Option<f64>;
 }
 
 impl IsPolygon for Polygon {
@@ -18,6 +19,7 @@ impl IsPolygon for Polygon {
     fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
+    fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
 }
 
 impl IsPolygon for Rectangle {
@@ -25,6 +27,7 @@ impl IsPolygon for Rectangle {
     fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
+    fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
 }
 
 impl IsPolygon for Oval {
@@ -32,6 +35,7 @@ impl IsPolygon for Oval {
     fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
+    fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
 }
 
 impl IsPolygon for TextFrame {
@@ -39,6 +43,7 @@ impl IsPolygon for TextFrame {
     fn get_item_transform(&self) -> &Option<Vec<f64>> { &self.item_transform() }
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
+    fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
 }
 
 pub trait RenderPolygon {
@@ -104,13 +109,14 @@ impl<T: IsPolygon> RenderPolygon for T {
         // The PDF library wants the points in a slightly different order
         // We just need to rotate the vec twice 
         points.rotate_right(2);
-
         // Lookup fill color 
         let fill_color = match self.get_fill_color() {
             Some(id) => idml_resources.color_from_id(id),
             None => idml_resources.color_from_id(&"Swatch/None".to_string())
         };
-
+        
+        println!("{:?}", self.get_stroke_color());
+        
         // Lookup stroke color 
         let stroke_color = match self.get_stroke_color() {
             Some(id) => idml_resources.color_from_id(id),
@@ -135,14 +141,20 @@ impl<T: IsPolygon> RenderPolygon for T {
             (&None, &None) => return Err("No page and layer index provided".to_string()),
         };
 
+        // Set fill color
         if let Some(color) = fill_color {
             layer.set_fill_color(color);
         };
+        
+        // Set stroke color
         if let Some(color) = stroke_color {
             layer.set_outline_color(color);
         };
-
-        layer.set_outline_thickness(2.0);
+        
+        // Set stroke thickness
+        if let Some(thickness) = &self.get_stroke_weight() {
+            layer.set_outline_thickness(thickness.to_owned());
+        };
 
         // Draw first line
         layer.add_shape(line);

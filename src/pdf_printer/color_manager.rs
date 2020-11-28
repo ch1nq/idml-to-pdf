@@ -6,6 +6,8 @@ use crate::idml_parser::package_parser::IDMLResources;
 impl IDMLResources {
     pub fn color_from_id(&self, id: &String) -> Option<PdfColor> {
         
+        // println!("{}",id);
+        
         let graphic = &self.graphic();
         
         let color_lookup = graphic.colors().into_iter()
@@ -34,7 +36,7 @@ impl IDMLResources {
 
 impl IdmlColor {
     pub fn to_pdf_color(&self) -> PdfColor {
-        println!("Color: {:#?}", &self.color_value());
+        // println!("Color: {:#?}", &self.color_value());
 
         match (&self.space(),&self.color_value()) {
             (Some(ColorSpace::CMYK), Some(value)) => {
@@ -47,7 +49,18 @@ impl IdmlColor {
                     )
                 )
             },
-            _ => {
+            (Some(ColorSpace::RGB), Some(value)) => {
+                // Normalise values
+                let value = value.iter().map(|v| v/255_f64).collect::<Vec<f64>>();
+
+                PdfColor::Rgb(
+                    Rgb::new(
+                        value[0], value[1], value[2], None
+                    )
+                )
+            },
+            (space, value) => {
+                println!("Color of type '{:#?}' is not implemented yet", space);
                 // Default color is 100% magenta
                 PdfColor::Cmyk(
                     Cmyk::new(0.0, 1.0, 0.0, 0.0, None)

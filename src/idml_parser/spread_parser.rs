@@ -50,8 +50,6 @@ impl Spread {
             }
         ).collect();
 
-        // pages.retain(|&c| c.is_some());
-
         pages
     }
 }
@@ -143,6 +141,7 @@ pub struct Rectangle {
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
     stroke_color: Option<String>,
+    stroke_weight: Option<f64>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -155,6 +154,7 @@ pub struct Polygon {
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
     stroke_color: Option<String>,
+    stroke_weight: Option<f64>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -167,6 +167,7 @@ pub struct Oval {
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
     stroke_color: Option<String>,
+    stroke_weight: Option<f64>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -192,6 +193,7 @@ pub struct TextFrame {
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
     stroke_color: Option<String>,
+    stroke_weight: Option<f64>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
