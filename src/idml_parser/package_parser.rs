@@ -7,6 +7,7 @@ use derive_getters::Getters;
 use super::spread_parser::{self, Spread};
 use super::story_parser::{self, Story};
 use super::graphic_parser::{self, IdPkgGraphic};
+use super::styles_parser::{self, IdPkgStyles};
 
 #[derive(Deserialize,Debug,Getters)]
 pub struct IDMLPackage {
@@ -31,7 +32,7 @@ pub struct DesignMap {
 #[derive(Deserialize,Debug,Getters)]
 pub struct IDMLResources {
     fonts: Vec<String>,
-    styles: Vec<String>,
+    styles: IdPkgStyles,
     graphic: IdPkgGraphic,
     preferences: Vec<String>,
 }
@@ -114,7 +115,7 @@ fn parse_resources(path: &Path) -> Result<IDMLResources, io::Error> {
     
     // Styles
     resource_dir.push("Styles.xml");
-    let styles = vec!("Styles dummy".to_string());
+    let styles = styles_parser::parse_styles_from_path(&resource_dir).expect("Failed to parse Styles.xml");
     resource_dir.pop();
     
     // Graphic

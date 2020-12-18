@@ -2,7 +2,6 @@ use printpdf::{PdfDocumentReference, Point, Pt, Line};
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use crate::idml_parser::spread_parser::*;
 use super::transforms::{self, Transform};
-use super::color_manager;
 use crate::idml_parser::package_parser::IDMLResources;
 
 
@@ -12,6 +11,7 @@ pub trait IsPolygon {
     fn get_fill_color(&self) -> &Option<String>;
     fn get_stroke_color(&self) -> &Option<String>;
     fn get_stroke_weight(&self) -> &Option<f64>;
+    fn get_object_style(&self) -> &Option<String>;
 }
 
 impl IsPolygon for Polygon {
@@ -20,6 +20,7 @@ impl IsPolygon for Polygon {
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
     fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
+    fn get_object_style(&self) -> &Option<String> { &self.applied_object_style() }
 }
 
 impl IsPolygon for Rectangle {
@@ -28,6 +29,7 @@ impl IsPolygon for Rectangle {
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
     fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
+    fn get_object_style(&self) -> &Option<String> { &self.applied_object_style() }
 }
 
 impl IsPolygon for Oval {
@@ -36,6 +38,7 @@ impl IsPolygon for Oval {
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
     fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
+    fn get_object_style(&self) -> &Option<String> { &self.applied_object_style() }
 }
 
 impl IsPolygon for TextFrame {
@@ -44,6 +47,7 @@ impl IsPolygon for TextFrame {
     fn get_fill_color(&self) -> &Option<String> { &self.fill_color() }
     fn get_stroke_color(&self) -> &Option<String> { &self.stroke_color() }
     fn get_stroke_weight(&self) -> &Option<f64> { &self.stroke_weight() }
+    fn get_object_style(&self) -> &Option<String> { &self.applied_object_style() }
 }
 
 pub trait RenderPolygon {
@@ -109,19 +113,32 @@ impl<T: IsPolygon> RenderPolygon for T {
         // The PDF library wants the points in a slightly different order
         // We just need to rotate the vec twice 
         points.rotate_right(2);
-        // Lookup fill color 
-        let fill_color = match self.get_fill_color() {
-            Some(id) => idml_resources.color_from_id(id),
-            None => idml_resources.color_from_id(&"Swatch/None".to_string())
-        };
-        
-        println!("{:?}", self.get_stroke_color());
-        
-        // Lookup stroke color 
-        let stroke_color = match self.get_stroke_color() {
-            Some(id) => idml_resources.color_from_id(id),
-            None => idml_resources.color_from_id(&"Swatch/None".to_string())
-        };
+
+        // Initialize fill and stroke color to None
+        let mut fill_color = idml_resources.color_from_id(&"Swatch/None".to_string());
+        let mut stroke_color = idml_resources.color_from_id(&"Swatch/None".to_string());
+
+        // If a graphic style is applied, then update fill and stroke color from that 
+        if let Some(style_id) = self.get_object_style() {
+            if let Some(style) = idml_resources.styles().style_from_id(style_id) {
+                if let Some(id) = style.fill_color() {
+                    fill_color = idml_resources.color_from_id(id);
+                }
+                if let Some(id) = style.stroke_color() {
+                    stroke_color = idml_resources.color_from_id(id);
+                }
+            }
+        }
+
+        // Override fill color if one is available 
+        if let Some(id) = self.get_fill_color() {
+            fill_color = idml_resources.color_from_id(id)
+        }
+         
+        // Override stroke color if one is available 
+        if let Some(id) = self.get_stroke_color() {
+            stroke_color = idml_resources.color_from_id(id)
+        }
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
         let line = Line {
@@ -132,6 +149,7 @@ impl<T: IsPolygon> RenderPolygon for T {
             is_clipping_path: false,
         };
         
+        // Get the current layer of the PDF we are working on
         let layer = match (page_index, layer_index) {
             (&Some(page_id), &Some(layer_id)) => {
                 pdf_doc.get_page(page_id).get_layer(layer_id)

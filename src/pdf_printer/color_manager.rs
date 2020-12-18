@@ -59,7 +59,7 @@ impl IdmlColor {
                     )
                 )
             },
-            (space, value) => {
+            (space, _) => {
                 println!("Color of type '{:#?}' is not implemented yet", space);
                 // Default color is 100% magenta
                 PdfColor::Cmyk(

@@ -142,6 +142,7 @@ pub struct Rectangle {
     properties: Option<Properties>,
     stroke_color: Option<String>,
     stroke_weight: Option<f64>,
+    applied_object_style: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -155,6 +156,7 @@ pub struct Polygon {
     properties: Option<Properties>,
     stroke_color: Option<String>,
     stroke_weight: Option<f64>,
+    applied_object_style: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -168,6 +170,7 @@ pub struct Oval {
     properties: Option<Properties>,
     stroke_color: Option<String>,
     stroke_weight: Option<f64>,
+    applied_object_style: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -194,6 +197,7 @@ pub struct TextFrame {
     properties: Option<Properties>,
     stroke_color: Option<String>,
     stroke_weight: Option<f64>,
+    applied_object_style: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
