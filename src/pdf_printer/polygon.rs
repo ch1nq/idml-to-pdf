@@ -117,6 +117,7 @@ impl<T: IsPolygon> RenderPolygon for T {
         // Initialize fill and stroke color to None
         let mut fill_color = idml_resources.color_from_id(&"Swatch/None".to_string());
         let mut stroke_color = idml_resources.color_from_id(&"Swatch/None".to_string());
+        let mut stroke_weight = None;
 
         // If a graphic style is applied, then update fill and stroke color from that 
         if let Some(style_id) = self.get_object_style() {
@@ -127,17 +128,23 @@ impl<T: IsPolygon> RenderPolygon for T {
                 if let Some(id) = style.stroke_color() {
                     stroke_color = idml_resources.color_from_id(id);
                 }
+                stroke_weight = style.stroke_weight().to_owned();
             }
         }
 
-        // Override fill color if one is available 
+        // Override fill color if one is available on the polygon
         if let Some(id) = self.get_fill_color() {
             fill_color = idml_resources.color_from_id(id)
         }
          
-        // Override stroke color if one is available 
+        // Override stroke color if one is available on the polygon
         if let Some(id) = self.get_stroke_color() {
             stroke_color = idml_resources.color_from_id(id)
+        }
+
+        // Override stroke weight if one is available on the polygon
+        if let Some(weight) = self.get_stroke_weight() {
+            stroke_weight = Some(weight.to_owned());
         }
 
         // Is the shape stroked? Is the shape closed? Is the shape filled?
@@ -159,22 +166,22 @@ impl<T: IsPolygon> RenderPolygon for T {
             (&None, &None) => return Err("No page and layer index provided".to_string()),
         };
 
-        // Set fill color
+        // Set fill color in pdf
         if let Some(color) = fill_color {
             layer.set_fill_color(color);
         };
         
-        // Set stroke color
+        // Set stroke color in pdf
         if let Some(color) = stroke_color {
             layer.set_outline_color(color);
         };
         
-        // Set stroke thickness
-        if let Some(thickness) = &self.get_stroke_weight() {
-            layer.set_outline_thickness(thickness.to_owned());
+        // Set stroke thickness in pdf
+        if let Some(weight) = stroke_weight {
+            layer.set_outline_thickness(weight.to_owned());
         };
 
-        // Draw first line
+        // Finally, add the polygon to the layer
         layer.add_shape(line);
 
         Ok(())

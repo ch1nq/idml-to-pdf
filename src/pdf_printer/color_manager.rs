@@ -1,5 +1,5 @@
 use printpdf::{Rgb, Cmyk, Color as PdfColor};
-use regex;
+// use regex;
 use crate::idml_parser::graphic_parser::{self, IdPkgGraphic, Color as IdmlColor, ColorSpace, ColorModel};
 use crate::idml_parser::package_parser::IDMLResources;
 
