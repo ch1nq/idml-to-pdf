@@ -1,7 +1,7 @@
 use printpdf::{Rgb, Cmyk, Color as PdfColor};
 // use regex;
 use crate::idml_parser::graphic_parser::{self, IdPkgGraphic, Color as IdmlColor, ColorSpace, ColorModel};
-use crate::idml_parser::package_parser::IDMLResources;
+use crate::idml_parser::IDMLResources;
 
 impl IDMLResources {
     pub fn color_from_id(&self, id: &String) -> Option<PdfColor> {

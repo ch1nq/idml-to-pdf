@@ -189,8 +189,11 @@ pub struct TextFrame {
     #[serde(rename="Self")]
     id: String,
     fill_color: Option<String>,
+    #[serde(deserialize_with="deserialize_id_string")]
     parent_story: Option<String>,
+    #[serde(deserialize_with="deserialize_id_string")]
     previous_text_frame: Option<String>,
+    #[serde(deserialize_with="deserialize_id_string")]
     next_text_frame: Option<String>,
     #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,

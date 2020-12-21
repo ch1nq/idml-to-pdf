@@ -30,3 +30,17 @@ where
         Err(e) => Err(e)
     }
 }
+
+pub fn deserialize_id_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    let s: std::borrow::Cow<str> = serde::de::Deserialize::deserialize(deserializer)?;
+    let s_trimmed = s.trim();
+    let id = match s_trimmed {
+        "" => None,
+        "n" => None,
+        _ => Some(s_trimmed.to_owned())
+    };
+    Ok(id)
+}

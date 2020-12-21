@@ -1,13 +1,19 @@
+pub mod spread_parser;
+pub mod story_parser;
+pub mod graphic_parser;
+pub mod styles_parser;
+mod formats;
+
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::{fs, io};
 use serde::Deserialize;
 use derive_getters::Getters;
 
-use super::spread_parser::{self, Spread};
-use super::story_parser::{self, Story};
-use super::graphic_parser::{self, IdPkgGraphic};
-use super::styles_parser::{self, IdPkgStyles};
+use spread_parser::Spread;
+use story_parser::Story;
+use graphic_parser::IdPkgGraphic;
+use styles_parser::IdPkgStyles;
 
 #[derive(Deserialize,Debug,Getters)]
 pub struct IDMLPackage {

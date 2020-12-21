@@ -1,14 +1,18 @@
+//pub mod printer;
+mod transforms;
+mod color_manager;
+mod page_items;
+
 use std::fs::File;
 use std::io::BufWriter;
 use printpdf::*;
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
+use transforms::Transform;
+use page_items::polygon::RenderPolygon;
+use page_items::textframe;
 
-use crate::idml_parser::package_parser::IDMLPackage;
+use crate::idml_parser::IDMLPackage;
 use crate::idml_parser::spread_parser::*;
-
-use super::transforms::{self, Transform};
-use super::polygon::RenderPolygon;
-use super::textframe;
 
 pub struct PDFPrinter {
     idml_package: IDMLPackage,

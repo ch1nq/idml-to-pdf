@@ -1,5 +1,5 @@
-use idml_to_pdf::idml_parser::package_parser::IDMLPackage;
-use idml_to_pdf::pdf_printer::printer::PDFPrinter;
+use idml_to_pdf::idml_parser::IDMLPackage;
+use idml_to_pdf::pdf_printer::PDFPrinter;
 use idml_to_pdf::decompressor;
 
 fn main() {

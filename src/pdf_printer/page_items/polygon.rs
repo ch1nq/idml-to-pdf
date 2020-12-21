@@ -1,9 +1,8 @@
 use printpdf::{PdfDocumentReference, Point, Pt, Line};
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use crate::idml_parser::spread_parser::*;
-use super::transforms::{self, Transform};
-use crate::idml_parser::package_parser::IDMLResources;
-
+use crate::pdf_printer::transforms::{self, Transform};
+use crate::idml_parser::IDMLResources;
 
 pub trait IsPolygon {
     fn get_properties(&self) -> &Option<Properties>;
