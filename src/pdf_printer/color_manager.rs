@@ -3,15 +3,15 @@ use printpdf::{Rgb, Cmyk, Color as PdfColor};
 use crate::idml_parser::graphic_parser::{self, IdPkgGraphic, Color as IdmlColor, ColorSpace, ColorModel};
 use crate::idml_parser::IDMLResources;
 
+pub fn color_from_id(idml_resources: &IDMLResources, id: &String) -> Result<PdfColor, String> {
+    idml_resources.color_from_id(id)
+}
+
 impl IDMLResources {
-    pub fn color_from_id(&self, id: &String) -> Option<PdfColor> {
-        
-        // println!("{}",id);
-        
-        let graphic = &self.graphic();
-        
-        let color_lookup = graphic.colors().into_iter()
-        .filter(|color|
+    pub fn color_from_id(&self, id: &String) -> Result<PdfColor, String> {
+
+        let color_lookup = &self.graphic().colors().into_iter()
+            .filter(|color|
                 if let Some(color_id) = color.id() { 
                     color_id == id
                 } else {
@@ -22,13 +22,13 @@ impl IDMLResources {
         
         match color_lookup.len() {
             0 => {
-                None
+                Err("No color matched id".to_string())
             },
             1 => {
-                Some(color_lookup[0].to_pdf_color())
+                Ok(color_lookup[0].to_pdf_color())
             },
             _ => {
-                panic!("Multiple colors match the same id '{}':\n{:#?}", id, color_lookup);
+                Err(format!("Multiple colors match the same id '{}':\n{:#?}", id, color_lookup).to_string())
             }
         }
     }

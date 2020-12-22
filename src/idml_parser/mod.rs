@@ -1,6 +1,7 @@
 pub mod spread_parser;
 pub mod story_parser;
 pub mod graphic_parser;
+pub mod fonts_parser;
 pub mod styles_parser;
 mod formats;
 
@@ -12,6 +13,7 @@ use derive_getters::Getters;
 
 use spread_parser::Spread;
 use story_parser::Story;
+use fonts_parser::IdPkgFonts;
 use graphic_parser::IdPkgGraphic;
 use styles_parser::IdPkgStyles;
 
@@ -37,7 +39,7 @@ pub struct DesignMap {
 
 #[derive(Deserialize,Debug,Getters)]
 pub struct IDMLResources {
-    fonts: Vec<String>,
+    fonts: IdPkgFonts,
     styles: IdPkgStyles,
     graphic: IdPkgGraphic,
     preferences: Vec<String>,
@@ -116,17 +118,20 @@ fn parse_resources(path: &Path) -> Result<IDMLResources, io::Error> {
 
     // Fonts
     resource_dir.push("Fonts.xml");
-    let fonts = vec!("Fonts dummy".to_string());
+    let fonts = fonts_parser::parse_fonts_from_path(&resource_dir)
+        .expect("Failed to parse Fonts.xml");
     resource_dir.pop();
     
     // Styles
     resource_dir.push("Styles.xml");
-    let styles = styles_parser::parse_styles_from_path(&resource_dir).expect("Failed to parse Styles.xml");
+    let styles = styles_parser::parse_styles_from_path(&resource_dir)
+        .expect("Failed to parse Styles.xml");
     resource_dir.pop();
     
     // Graphic
     resource_dir.push("Graphic.xml");
-    let graphic = graphic_parser::parse_graphic_from_path(&resource_dir).expect("Failed to parse Graphic.xml");
+    let graphic = graphic_parser::parse_graphic_from_path(&resource_dir)
+        .expect("Failed to parse Graphic.xml");
     resource_dir.pop();
     
     // Preferences

@@ -3,6 +3,7 @@ use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use crate::idml_parser::spread_parser::*;
 use crate::pdf_printer::transforms::{self, Transform};
 use crate::idml_parser::IDMLResources;
+use crate::pdf_printer::pdf_utils;
 
 pub trait IsPolygon {
     fn get_properties(&self) -> &Option<Properties>;
@@ -108,10 +109,11 @@ impl<T: IsPolygon> RenderPolygon for T {
                 )
             )
             .collect();
-        
-        // The PDF library wants the points in a slightly different order
-        // We just need to rotate the vec twice 
-        points.rotate_right(2);
+
+            
+            // The PDF library wants the points in a slightly different order
+            // We just need to rotate the vec twice 
+            points.rotate_right(2);
 
         // Initialize fill and stroke color to None
         let mut fill_color = idml_resources.color_from_id(&"Swatch/None".to_string());
@@ -150,28 +152,21 @@ impl<T: IsPolygon> RenderPolygon for T {
         let line = Line {
             points: points,
             is_closed: true,
-            has_fill: fill_color.is_some(),
-            has_stroke: stroke_color.is_some(),
+            has_fill: fill_color.is_ok(),
+            has_stroke: stroke_color.is_ok(),
             is_clipping_path: false,
         };
         
         // Get the current layer of the PDF we are working on
-        let layer = match (page_index, layer_index) {
-            (&Some(page_id), &Some(layer_id)) => {
-                pdf_doc.get_page(page_id).get_layer(layer_id)
-            },
-            (&Some(_), &None) => return Err("No layer index provided".to_string()),
-            (&None, &Some(_)) => return Err("No page index provided".to_string()),
-            (&None, &None) => return Err("No page and layer index provided".to_string()),
-        };
-
+        let layer = pdf_utils::layer_from_index(pdf_doc, page_index, layer_index)?;
+        
         // Set fill color in pdf
-        if let Some(color) = fill_color {
+        if let Ok(color) = fill_color {
             layer.set_fill_color(color);
         };
         
         // Set stroke color in pdf
-        if let Some(color) = stroke_color {
+        if let Ok(color) = stroke_color {
             layer.set_outline_color(color);
         };
         
@@ -182,6 +177,7 @@ impl<T: IsPolygon> RenderPolygon for T {
 
         // Finally, add the polygon to the layer
         layer.add_shape(line);
+
 
         Ok(())
     }
