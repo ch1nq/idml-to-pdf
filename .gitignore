@@ -2,5 +2,5 @@
 .DS_Store
 
 # Ignore test output, but not the expected output
-/test/*.pdf
-!/test/*-expected.pdf
+/test/*/*.pdf
+!/test/*/*-expected.pdf
