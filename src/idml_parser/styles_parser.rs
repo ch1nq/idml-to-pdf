@@ -1,6 +1,10 @@
 use std::path::Path;
 use serde::Deserialize;
 use derive_getters::Getters;
+use super::styles::paragraph_style::*;
+use super::styles::character_style::*;
+use super::styles::object_style::*;
+use super::styles::*;
 // use super::formats::*;
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
@@ -8,28 +12,10 @@ use derive_getters::Getters;
 #[serde(rename_all="PascalCase")]
 pub struct IdPkgStyles {
     #[serde(rename="DOMVersion")]
-    dom_version: Option<f32>,
+    dom_version: Option<f32>, 
     root_object_style_group: Option<RootObjectStyleGroup>,
-}
-
-#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
-#[serde(rename_all="PascalCase")]
-pub struct RootObjectStyleGroup {
-    #[serde(rename="Self")]
-    id: Option<String>,
-    #[serde(rename="ObjectStyle")]
-    object_styles: Option<Vec<ObjectStyle>>,
-}
-
-#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
-#[serde(rename_all="PascalCase")]
-pub struct ObjectStyle {
-    #[serde(rename="Self")]
-    id: Option<String>, 
-    name: Option<String>,
-    fill_color: Option<String>,
-    stroke_weight: Option<f64>,
-    stroke_color: Option<String>,
+    root_paragraph_style_group: Option<RootParagraphStyleGroup>,
+    root_character_style_group: Option<RootCharacterStyleGroup>,
 }
 
 pub fn parse_styles_from_path(path: &Path) -> Result<IdPkgStyles, quick_xml::DeError> {
@@ -38,24 +24,24 @@ pub fn parse_styles_from_path(path: &Path) -> Result<IdPkgStyles, quick_xml::DeE
 }
 
 impl IdPkgStyles {
-    pub fn style_from_id(&self, id: &String) -> Option<&ObjectStyle> {
-
-        // Search through object styles and find one matching the given id
-        if let Some(root_style_group) = &self.root_object_style_group {
-            if let Some(obj_styles) = &root_style_group.object_styles {
-                // Note: Maybe more effecient to implement objstyles as a HashMap, 
-                //       to make lookups faster  
-                for style in obj_styles {
-                    if let Some(style_id) = &style.id {
-                        if style_id == id {
-                            return Some(style);
-                        }
-                    } 
-                }
-            }
+    pub fn object_style_from_id(&self, id: &String) -> Option<&ObjectStyle> {
+        match &self.root_object_style_group {
+            Some(root_style_group) => root_style_group.style_from_id(id),
+            _ => None 
         }
+    }
 
-        // If we reach this point, no style was found 
-        None
+    pub fn paragraph_style_from_id(&self, id: &String) -> Option<&ParagraphStyle> {
+        match &self.root_paragraph_style_group {
+            Some(root_style_group) => root_style_group.style_from_id(id),
+            _ => None 
+        }
+    }
+
+    pub fn character_style_from_id(&self, id: &String) -> Option<&CharacterStyle> {
+        match &self.root_character_style_group {
+            Some(root_style_group) => root_style_group.style_from_id(id),
+            _ => None 
+        }
     }
 }

@@ -4,6 +4,7 @@ pub mod graphic_parser;
 pub mod fonts_parser;
 pub mod styles_parser;
 mod formats;
+mod styles;
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;

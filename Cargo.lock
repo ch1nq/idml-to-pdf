@@ -845,9 +845,9 @@ dependencies = [
 
 [[package]]
 name = "printpdf"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0d47ed5d1ebde73e4059e9c06493e0a068715e647649710d15b9c4188c47414"
+checksum = "1a2472a184bcb128d0e3db65b59ebd11d010259a5e14fd9d048cba8f2c9302d4"
 dependencies = [
  "image",
  "js-sys",
