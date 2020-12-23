@@ -122,7 +122,7 @@ impl<T: IsPolygon> RenderPolygon for T {
 
         // If a graphic style is applied, then update fill and stroke color from that 
         if let Some(style_id) = self.get_object_style() {
-            if let Some(style) = idml_resources.styles().style_from_id(style_id) {
+            if let Some(style) = idml_resources.styles().object_style_from_id(style_id) {
                 if let Some(id) = style.fill_color() {
                     fill_color = idml_resources.color_from_id(id);
                 }

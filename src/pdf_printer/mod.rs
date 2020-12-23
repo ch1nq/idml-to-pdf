@@ -11,6 +11,7 @@ use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use transforms::Transform;
 use page_items::polygon::RenderPolygon;
 use page_items::textframe;
+use font_manager::FontLibrary;
 
 use crate::idml_parser::IDMLPackage;
 use crate::idml_parser::spread_parser::*;
@@ -18,7 +19,7 @@ use crate::idml_parser::spread_parser::*;
 pub struct PDFPrinter {
     idml_package: IDMLPackage,
     pdf_doc: PdfDocumentReference,
-    fonts: Vec<IndirectFontRef>
+    font_library: FontLibrary,
 }
 
 impl PDFPrinter {
@@ -27,12 +28,12 @@ impl PDFPrinter {
         let doc = PdfDocument::empty("PDF_Document_title");
 
         // Load fonts
-        let fonts = font_manager::load_all_fonts(idml_package.resources(), &doc)?;
+        let font_lib = FontLibrary::new(idml_package.resources(), &doc)?;
         
         let printer = PDFPrinter {
             idml_package: idml_package,
             pdf_doc: doc,
-            fonts: fonts,
+            font_library: font_lib,
         };
 
         printer.render_pdf()?;
@@ -68,9 +69,13 @@ impl PDFPrinter {
         Ok(())
     }
     
-    fn render_spread_content(&self, content: &SpreadContent, spread_transform: &Transform, page_transform: &mut Transform, page_index: &mut Option<PdfPageIndex>, layer_index: &mut Option<PdfLayerIndex>) 
-        -> Result<(), Error> 
-    {
+    fn render_spread_content(&self, 
+        content: &SpreadContent, 
+        spread_transform: &Transform, 
+        page_transform: &mut Transform, 
+        page_index: &mut Option<PdfPageIndex>, 
+        layer_index: &mut Option<PdfLayerIndex>
+    ) -> Result<(), Error> {
         match content {
             SpreadContent::Page(p) => {
                 // Update page tranformation matrix
@@ -97,7 +102,7 @@ impl PDFPrinter {
             SpreadContent::TextFrame(t) => { 
                 t.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
                     .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
-                t.render_story(page_transform, &self.pdf_doc, &self.idml_package, page_index, layer_index)
+                t.render_story(page_transform, &self.pdf_doc, &self.idml_package, &self.font_library, page_index, layer_index)
                     .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
             }
             SpreadContent::Oval(o) => { 
