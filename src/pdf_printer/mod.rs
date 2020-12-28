@@ -10,7 +10,7 @@ use printpdf::*;
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use transforms::Transform;
 use page_items::polygon::RenderPolygon;
-use page_items::textframe;
+// use page_items::textframe;
 use font_manager::FontLibrary;
 
 use crate::idml_parser::IDMLPackage;
@@ -100,8 +100,8 @@ impl PDFPrinter {
                     .expect(format!("Failed to render polygon '{}'", p.id()).as_str());
             }
             SpreadContent::TextFrame(t) => { 
-                t.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
-                    .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
+                // t.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
+                //     .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
                 t.render_story(page_transform, &self.pdf_doc, &self.idml_package, &self.font_library, page_index, layer_index)
                     .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
             }

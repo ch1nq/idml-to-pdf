@@ -3,8 +3,8 @@ pub mod story_parser;
 pub mod graphic_parser;
 pub mod fonts_parser;
 pub mod styles_parser;
+pub mod styles;
 mod formats;
-mod styles;
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;

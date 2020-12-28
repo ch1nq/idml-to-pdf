@@ -1,14 +1,13 @@
 use printpdf::{Rgb, Cmyk, Color as PdfColor};
-// use regex;
-use crate::idml_parser::graphic_parser::{self, IdPkgGraphic, Color as IdmlColor, ColorSpace, ColorModel};
+use crate::idml_parser::graphic_parser::{Color as IdmlColor, ColorSpace};
 use crate::idml_parser::IDMLResources;
 
-pub fn color_from_id(idml_resources: &IDMLResources, id: &String) -> Result<PdfColor, String> {
+pub fn color_from_id(idml_resources: &IDMLResources, id: &String) -> Result<Option<PdfColor>, String> {
     idml_resources.color_from_id(id)
 }
 
 impl IDMLResources {
-    pub fn color_from_id(&self, id: &String) -> Result<PdfColor, String> {
+    pub fn color_from_id(&self, id: &String) -> Result<Option<PdfColor>, String> {
 
         let color_lookup = &self.graphic().colors().into_iter()
             .filter(|color|
@@ -22,10 +21,13 @@ impl IDMLResources {
         
         match color_lookup.len() {
             0 => {
-                Err("No color matched id".to_string())
+                // TOOD: Load swatches so it doenst fail when a swatch is used.
+                //       Just return None for now
+                Ok(None)
+                // Err(format!("No color matched id {:?}", id).to_string())
             },
             1 => {
-                Ok(color_lookup[0].to_pdf_color())
+                Ok(Some(color_lookup[0].to_pdf_color()))
             },
             _ => {
                 Err(format!("Multiple colors match the same id '{}':\n{:#?}", id, color_lookup).to_string())

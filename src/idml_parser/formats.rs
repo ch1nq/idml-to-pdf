@@ -1,3 +1,4 @@
+/// Deserializer yielding a vec [N, N, N, N, ...] given a space seperated  string "N N N N ..."
 pub fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
 where
     D: serde::de::Deserializer<'de>,

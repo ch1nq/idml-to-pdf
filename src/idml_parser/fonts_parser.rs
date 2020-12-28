@@ -31,6 +31,8 @@ pub struct Font {
     #[serde(rename="Self")]
     id: String,
     name: Option<String>,
+    font_family: Option<String>,
+    font_style_name: Option<String>,
 }
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]

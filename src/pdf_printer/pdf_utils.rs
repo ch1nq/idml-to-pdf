@@ -1,4 +1,4 @@
-use printpdf::{PdfDocumentReference, PdfPageReference, PdfLayerReference};
+use printpdf::{PdfDocumentReference, PdfLayerReference};
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 
 pub fn layer_from_index(

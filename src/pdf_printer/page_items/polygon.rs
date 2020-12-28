@@ -161,12 +161,12 @@ impl<T: IsPolygon> RenderPolygon for T {
         let layer = pdf_utils::layer_from_index(pdf_doc, page_index, layer_index)?;
         
         // Set fill color in pdf
-        if let Ok(color) = fill_color {
+        if let Some(color) = fill_color? {
             layer.set_fill_color(color);
         };
         
         // Set stroke color in pdf
-        if let Ok(color) = stroke_color {
+        if let Some(color) = stroke_color? {
             layer.set_outline_color(color);
         };
         
