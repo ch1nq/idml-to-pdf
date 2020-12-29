@@ -1,13 +1,35 @@
-use printpdf::{Rgb, Cmyk, Color as PdfColor};
+use printpdf::{Rgb, Cmyk, SpotColor, Color as PdfColor};
 use crate::idml_parser::graphic_parser::{Color as IdmlColor, ColorSpace};
 use crate::idml_parser::IDMLResources;
 
-pub fn color_from_id(idml_resources: &IDMLResources, id: &String) -> Result<Option<PdfColor>, String> {
+#[derive(Debug)]
+pub enum ColorError {
+    ColorNotImplemented,
+    NoColorMatch,
+    MultiColorMatch,
+}
+
+impl std::fmt::Display for ColorError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let text = match &self {
+            ColorError::ColorNotImplemented => "Color not implemented",
+            ColorError::NoColorMatch        => "No colors match id provided",
+            ColorError::MultiColorMatch     => "Multiple colors match the id provided"
+        };
+        write!(f, "{}", text)
+    }
+}
+
+impl std::error::Error for ColorError {
+
+}
+
+pub fn color_from_id(idml_resources: &IDMLResources, id: &String) -> Result<Option<PdfColor>, ColorError> {
     idml_resources.color_from_id(id)
 }
 
 impl IDMLResources {
-    pub fn color_from_id(&self, id: &String) -> Result<Option<PdfColor>, String> {
+    pub fn color_from_id(&self, id: &String) -> Result<Option<PdfColor>, ColorError> {
 
         let color_lookup = &self.graphic().colors().into_iter()
             .filter(|color|
@@ -23,14 +45,19 @@ impl IDMLResources {
             0 => {
                 // TOOD: Load swatches so it doenst fail when a swatch is used.
                 //       Just return None for now
-                Ok(None)
-                // Err(format!("No color matched id {:?}", id).to_string())
+
+                // FIXME: Temporary fix until swatches get implemented
+                if id == "Swatch/None" {
+                    return Err(ColorError::ColorNotImplemented);
+                }
+
+                Err(ColorError::NoColorMatch)
             },
             1 => {
                 Ok(Some(color_lookup[0].to_pdf_color()))
             },
             _ => {
-                Err(format!("Multiple colors match the same id '{}':\n{:#?}", id, color_lookup).to_string())
+                Err(ColorError::MultiColorMatch)
             }
         }
     }

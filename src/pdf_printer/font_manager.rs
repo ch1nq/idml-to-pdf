@@ -12,7 +12,7 @@ pub struct FontLibrary {
     // font_families: HashMap<String, FontFamily>,
     // font_families: HashMap<String, HashMap<String, IndirectFontRef>>,
     fonts: HashMap<(String, String), IndirectFontRef>,
-    current_font: RefCell<Option<IndirectFontRef>>
+    // current_font: RefCell<Option<IndirectFontRef>>
 }
 
 // #[derive(Debug)]
@@ -22,25 +22,25 @@ pub struct FontLibrary {
 
 impl FontLibrary {
 
-    pub fn get_current_font(&self) -> Option<IndirectFontRef> {
-        // Return a clone of the font reference to make sure, 
-        // that a borrow and a mutable borrow never occurs at the same time 
-        self.current_font.borrow().clone()
-    }
+    // pub fn get_current_font(&self) -> Option<IndirectFontRef> {
+    //     // Return a clone of the font reference to make sure, 
+    //     // that a borrow and a mutable borrow never occurs at the same time 
+    //     self.current_font.borrow().clone()
+    // }
 
-    pub fn set_current_font(&self, name: &str, style: &str) 
-    -> Result<Option<IndirectFontRef>, String> {
-        match self.font_from_idml_name_and_style(name, style) {
-            Some(font) => {
-                // Update the reference, we don't actually care about the previous value
-                let _ = self.current_font.replace(Some(font.clone()));
-                Ok(self.get_current_font())
-            },
-            // Let the caller know if their requested font doesn't exist 
-            // - this likely is an error on their end
-            _ => Err("Failed to set font".to_string())
-        }
-    }
+    // pub fn set_current_font(&self, name: &str, style: &str) 
+    // -> Result<Option<IndirectFontRef>, String> {
+    //     match self.font_from_idml_name_and_style(name, style) {
+    //         Some(font) => {
+    //             // Update the reference, we don't actually care about the previous value
+    //             let _ = self.current_font.replace(Some(font.clone()));
+    //             Ok(self.get_current_font())
+    //         },
+    //         // Let the caller know if their requested font doesn't exist 
+    //         // - this likely is an error on their end
+    //         _ => Err("Failed to set font".to_string())
+    //     }
+    // }
 
     pub fn font_from_idml_name_and_style(&self, name: &str, style: &str)
     -> Option<&IndirectFontRef> {
@@ -98,7 +98,7 @@ impl FontLibrary {
         let font_lib = FontLibrary {
         //    font_families: HashMap::from_iter(font_families),
            fonts: HashMap::from_iter(font_refs),
-           current_font: RefCell::new(None)
+        //    current_font: RefCell::new(None)
         };
 
         Ok(font_lib)

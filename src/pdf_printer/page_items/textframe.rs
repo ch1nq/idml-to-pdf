@@ -2,7 +2,10 @@ use printpdf::{PdfDocumentReference, Pt, Mm, PdfLayerReference, TextRenderingMod
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use crate::pdf_printer::{
     pdf_utils, 
-    color_manager, 
+    color_manager::{
+        self,
+        ColorError,
+    }, 
     FontLibrary,
     transforms::{self, Transform}
 };
@@ -60,7 +63,7 @@ impl TextRenderSettings {
             (Some(_), Some(_))  => layer.set_text_rendering_mode(TextRenderingMode::FillStroke),
             (Some(_), None)     => layer.set_text_rendering_mode(TextRenderingMode::Stroke),
             (None,    Some(_))  => layer.set_text_rendering_mode(TextRenderingMode::Fill),
-            (None,    None)     => layer.set_text_rendering_mode(TextRenderingMode::FillStroke) // <- This might not be the right choice
+            (None,    None)     => layer.set_text_rendering_mode(TextRenderingMode::Invisible) // <- This might not be the right choice
         } 
     }
 
@@ -70,15 +73,9 @@ impl TextRenderSettings {
         layer.set_line_height(10.0);
         
         // If name, style and size are some, then we can write the given text
-        // match (&self.font_name, &self.font_style) {
-        //     (Some(name), Some(style)) => {
         if let Some(font) = &self.font {
             layer.write_text(text, font);
         }
-        //     },
-        //     _ => {}
-        // } 
-
     }
 }
 
@@ -94,7 +91,7 @@ impl TextFrame {
         
         // Get the current layer of the PDF we are working on
         let layer = pdf_utils::layer_from_index(pdf_doc, page_index, layer_index)?;
-        
+
         // Keeps track of changes to things like fonts, colors, stroke width etc.
         let mut settings = TextRenderSettings::default();
 
@@ -111,6 +108,8 @@ impl TextFrame {
                 layer.end_text_section();
             }
         }
+
+        settings.apply_to_layer(&layer, font_library);
         
         Ok(())
     }
@@ -190,14 +189,22 @@ impl TextFrame {
     ) -> Result<(),String> {
         // Fill color
         if let Some(color_id) = p_style.fill_color() {
-            let color = color_manager::color_from_id(idml_resources, color_id)?;
+            let color = match color_manager::color_from_id(idml_resources, color_id){
+                Ok(c) => c,
+                Err(ColorError::ColorNotImplemented) => None,
+                _ => {return Err("Color error".to_string())}
+            };
             // layer.set_fill_color(color);
             settings.fill_color = color;
         };
 
         // Stroke color
         if let Some(color_id) = p_style.stroke_color() {
-            let color = color_manager::color_from_id(idml_resources, color_id)?;
+            let color = match color_manager::color_from_id(idml_resources, color_id) {
+                Ok(c) => c,
+                Err(ColorError::ColorNotImplemented) => None,
+                _ => {return Err("Color error".to_string())}
+            };
             // layer.set_outline_color(color);
             settings.stroke_color = color;
         };
@@ -263,14 +270,22 @@ impl TextFrame {
     ) -> Result<(),String> {
         // Fill color
         if let Some(color_id) = c_style.fill_color() {
-            let color = color_manager::color_from_id(idml_resources, color_id)?;
+            let color = match color_manager::color_from_id(idml_resources, color_id){
+                Ok(c) => c,
+                Err(ColorError::ColorNotImplemented) => None,
+                _ => {return Err("Color error".to_string())}
+            };
             // layer.set_fill_color(color);
             settings.fill_color = color;
         };
 
         // Stroke color
         if let Some(color_id) = c_style.stroke_color() {
-            let color = color_manager::color_from_id(idml_resources, color_id)?;
+            let color = match color_manager::color_from_id(idml_resources, color_id){
+                Ok(c) => c,
+                Err(ColorError::ColorNotImplemented) => None,
+                _ => {return Err("Color error".to_string())}
+            };
             // layer.set_outline_color(color);
             settings.stroke_color = color;
         };
@@ -321,7 +336,6 @@ impl TextFrame {
 
                         },
                         StoryContent::Br => {
-                            println!("Hello newline");
                             layer.add_line_break();
                         },
                         _ => {}

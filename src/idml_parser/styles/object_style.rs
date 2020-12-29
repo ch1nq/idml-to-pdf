@@ -93,7 +93,7 @@ impl Style for ObjectStyle {
             fill_color,
             stroke_color,
             stroke_weight,
-        )
+        )    
     }
 }
 

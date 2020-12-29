@@ -161,14 +161,16 @@ impl<T: IsPolygon> RenderPolygon for T {
         let layer = pdf_utils::layer_from_index(pdf_doc, page_index, layer_index)?;
         
         // Set fill color in pdf
-        if let Some(color) = fill_color? {
-            layer.set_fill_color(color);
-        };
+        match fill_color {
+            Ok(Some(color)) => layer.set_fill_color(color),
+            _ => {}
+        }
         
         // Set stroke color in pdf
-        if let Some(color) = stroke_color? {
-            layer.set_outline_color(color);
-        };
+        match stroke_color {
+            Ok(Some(color)) => layer.set_outline_color(color),
+            _ => {} 
+        }
         
         // Set stroke thickness in pdf
         if let Some(weight) = stroke_weight {

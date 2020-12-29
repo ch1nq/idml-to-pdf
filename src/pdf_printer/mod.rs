@@ -76,38 +76,39 @@ impl PDFPrinter {
         page_index: &mut Option<PdfPageIndex>, 
         layer_index: &mut Option<PdfLayerIndex>
     ) -> Result<(), Error> {
+        
         match content {
             SpreadContent::Page(p) => {
                 // Update page tranformation matrix
                 *page_transform = transforms::from_vec(p.item_transform()).reverse();
                 *page_transform = page_transform.combine_with(spread_transform);
-
+                
                 // Make a new page
                 let (page_id, layer_id) = self.render_blank_page(p, page_transform)
-                    .expect(format!("Failed to render page '{}'", p.id()).as_str());
-
+                .expect(format!("Failed to render page '{}'", p.id()).as_str());
+                
                 // Update the current page and layer index
                 *page_index = Some(page_id);
                 *layer_index = Some(layer_id);
-
+                
             }
             SpreadContent::Rectangle(r) => { 
                 r.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
-                    .expect(format!("Failed to render rectangle '{}'", r.id()).as_str());
+                .expect(format!("Failed to render rectangle '{}'", r.id()).as_str());
             }
             SpreadContent::Polygon(p) => { 
                 p.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
-                    .expect(format!("Failed to render polygon '{}'", p.id()).as_str());
+                .expect(format!("Failed to render polygon '{}'", p.id()).as_str());
             }
             SpreadContent::TextFrame(t) => { 
-                // t.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
-                //     .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
+                t.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
+                    .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
                 t.render_story(page_transform, &self.pdf_doc, &self.idml_package, &self.font_library, page_index, layer_index)
                     .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
             }
             SpreadContent::Oval(o) => { 
                 o.render(page_transform, &self.pdf_doc, &self.idml_package.resources(), page_index, layer_index)
-                    .expect(format!("Failed to render oval '{}'", o.id()).as_str());
+                .expect(format!("Failed to render oval '{}'", o.id()).as_str());
             }
             _ => {}
         }
