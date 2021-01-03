@@ -4,3 +4,4 @@
 # Ignore test output, but not the expected output
 /test/*/*.pdf
 !/test/*/*-expected.pdf
+/test/**/*.lst

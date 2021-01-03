@@ -30,10 +30,53 @@ pub struct FontFamily {
 pub struct Font {
     #[serde(rename="Self")]
     id: String,
-    name: Option<String>,
-    font_family: Option<String>,
-    font_style_name: Option<String>,
+    font_family: String,
+    font_style_name: String,
+    font_style_name_native: String,
+    font_type: FontTypes,
+    full_name: String,
+    full_name_native: String,
+    name: String,
+    platform_name: String,
+    post_script_name: String,
+    status: FontStatus,
+    version: String,
+    writing_script: i8,
 }
+
+#[derive(Deserialize,Debug,PartialEq)]
+pub enum FontTypes {
+    Type1,
+    TrueType,
+    CID,
+    ATC,
+    Bitmap,
+    OCF,
+    OpenTypeCFF,
+    OpenTypeCID,
+    OpenTypeTT,
+    #[serde(other)]
+    Unknown
+}
+
+impl Default for FontTypes {
+    fn default() -> Self { FontTypes::Unknown }
+}
+
+#[derive(Deserialize,Debug,PartialEq)]
+pub enum FontStatus {
+    Installed,
+    NotAvailable,
+    Fauxed,
+    Substituted,
+    #[serde(other)]
+    Unknown
+}
+
+impl Default for FontStatus {
+    fn default() -> Self { FontStatus::Unknown }
+}
+
 
 #[derive(Default,Deserialize,Debug,PartialEq,Getters)]
 #[serde(rename_all="PascalCase")]

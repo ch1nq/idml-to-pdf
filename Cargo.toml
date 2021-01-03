@@ -16,3 +16,4 @@ regex = "1"
 derive-getters = "^0.2.0"
 ndarray = "0.13.1"
 ndarray-linalg = { version = "0.12", features = ["intel-mkl"] }
+dirs = "3.0"

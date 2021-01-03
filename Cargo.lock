@@ -306,6 +306,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirs"
+version = "3.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "142995ed02755914747cc6ca76fc7e4583cd18578746716d0508ea6ed558b9ff"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
 name = "dirs-sys"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -488,6 +497,7 @@ name = "idml_to_pdf"
 version = "0.1.0"
 dependencies = [
  "derive-getters",
+ "dirs 3.0.1",
  "ndarray",
  "ndarray-linalg",
  "printpdf",
@@ -531,7 +541,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ada23f955fb7d06cb5db9424863caa7251f8f9b525f4c4816144465f77cfded7"
 dependencies = [
  "curl",
- "dirs",
+ "dirs 2.0.2",
  "failure",
  "glob",
  "log",

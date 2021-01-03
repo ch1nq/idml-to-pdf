@@ -6,6 +6,7 @@ mod pdf_utils;
 
 use std::fs::File;
 use std::io::BufWriter;
+use std::path::PathBuf;
 use printpdf::*;
 use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
 use transforms::Transform;
@@ -20,20 +21,22 @@ pub struct PDFPrinter {
     idml_package: IDMLPackage,
     pdf_doc: PdfDocumentReference,
     font_library: FontLibrary,
+    resource_dir: Option<PathBuf>
 }
 
 impl PDFPrinter {
-    pub fn new(idml_package:IDMLPackage) -> Result<PDFPrinter, Error> {
+    pub fn new(idml_package:IDMLPackage, resource_dir: Option<PathBuf>) -> Result<PDFPrinter, Error> {
         
         let doc = PdfDocument::empty("PDF_Document_title");
 
         // Load fonts
-        let font_lib = FontLibrary::new(idml_package.resources(), &doc)?;
+        let font_lib = FontLibrary::new(idml_package.resources(), &doc, &resource_dir)?;
         
         let printer = PDFPrinter {
             idml_package: idml_package,
             pdf_doc: doc,
             font_library: font_lib,
+            resource_dir: resource_dir
         };
 
         printer.render_pdf()?;
