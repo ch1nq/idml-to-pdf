@@ -1,22 +1,22 @@
-use serde::Deserialize;
-use derive_getters::Getters;
 use super::{Style, StyleGroup};
+use derive_getters::Getters;
+use serde::Deserialize;
 use std::default::Default;
 
-#[derive(Default,Deserialize,Debug,PartialEq,Getters)]
-#[serde(rename_all="PascalCase")]
+#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
+#[serde(rename_all = "PascalCase")]
 pub struct RootParagraphStyleGroup {
-    #[serde(rename="Self")]
+    #[serde(rename = "Self")]
     id: Option<String>,
-    #[serde(rename="ParagraphStyle")]
+    #[serde(rename = "ParagraphStyle")]
     paragraph_styles: Option<Vec<ParagraphStyle>>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq,Getters,Clone)]
-#[serde(rename_all="PascalCase")]
+#[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ParagraphStyle {
-    #[serde(rename="Self")]
-    id: Option<String>, 
+    #[serde(rename = "Self")]
+    id: Option<String>,
     name: Option<String>,
     fill_color: Option<String>,
     font_style: Option<String>,
@@ -26,27 +26,26 @@ pub struct ParagraphStyle {
     properties: Option<ParagraphProperties>,
 }
 
-#[derive(Default,Deserialize,Debug,PartialEq,Getters,Clone)]
-#[serde(rename_all="PascalCase")]
+#[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ParagraphProperties {
     based_on: Option<String>,
     applied_font: Option<String>,
 }
 
 impl Style for ParagraphStyle {
-    fn get_id(&self) -> &Option<String> { 
-        &self.id() 
+    fn get_id(&self) -> &Option<String> {
+        &self.id()
     }
 
-    fn get_parent_id(&self) -> &Option<String> { 
+    fn get_parent_id(&self) -> &Option<String> {
         match &self.properties {
             Some(properties) => &properties.based_on,
-            _ => &None
+            _ => &None,
         }
     }
 
     fn combine_with_parent(&self, parent: &ParagraphStyle) -> ParagraphStyle {
-        
         // Macros for making a struct calling choose on every field
         macro_rules! choose_fields {
             (
@@ -64,23 +63,20 @@ impl Style for ParagraphStyle {
                 }
             }
         }
-        
+
         // Get references to property structs
         let combined_properties = match (&self.properties, &parent.properties) {
-            (Some(child_props), Some(parent_props)) => 
-            Some(
-                choose_fields!(
-                    child_props,
-                    parent_props,
-                    ParagraphProperties {
-                        // Manually set fields
-                        based_on: self.get_parent_id().clone()
-                    },
-                    // Fields that can be overwritten by child properties
-                    applied_font,
-                )
-            ),
-            _ => None
+            (Some(child_props), Some(parent_props)) => Some(choose_fields!(
+                child_props,
+                parent_props,
+                ParagraphProperties {
+                    // Manually set fields
+                    based_on: self.get_parent_id().clone()
+                },
+                // Fields that can be overwritten by child properties
+                applied_font,
+            )),
+            _ => None,
         };
 
         choose_fields!(
@@ -103,5 +99,7 @@ impl Style for ParagraphStyle {
 }
 
 impl StyleGroup<ParagraphStyle> for RootParagraphStyleGroup {
-    fn get_styles(&self) -> &Option<Vec<ParagraphStyle>> { &self.paragraph_styles() }
+    fn get_styles(&self) -> &Option<Vec<ParagraphStyle>> {
+        &self.paragraph_styles()
+    }
 }
