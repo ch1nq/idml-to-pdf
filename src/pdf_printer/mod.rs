@@ -21,7 +21,7 @@ pub struct PDFPrinter {
     idml_package: IDMLPackage,
     pdf_doc: PdfDocumentReference,
     font_library: FontLibrary,
-    resource_dir: Option<PathBuf>,
+    // resource_dir: Option<PathBuf>,
 }
 
 impl PDFPrinter {
@@ -38,7 +38,7 @@ impl PDFPrinter {
             idml_package: idml_package,
             pdf_doc: doc,
             font_library: font_lib,
-            resource_dir: resource_dir,
+            // resource_dir: resource_dir,
         };
 
         printer.render_pdf()?;

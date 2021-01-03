@@ -225,7 +225,7 @@ impl TextFrame {
         // Fill color
         if let Some(color_id) = p_style.fill_color() {
             let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => c,
+                Ok(c) => Some(c),
                 Err(ColorError::ColorNotImplemented) => None,
                 _ => return Err("Color error".to_string()),
             };
@@ -236,7 +236,7 @@ impl TextFrame {
         // Stroke color
         if let Some(color_id) = p_style.stroke_color() {
             let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => c,
+                Ok(c) => Some(c),
                 Err(ColorError::ColorNotImplemented) => None,
                 _ => return Err("Color error".to_string()),
             };
@@ -326,7 +326,7 @@ impl TextFrame {
         // Fill color
         if let Some(color_id) = c_style.fill_color() {
             let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => c,
+                Ok(c) => Some(c),
                 Err(ColorError::ColorNotImplemented) => None,
                 _ => return Err("Color error".to_string()),
             };
@@ -337,7 +337,7 @@ impl TextFrame {
         // Stroke color
         if let Some(color_id) = c_style.stroke_color() {
             let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => c,
+                Ok(c) => Some(c),
                 Err(ColorError::ColorNotImplemented) => None,
                 _ => return Err("Color error".to_string()),
             };

@@ -18,7 +18,7 @@ impl FontLibrary {
         name: &str,
         style: &str,
     ) -> Option<&IndirectFontRef> {
-        println!("{} {}", name, style);
+        // println!("{} {}", name, style);
         self.fonts.get(&(name.to_string(), style.to_string()))
     }
 
@@ -87,7 +87,7 @@ fn load_font_from_id(
     match &font_lookup[..] {
         // [] => Err("No font matched id".to_string()),
         [] => {
-            println!("No font matched: {}", id);
+            // println!("No font matched: {}", id);
             // let font = pdf_doc.add_external_font(std::fs::File::open("/Library/Fonts/Arial Unicode.ttf").unwrap()).unwrap();
             let font = pdf_doc
                 .add_builtin_font(printpdf::BuiltinFont::TimesRoman)
@@ -101,7 +101,7 @@ fn load_font_from_id(
             Ok(font)
         }
         [font_path, ..] => {
-            println!("Multiple fonts font matched: {}", id);
+            // println!("Multiple fonts font matched: {}", id);
             // Err(format!("Multiple fonts matched: {}", id).to_string())
             let font = pdf_doc
                 .add_external_font(std::fs::File::open(font_path).unwrap())

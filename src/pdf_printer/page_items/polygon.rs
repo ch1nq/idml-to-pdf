@@ -244,13 +244,13 @@ impl<T: IsPolygon> RenderPolygon for T {
 
         // Set fill color in pdf
         match fill_color {
-            Ok(Some(color)) => layer.set_fill_color(color),
+            Ok(color) => layer.set_fill_color(color),
             _ => {}
         }
 
         // Set stroke color in pdf
         match stroke_color {
-            Ok(Some(color)) => layer.set_outline_color(color),
+            Ok(color) => layer.set_outline_color(color),
             _ => {}
         }
 

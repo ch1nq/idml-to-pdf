@@ -11,13 +11,16 @@ pub struct IdPkgGraphic {
     dom_version: Option<f32>,
     #[serde(rename = "Color")]
     colors: Vec<Color>,
+    #[serde(rename = "Swatch")]
+    swatches: Vec<Swatch>,
 }
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
 pub struct Color {
     #[serde(rename = "Self")]
-    id: Option<String>,
+    id: String,
+    name: String,
     #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
     alternate_color_value: Option<Vec<f64>>,
     alternate_space: Option<ColorSpace>,
@@ -28,6 +31,18 @@ pub struct Color {
     model: Option<ColorModel>,
     space: Option<ColorSpace>,
     spot_ink_alias_spot_color_reference: Option<String>,
+}
+
+#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
+#[serde(rename_all = "PascalCase")]
+pub struct Swatch {
+    #[serde(rename = "Self")]
+    id: String,
+    name: String,
+    color_editable: Option<bool>,
+    color_removeable: Option<bool>,
+    visible: Option<bool>,
+    swatch_creator_id: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

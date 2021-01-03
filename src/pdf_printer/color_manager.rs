@@ -1,4 +1,4 @@
-use crate::idml_parser::graphic_parser::{Color as IdmlColor, ColorSpace};
+use crate::idml_parser::graphic_parser::{Color as IdmlColor, Swatch, ColorSpace};
 use crate::idml_parser::IDMLResources;
 use printpdf::{Cmyk, Color as PdfColor, Rgb, SpotColor};
 
@@ -25,45 +25,53 @@ impl std::error::Error for ColorError {}
 pub fn color_from_id(
     idml_resources: &IDMLResources,
     id: &String,
-) -> Result<Option<PdfColor>, ColorError> {
+) -> Result<PdfColor, ColorError> {
     idml_resources.color_from_id(id)
 }
 
 impl IDMLResources {
-    pub fn color_from_id(&self, id: &String) -> Result<Option<PdfColor>, ColorError> {
-        let color_lookup = &self
+    pub fn color_from_id(&self, id: &String) -> Result<PdfColor, ColorError> {
+        
+        // List to search
+        let mut matches = vec![];
+        
+        // Append colors that match id
+        matches.append(
+            &mut self
             .graphic()
             .colors()
             .into_iter()
-            .filter(|color| {
-                if let Some(color_id) = color.id() {
-                    color_id == id
-                } else {
-                    false
-                }
-            })
-            .collect::<Vec<&IdmlColor>>();
-
-        match color_lookup.len() {
-            0 => {
-                // TOOD: Load swatches so it doenst fail when a swatch is used.
-                //       Just return None for now
-
-                // FIXME: Temporary fix until swatches get implemented
-                if id == "Swatch/None" {
-                    return Err(ColorError::ColorNotImplemented);
-                }
-
-                Err(ColorError::NoColorMatch)
-            }
-            1 => Ok(Some(color_lookup[0].to_pdf_color())),
-            _ => Err(ColorError::MultiColorMatch),
+            .filter(|color| color.id() == id)
+            .map(|color| color as &dyn ToPDFColor)
+            .collect::<Vec<&dyn ToPDFColor>>()
+        );
+        
+        // Append swatches that match id
+        matches.append(
+            &mut self
+            .graphic()
+            .swatches()
+            .into_iter()
+            .filter(|swatch| swatch.id() == id)
+            .map(|swatch| swatch as &dyn ToPDFColor)
+            .collect::<Vec<&dyn ToPDFColor>>()
+        );
+        
+        // Return color if found
+        match matches[..] {
+            []      => Err(ColorError::NoColorMatch),
+            [color] => color.to_pdf_color(),
+            [_, ..] => Err(ColorError::MultiColorMatch),
         }
     }
 }
 
-impl IdmlColor {
-    pub fn to_pdf_color(&self) -> PdfColor {
+pub trait ToPDFColor {
+    fn to_pdf_color(&self) -> Result<PdfColor, ColorError>;
+}
+
+impl ToPDFColor for IdmlColor {
+    fn to_pdf_color(&self) -> Result<PdfColor, ColorError> {
         // println!("Color: {:#?}", &self.color_value());
 
         match (&self.space(), &self.color_value()) {
@@ -71,19 +79,22 @@ impl IdmlColor {
                 // Normalise values
                 let value = value.iter().map(|v| v / 100_f64).collect::<Vec<f64>>();
 
-                PdfColor::Cmyk(Cmyk::new(value[0], value[1], value[2], value[3], None))
+                Ok(PdfColor::Cmyk(Cmyk::new(value[0], value[1], value[2], value[3], None)))
             }
             (Some(ColorSpace::RGB), Some(value)) => {
                 // Normalise values
                 let value = value.iter().map(|v| v / 255_f64).collect::<Vec<f64>>();
 
-                PdfColor::Rgb(Rgb::new(value[0], value[1], value[2], None))
+                Ok(PdfColor::Rgb(Rgb::new(value[0], value[1], value[2], None)))
             }
-            (space, _) => {
-                println!("Color of type '{:#?}' is not implemented yet", space);
-                // Default color is 100% magenta
-                PdfColor::Cmyk(Cmyk::new(0.0, 1.0, 0.0, 0.0, None))
-            }
+            _ => Err(ColorError::ColorNotImplemented)
         }
+    }
+}
+
+impl ToPDFColor for Swatch {
+    fn to_pdf_color(&self) -> Result<PdfColor, ColorError> {
+        // Only the "Swatch/None" should ever be created in IDML, so just default to not implemented yet 
+        Err(ColorError::ColorNotImplemented)
     }
 }
