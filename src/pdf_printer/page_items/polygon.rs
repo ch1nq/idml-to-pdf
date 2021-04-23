@@ -1,9 +1,11 @@
 use crate::idml_parser::spread_parser::*;
 use crate::idml_parser::IDMLResources;
 use crate::pdf_printer::pdf_utils;
+use crate::pdf_printer::color_manager::{Color, Cmyk, Rgb};
 use crate::pdf_printer::transforms::{self, Transform};
-use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
-use printpdf::{Line, PdfDocumentReference, Point, Pt};
+// use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
+// use printpdf::{Line, HPDF_Doc, Point, Pt};
+use libharu_sys::*;
 
 pub trait IsPolygon {
     fn get_properties(&self) -> &Option<Properties>;
@@ -102,10 +104,9 @@ pub trait RenderPolygon {
     fn render(
         &self,
         parent_transform: &Transform,
-        pdf_doc: &PdfDocumentReference,
+        pdf_doc: &HPDF_Doc,
         idml_resources: &IDMLResources,
-        page_index: &Option<PdfPageIndex>,
-        layer_index: &Option<PdfLayerIndex>,
+        current_page: &mut HPDF_Page,
     ) -> Result<(), String>;
 }
 
@@ -113,15 +114,16 @@ impl<T: IsPolygon> RenderPolygon for T {
     fn render(
         &self,
         parent_transform: &Transform,
-        pdf_doc: &PdfDocumentReference,
+        pdf_doc: &HPDF_Doc,
         idml_resources: &IDMLResources,
-        page_index: &Option<PdfPageIndex>,
-        layer_index: &Option<PdfLayerIndex>,
+        current_page: &mut HPDF_Page,
     ) -> Result<(), String> {
+    
+
         let item_transform = transforms::from_vec(self.get_item_transform());
 
         // Parse the points and apply the relevant transformations
-        let mut points: Vec<(Point, bool)> = self
+        let mut points: Vec<HPDF_REAL> = self
             .get_properties()
             .into_iter()
             .filter_map(|point| point.path_geometry().as_ref())
@@ -157,45 +159,15 @@ impl<T: IsPolygon> RenderPolygon for T {
                         })
                         .flat_map(|[a, l, r]| {
                             vec![
-                                // PDF library wants beizer curves in this order:
-                                (
-                                    Point {
-                                        x: Pt(l[0]),
-                                        y: Pt(l[1]),
-                                    },
-                                    true,
-                                ), // Left handle
-                                (
-                                    Point {
-                                        x: Pt(a[0]),
-                                        y: Pt(a[1]),
-                                    },
-                                    false,
-                                ), // Anchor
-                                (
-                                    Point {
-                                        x: Pt(a[0]),
-                                        y: Pt(a[1]),
-                                    },
-                                    true,
-                                ), // Anchor
-                                (
-                                    Point {
-                                        x: Pt(r[0]),
-                                        y: Pt(r[1]),
-                                    },
-                                    true,
-                                ), // Right handle
+                                l[0] as f32, l[1] as f32, // Left handle
+                                a[0] as f32, a[1] as f32, // Anchor
+                                r[0] as f32, r[1] as f32, // Right handle
                             ]
                             .into_iter()
                         })
                 })
             })
             .collect();
-
-        // The PDF library wants the points in a slightly different order
-        // We just need to rotate the vec twice
-        points.rotate_right(2);
 
         // Initialize fill and stroke color to None
         let mut fill_color = idml_resources.color_from_id(&"Swatch/None".to_string());
@@ -230,38 +202,54 @@ impl<T: IsPolygon> RenderPolygon for T {
             stroke_weight = Some(weight.to_owned());
         }
 
-        // Is the shape stroked? Is the shape closed? Is the shape filled?
-        let line = Line {
-            points: points,
-            is_closed: true,
-            has_fill: fill_color.is_ok(),
-            has_stroke: stroke_color.is_ok(),
-            is_clipping_path: false,
-        };
+        unsafe {
+            // Save the current graphic state 
+            HPDF_Page_GSave(*current_page);  
 
-        // Get the current layer of the PDF we are working on
-        let layer = pdf_utils::layer_from_index(pdf_doc, page_index, layer_index)?;
+            // Set line thickness
+            if let Some(weight) = stroke_weight {
+                HPDF_Page_SetLineWidth(*current_page, weight.to_owned() as f32);
+            };
 
-        // Set fill color in pdf
-        match fill_color {
-            Ok(color) => layer.set_fill_color(color),
-            _ => {}
+            // Start drawing from first anchor point
+            HPDF_Page_MoveTo(*current_page, points[2], points[3]);
+
+            // The PDF library wants the points in a slightly different order
+            // We just need to rotate the vec twice
+            points.rotate_right(2);
+
+            // Loop over anchor points and bezier handles 
+            for slice in points.windows(6) {
+                if let &[rx, ry, lx, ly, ax, ay] = slice {
+                    HPDF_Page_CurveTo(*current_page, lx, ly, rx, ry, ax, ay);
+                }
+            }
+            
+            // Set fill color of shape
+            match fill_color {
+                Ok(Color::Cmyk(color)) => {
+                    HPDF_Page_SetCMYKFill(*current_page, *color.c(), *color.m(), *color.y(), *color.k());
+                },
+                Ok(Color::Rgb(color)) => {
+                    HPDF_Page_SetRGBFill(*current_page, *color.r(), *color.g(), *color.b());
+                },
+                _ => {}
+            }
+
+            // Set stroke color of shape
+            match stroke_color {
+                Ok(Color::Cmyk(color)) => {
+                    HPDF_Page_SetCMYKStroke(*current_page, *color.c(), *color.m(), *color.y(), *color.k());
+                },
+                Ok(Color::Rgb(color)) => {
+                    HPDF_Page_SetRGBStroke(*current_page, *color.r(), *color.g(), *color.b());
+                },
+                _ => {}
+            }
+
+            // Restore the previous graphic state 
+            HPDF_Page_GRestore(*current_page);  
         }
-
-        // Set stroke color in pdf
-        match stroke_color {
-            Ok(color) => layer.set_outline_color(color),
-            _ => {}
-        }
-
-        // Set stroke thickness in pdf
-        if let Some(weight) = stroke_weight {
-            layer.set_outline_thickness(weight.to_owned());
-        };
-
-        // Finally, add the polygon to the layer
-        layer.add_shape(line);
-
         Ok(())
     }
 }

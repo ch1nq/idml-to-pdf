@@ -1,6 +1,29 @@
 use crate::idml_parser::graphic_parser::{Color as IdmlColor, Swatch, ColorSpace};
 use crate::idml_parser::IDMLResources;
-use printpdf::{Cmyk, Color as PdfColor, Rgb, SpotColor};
+use derive_getters::Getters;
+// use printpdf::{Cmyk, Color as PdfColor, Rgb, SpotColor};
+
+#[derive(Debug, Getters)]
+pub struct Cmyk {
+    c: f32,
+    m: f32,
+    y: f32,
+    k: f32,
+}
+
+#[derive(Debug, Getters)]
+pub struct Rgb {
+    r: f32,
+    g: f32,
+    b: f32,
+}
+
+#[derive(Debug)]
+pub enum Color {
+    Cmyk(Cmyk),
+    Rgb(Rgb),
+    None
+}
 
 #[derive(Debug)]
 pub enum ColorError {
@@ -25,12 +48,12 @@ impl std::error::Error for ColorError {}
 pub fn color_from_id(
     idml_resources: &IDMLResources,
     id: &String,
-) -> Result<PdfColor, ColorError> {
+) -> Result<Color, ColorError> {
     idml_resources.color_from_id(id)
 }
 
 impl IDMLResources {
-    pub fn color_from_id(&self, id: &String) -> Result<PdfColor, ColorError> {
+    pub fn color_from_id(&self, id: &String) -> Result<Color, ColorError> {
         
         // List to search
         let mut matches = vec![];
@@ -67,11 +90,11 @@ impl IDMLResources {
 }
 
 pub trait ToPDFColor {
-    fn to_pdf_color(&self) -> Result<PdfColor, ColorError>;
+    fn to_pdf_color(&self) -> Result<Color, ColorError>;
 }
 
 impl ToPDFColor for IdmlColor {
-    fn to_pdf_color(&self) -> Result<PdfColor, ColorError> {
+    fn to_pdf_color(&self) -> Result<Color, ColorError> {
         // println!("Color: {:#?}", &self.color_value());
 
         match (&self.space(), &self.color_value()) {
@@ -79,13 +102,22 @@ impl ToPDFColor for IdmlColor {
                 // Normalise values
                 let value = value.iter().map(|v| v / 100_f64).collect::<Vec<f64>>();
 
-                Ok(PdfColor::Cmyk(Cmyk::new(value[0], value[1], value[2], value[3], None)))
+                Ok(Color::Cmyk(Cmyk{
+                    c: value[0] as f32, 
+                    m: value[1] as f32, 
+                    y: value[2] as f32, 
+                    k: value[3] as f32,
+                }))
             }
             (Some(ColorSpace::RGB), Some(value)) => {
                 // Normalise values
                 let value = value.iter().map(|v| v / 255_f64).collect::<Vec<f64>>();
 
-                Ok(PdfColor::Rgb(Rgb::new(value[0], value[1], value[2], None)))
+                Ok(Color::Rgb(Rgb{
+                    r: value[0] as f32, 
+                    g: value[1] as f32, 
+                    b: value[2] as f32,
+                }))
             }
             _ => Err(ColorError::ColorNotImplemented)
         }
@@ -93,7 +125,7 @@ impl ToPDFColor for IdmlColor {
 }
 
 impl ToPDFColor for Swatch {
-    fn to_pdf_color(&self) -> Result<PdfColor, ColorError> {
+    fn to_pdf_color(&self) -> Result<Color, ColorError> {
         // Only the "Swatch/None" should ever be created in IDML, so just default to not implemented yet 
         Err(ColorError::ColorNotImplemented)
     }
