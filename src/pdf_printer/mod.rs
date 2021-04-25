@@ -4,25 +4,32 @@ mod page_items;
 mod pdf_utils;
 mod transforms;
 
-use page_items::polygon::RenderPolygon;
 use libharu_sys::*;
+use page_items::polygon::RenderPolygon;
+use std::ffi::CString;
 use std::path::PathBuf;
 use std::ptr;
-use std::ffi::CString;
 use transforms::Transform;
 // use page_items::textframe;
 // use font_manager::FontLibrary;
 use crate::idml_parser::spread_parser::*;
 use crate::idml_parser::IDMLPackage;
 
-extern fn error_handler(error_no: HPDF_STATUS, detail_no: HPDF_STATUS, _user_data : HPDF_HANDLE) {
-    println!("ERROR: error_no={:#X}, detail_no={:#X}", error_no, detail_no);
+extern "C" fn error_handler(
+    error_no: HPDF_STATUS,
+    detail_no: HPDF_STATUS,
+    _user_data: HPDF_HANDLE,
+) {
+    println!(
+        "ERROR: error_no={:#X}, detail_no={:#X}",
+        error_no, detail_no
+    );
 }
 
 macro_rules! cstring {
     ($fmt:expr) => {
         CString::new($fmt).unwrap()
-    }
+    };
 }
 
 pub struct PDFPrinter {
@@ -40,7 +47,10 @@ impl PDFPrinter {
             if pdf_doc == ptr::null_mut() {
                 return Err(format!("error: cannot create PdfDoc object"));
             }
-            let printer = PDFPrinter{idml_package, pdf_doc};
+            let printer = PDFPrinter {
+                idml_package,
+                pdf_doc,
+            };
             Ok(printer)
         }
     }
@@ -59,11 +69,12 @@ impl PDFPrinter {
         // Udated everytime a new page is created
         let mut current_page = None;
 
-        // Make transformation matrices       
+        // Make transformation matrices
         let invert_y_axis = transforms::from_values(1_f64, 0_f64, 0_f64, -1_f64, 0_f64, 0_f64);
-        let spread_transform = transforms::from_vec(spread.item_transform()).combine_with(&invert_y_axis);
+        let spread_transform =
+            transforms::from_vec(spread.item_transform()).combine_with(&invert_y_axis);
         // let spread_transform = transforms::from_vec(spread.item_transform());
-        
+
         let mut page_transform = transforms::identity();
 
         for content in spread.contents() {
@@ -90,7 +101,7 @@ impl PDFPrinter {
                 // Update page tranformation matrix
                 *page_transform = transforms::from_vec(p.item_transform()).reverse();
                 *page_transform = page_transform.combine_with(spread_transform);
-                
+
                 // Make a new page
                 let page = self
                     .render_blank_page(p, page_transform)
@@ -153,11 +164,9 @@ impl PDFPrinter {
             // Top left and bottom right corners of page
             let point1 = page_transform.apply_to_point(x1, y1);
             let point2 = page_transform.apply_to_point(x2, y2);
-            let width  = point2[0]-point1[0];
-            let height = point2[1]-point1[1];
-            let transpose = &transforms::from_values(
-                1_f64, 0_f64, 0_f64, 1_f64, 0_f64, -height
-            );
+            let width = point2[0] - point1[0];
+            let height = point2[1] - point1[1];
+            let transpose = &transforms::from_values(1_f64, 0_f64, 0_f64, 1_f64, 0_f64, -height);
             *page_transform = page_transform.combine_with(transpose);
 
             unsafe {
@@ -179,7 +188,7 @@ impl PDFPrinter {
         unsafe {
             let fname = cstring!(path);
             HPDF_SaveToFile(self.pdf_doc, fname.as_ptr());
-            HPDF_Free(self.pdf_doc);        
+            HPDF_Free(self.pdf_doc);
         }
         Ok(())
     }
