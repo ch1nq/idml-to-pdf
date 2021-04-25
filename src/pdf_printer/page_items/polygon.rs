@@ -124,6 +124,7 @@ impl<T: IsPolygon> RenderPolygon for T {
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
             .flat_map(|path_point_arrays| {
                 path_point_arrays.into_iter().flat_map(|path_point_array| {
+<<<<<<< HEAD
                     path_point_array
                         .path_point_array()
                         .into_iter()
@@ -143,6 +144,19 @@ impl<T: IsPolygon> RenderPolygon for T {
                                 .apply_to_point(&point[0], &point[1])
                         })
                         .map(|point| point.iter().map(|&a| a as f32).collect())
+=======
+                    path_point_array.path_point_array().into_iter().flat_map(|path_point_type| {
+                        vec!(
+                            // Get anchor point and its two handles for the beizer curve
+                            path_point_type.left_direction().as_ref(),
+                            path_point_type.anchor().as_ref(),
+                            path_point_type.right_direction().as_ref(),
+                        ).into_iter()
+                    })
+                    .filter_map(|point| point)
+                    .map(|point| item_transform.combine_with(&parent_transform).apply_to_point(&point[0], &point[1]))
+                    .map(|point| point.iter().map(|&a| a as f32).collect())
+>>>>>>> 26d57856b8e267000fa0c3854a9085c3148ab861
                 })
             })
             .collect();
@@ -242,8 +256,13 @@ impl<T: IsPolygon> RenderPolygon for T {
             if let Some(last) = points.last() {
                 HPDF_Page_MoveTo(current_page, last[0], last[1]);
             }
+<<<<<<< HEAD
 
             // Draw the rest of the bezier curves
+=======
+            
+            // Draw the rest of the bezier curves  
+>>>>>>> 26d57856b8e267000fa0c3854a9085c3148ab861
             for slice in points.chunks(3) {
                 if let [r, l, a] = slice {
                     HPDF_Page_CurveTo(current_page, r[0], r[1], l[0], l[1], a[0], a[1]);
