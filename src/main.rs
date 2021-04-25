@@ -2,7 +2,7 @@ use idml_to_pdf::decompressor;
 use idml_to_pdf::idml_parser::IDMLPackage;
 use idml_to_pdf::pdf_printer::PDFPrinter;
 use std::path::PathBuf;
-use std::time::{Instant};
+use std::time::Instant;
 
 fn main() {
     std::process::exit(real_main().unwrap());
@@ -35,7 +35,7 @@ fn real_main() -> Result<i32, std::io::Error> {
     // Decrompress idml file into a directory
     let idml_dir = decompressor::decompress_idml(&file_path).unwrap();
 
-    // Parse contents of a directory into an IDML Package 
+    // Parse contents of a directory into an IDML Package
     let start = Instant::now();
     let idml_package = IDMLPackage::from_dir(&idml_dir)?;
     let duration = start.elapsed();
@@ -48,7 +48,7 @@ fn real_main() -> Result<i32, std::io::Error> {
     let duration = start.elapsed();
     println!("Making the PDF took {:.2?}", duration);
 
-    // Save the PDF document 
+    // Save the PDF document
     let start = Instant::now();
     pdf_printer.save_pdf(&pdf_path).unwrap();
     let duration = start.elapsed();

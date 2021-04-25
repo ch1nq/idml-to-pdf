@@ -153,8 +153,8 @@ fn parse_stories(path: &Path) -> Result<Vec<Story>, io::Error> {
     story_dir.push("Stories");
 
     if let Ok(dir) = fs::read_dir(story_dir) {
-        let stories = dir.map(
-            |entry| {
+        let stories = dir
+            .map(|entry| {
                 let path = &entry.unwrap().path();
                 let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
                 story_wrapper.get_story().expect("No story found")
@@ -162,7 +162,7 @@ fn parse_stories(path: &Path) -> Result<Vec<Story>, io::Error> {
             .collect();
         Ok(stories)
     } else {
-        Ok(vec!())
+        Ok(vec![])
     }
 }
 

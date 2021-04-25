@@ -1,4 +1,4 @@
-use crate::idml_parser::graphic_parser::{Color as IdmlColor, Swatch, ColorSpace};
+use crate::idml_parser::graphic_parser::{Color as IdmlColor, ColorSpace, Swatch};
 use crate::idml_parser::IDMLResources;
 use derive_getters::Getters;
 // use printpdf::{Cmyk, Color as PdfColor, Rgb, SpotColor};
@@ -22,7 +22,7 @@ pub struct Rgb {
 pub enum Color {
     Cmyk(Cmyk),
     Rgb(Rgb),
-    None
+    None,
 }
 
 #[derive(Debug)]
@@ -45,44 +45,40 @@ impl std::fmt::Display for ColorError {
 
 impl std::error::Error for ColorError {}
 
-pub fn color_from_id(
-    idml_resources: &IDMLResources,
-    id: &String,
-) -> Result<Color, ColorError> {
+pub fn color_from_id(idml_resources: &IDMLResources, id: &String) -> Result<Color, ColorError> {
     idml_resources.color_from_id(id)
 }
 
 impl IDMLResources {
     pub fn color_from_id(&self, id: &String) -> Result<Color, ColorError> {
-        
         // List to search
         let mut matches = vec![];
-        
+
         // Append colors that match id
         matches.append(
             &mut self
-            .graphic()
-            .colors()
-            .into_iter()
-            .filter(|color| color.id() == id)
-            .map(|color| color as &dyn ToPDFColor)
-            .collect::<Vec<&dyn ToPDFColor>>()
+                .graphic()
+                .colors()
+                .into_iter()
+                .filter(|color| color.id() == id)
+                .map(|color| color as &dyn ToPDFColor)
+                .collect::<Vec<&dyn ToPDFColor>>(),
         );
-        
+
         // Append swatches that match id
         matches.append(
             &mut self
-            .graphic()
-            .swatches()
-            .into_iter()
-            .filter(|swatch| swatch.id() == id)
-            .map(|swatch| swatch as &dyn ToPDFColor)
-            .collect::<Vec<&dyn ToPDFColor>>()
+                .graphic()
+                .swatches()
+                .into_iter()
+                .filter(|swatch| swatch.id() == id)
+                .map(|swatch| swatch as &dyn ToPDFColor)
+                .collect::<Vec<&dyn ToPDFColor>>(),
         );
-        
+
         // Return color if found
         match matches[..] {
-            []      => Err(ColorError::NoColorMatch),
+            [] => Err(ColorError::NoColorMatch),
             [color] => color.to_pdf_color(),
             [_, ..] => Err(ColorError::MultiColorMatch),
         }
@@ -102,10 +98,10 @@ impl ToPDFColor for IdmlColor {
                 // Normalise values
                 let value = value.iter().map(|v| v / 100_f64).collect::<Vec<f64>>();
 
-                Ok(Color::Cmyk(Cmyk{
-                    c: value[0] as f32, 
-                    m: value[1] as f32, 
-                    y: value[2] as f32, 
+                Ok(Color::Cmyk(Cmyk {
+                    c: value[0] as f32,
+                    m: value[1] as f32,
+                    y: value[2] as f32,
                     k: value[3] as f32,
                 }))
             }
@@ -113,20 +109,20 @@ impl ToPDFColor for IdmlColor {
                 // Normalise values
                 let value = value.iter().map(|v| v / 255_f64).collect::<Vec<f64>>();
 
-                Ok(Color::Rgb(Rgb{
-                    r: value[0] as f32, 
-                    g: value[1] as f32, 
+                Ok(Color::Rgb(Rgb {
+                    r: value[0] as f32,
+                    g: value[1] as f32,
                     b: value[2] as f32,
                 }))
             }
-            _ => Err(ColorError::ColorNotImplemented)
+            _ => Err(ColorError::ColorNotImplemented),
         }
     }
 }
 
 impl ToPDFColor for Swatch {
     fn to_pdf_color(&self) -> Result<Color, ColorError> {
-        // Only the "Swatch/None" should ever be created in IDML, so just default to not implemented yet 
+        // Only the "Swatch/None" should ever be created in IDML, so just default to not implemented yet
         Err(ColorError::ColorNotImplemented)
     }
 }
