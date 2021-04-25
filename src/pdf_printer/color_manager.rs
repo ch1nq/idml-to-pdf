@@ -3,7 +3,7 @@ use crate::idml_parser::IDMLResources;
 use derive_getters::Getters;
 // use printpdf::{Cmyk, Color as PdfColor, Rgb, SpotColor};
 
-#[derive(Debug, Getters)]
+#[derive(Debug, Clone, Copy, Getters)]
 pub struct Cmyk {
     c: f32,
     m: f32,
@@ -11,14 +11,14 @@ pub struct Cmyk {
     k: f32,
 }
 
-#[derive(Debug, Getters)]
+#[derive(Debug, Clone, Copy, Getters)]
 pub struct Rgb {
     r: f32,
     g: f32,
     b: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Color {
     Cmyk(Cmyk),
     Rgb(Rgb),

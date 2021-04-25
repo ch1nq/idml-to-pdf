@@ -44,7 +44,7 @@ fn real_main() -> Result<i32, std::io::Error> {
     // Make IDML package into a PDF document
     let start = Instant::now();
     let pdf_printer = PDFPrinter::new(idml_package, font_dir).unwrap();
-    pdf_printer.render_pdf();
+    pdf_printer.render_pdf().unwrap();
     let duration = start.elapsed();
     println!("Making the PDF took {:.2?}", duration);
 
