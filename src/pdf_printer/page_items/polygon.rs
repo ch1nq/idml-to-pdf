@@ -234,16 +234,16 @@ impl<T: IsPolygon> RenderPolygon for T {
                 _ => {}
             }
 
-            // The PDF library wants the points in a slightly different order
-            // We just need to rotate the vec twice
-            points.rotate_right(1);
-
-            // Start drawing from first anchor point
-            if let Some(last) = points.last() {
-                HPDF_Page_MoveTo(current_page, last[0], last[1]);
+            // Start from first anchorpoint
+            if let Some(p) = points.get(1) {
+                HPDF_Page_MoveTo(current_page, p[0], p[1]);
             }
-
-            // Draw the rest of the bezier curves
+            // The PDF library wants the points in a slightly different order
+            match closed_path {
+                true => points.rotate_left(2),
+                false => points = points[2..].to_vec(),
+            }
+            // Draw the rest of the bezier handles
             for slice in points.chunks(3) {
                 if let [r, l, a] = slice {
                     HPDF_Page_CurveTo(current_page, r[0], r[1], l[0], l[1], a[0], a[1]);
