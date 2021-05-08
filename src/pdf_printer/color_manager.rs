@@ -1,7 +1,6 @@
 use crate::idml_parser::graphic_parser::{Color as IdmlColor, ColorSpace, Swatch};
 use crate::idml_parser::IDMLResources;
 use derive_getters::Getters;
-// use printpdf::{Cmyk, Color as PdfColor, Rgb, SpotColor};
 
 #[derive(Debug, Clone, Copy, Getters)]
 pub struct Cmyk {

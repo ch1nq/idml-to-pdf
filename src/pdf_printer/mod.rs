@@ -133,13 +133,13 @@ impl PDFPrinter {
                     current_page.expect("No page found"),
                 )
                 .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
-                // t.render_story(
-                //     page_transform,
-                //     &self.pdf_doc,
-                //     &self.idml_package,
-                //     &mut current_page.expect("No page found"),
-                // )
-                // .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
+                t.render_story(
+                    &self.idml_package,
+                    page_transform,
+                    self.pdf_doc,
+                    current_page.expect("No page found"),
+                )
+                .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
             }
             SpreadContent::Oval(o) => {
                 o.render(

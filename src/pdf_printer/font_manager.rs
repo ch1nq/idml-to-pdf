@@ -1,32 +1,30 @@
 // use crate::idml_parser::IDMLResources;
 // use dirs;
-// // use printpdf::{IndirectFontRef, PdfDocumentReference};
+// use libharu_sys::*;
 // use std::cell::RefCell;
 // use std::collections::HashMap;
+// use std::ffi::CString;
 // use std::fs;
 // use std::iter::FromIterator;
 // use std::path::PathBuf;
+// use std::ptr;
 
 // #[derive(Debug)]
 // pub struct FontLibrary {
-//     fonts: HashMap<(String, String), IndirectFontRef>,
+//     fonts: HashMap<(String, String), HPDF_Font>,
 // }
 
 // impl FontLibrary {
-//     pub fn font_from_idml_name_and_style(
-//         &self,
-//         name: &str,
-//         style: &str,
-//     ) -> Option<&IndirectFontRef> {
+//     pub fn font_from_idml_name_and_style(&self, name: &str, style: &str) -> Option<&HPDF_Font> {
 //         // println!("{} {}", name, style);
 //         self.fonts.get(&(name.to_string(), style.to_string()))
 //     }
 
 //     pub fn new(
 //         idml_resources: &IDMLResources,
-//         pdf_doc: &PdfDocumentReference,
+//         pdf_doc: HPDF_Doc,
 //         resource_dir: &Option<PathBuf>,
-//     ) -> Result<FontLibrary, printpdf::Error> {
+//     ) -> Result<FontLibrary, String> {
 //         // Load every font from every font-family in the IDML resources
 //         let font_refs = idml_resources
 //             .fonts()
@@ -54,11 +52,11 @@
 
 // fn load_font_from_id(
 //     resource_dir: &Option<PathBuf>,
-//     pdf_doc: &PdfDocumentReference,
-//     id: &String,
-// ) -> Result<IndirectFontRef, String> {
+//     pdf_doc: HPDF_Doc,
+//     id: &str,
+// ) -> Result<HPDF_Font, String> {
 //     /// Get a list of paths to every file matching font_name in a given directory
-//     fn find_font_in_dir(font_name: &String, dir: &PathBuf) -> Vec<PathBuf> {
+//     fn find_font_in_dir(font_name: &str, dir: &PathBuf) -> Vec<PathBuf> {
 //         fs::read_dir(dir)
 //             .unwrap()
 //             .map(|entry| entry.unwrap().path())
@@ -88,24 +86,29 @@
 //         // [] => Err("No font matched id".to_string()),
 //         [] => {
 //             // println!("No font matched: {}", id);
-//             // let font = pdf_doc.add_external_font(std::fs::File::open("/Library/Fonts/Arial Unicode.ttf").unwrap()).unwrap();
-//             let font = pdf_doc
-//                 .add_builtin_font(printpdf::BuiltinFont::TimesRoman)
-//                 .unwrap();
+//             let font = HPDF_GetFont(
+//                 pdf_doc,
+//                 CString::new("Times-Roman").unwrap().as_ptr(),
+//                 ptr::null_mut(),
+//             );
 //             Ok(font)
 //         }
 //         [font_path] => {
-//             let font = pdf_doc
-//                 .add_external_font(std::fs::File::open(font_path).unwrap())
-//                 .unwrap();
+//             let font = HPDF_GetFont(
+//                 pdf_doc,
+//                 CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
+//                 ptr::null_mut(),
+//             );
 //             Ok(font)
 //         }
 //         [font_path, ..] => {
 //             // println!("Multiple fonts font matched: {}", id);
 //             // Err(format!("Multiple fonts matched: {}", id).to_string())
-//             let font = pdf_doc
-//                 .add_external_font(std::fs::File::open(font_path).unwrap())
-//                 .unwrap();
+//             let font = HPDF_GetFont(
+//                 pdf_doc,
+//                 CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
+//                 ptr::null_mut(),
+//             );
 //             Ok(font)
 //         }
 //     }
