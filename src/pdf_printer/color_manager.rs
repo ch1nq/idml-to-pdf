@@ -90,8 +90,6 @@ pub trait ToPDFColor {
 
 impl ToPDFColor for IdmlColor {
     fn to_pdf_color(&self) -> Result<Color, ColorError> {
-        // println!("Color: {:#?}", &self.color_value());
-
         match (&self.space(), &self.color_value()) {
             (Some(ColorSpace::CMYK), Some(value)) => {
                 // Normalise values

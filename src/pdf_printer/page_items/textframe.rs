@@ -59,7 +59,10 @@ impl<'a> RenderProperties<'a> {
 
     fn with_font_name(&mut self, style_properties: Option<impl StyleProperties>) -> &mut Self {
         if let Some(p) = style_properties {
-            self.font_name = p.get_applied_font();
+            let font_name = p.get_applied_font();
+            if font_name.is_some() {
+                self.font_name = font_name.clone();
+            }
         }
         self
     }
@@ -122,12 +125,13 @@ impl TextFrame {
         if let Some(story_id) = self.parent_story() {
             if let Ok(story) = idml_package.story_from_id(story_id) {
                 let render_properties = RenderProperties::new(idml_package.resources());
-                if let Some(p_styles) = story.paragraph_style_ranges() {
-                    for p_style in p_styles {
-                        let (left, _right, top, _bottom) = boundingbox(&self, parent_transform);
-                        unsafe {
-                            HPDF_Page_BeginText(current_page);
-                            HPDF_Page_MoveTextPos(current_page, left as f32, top as f32);
+                let bb = boundingbox(&self, parent_transform);
+                unsafe {
+                    HPDF_Page_GSave(current_page);
+                    HPDF_Page_BeginText(current_page);
+                    HPDF_Page_MoveTextPos(current_page, bb.left as f32, bb.top as f32);
+                    if let Some(p_styles) = story.paragraph_style_ranges() {
+                        for p_style in p_styles {
                             &self.render_paragraph_style(
                                 p_style,
                                 &render_properties,
@@ -137,9 +141,10 @@ impl TextFrame {
                                 font_lib,
                                 current_page,
                             )?;
-                            HPDF_Page_EndText(current_page);
                         }
                     }
+                    HPDF_Page_EndText(current_page);
+                    HPDF_Page_GRestore(current_page);
                 }
             }
         }
@@ -158,9 +163,9 @@ impl TextFrame {
     ) -> Result<(), String> {
         let mut render_properties = parent_properties.clone();
 
+        // Apply paragraph style formats
         if let Some(style_id) = p_style.applied_paragraph_style() {
             if let Some(style) = idml_resources.styles().paragraph_style_from_id(style_id) {
-                // Apply paragraph style formats
                 render_properties
                     .with_fill_color(style.fill_color().clone())
                     .with_stroke_color(style.stroke_color().clone())
@@ -186,6 +191,7 @@ impl TextFrame {
                 )?;
             }
         }
+
         Ok(())
     }
 
@@ -201,9 +207,9 @@ impl TextFrame {
     ) -> Result<(), String> {
         let mut render_properties = parent_properties.clone();
 
+        // Apply character style formats
         if let Some(style_id) = c_style.applied_character_style() {
             if let Some(style) = idml_resources.styles().character_style_from_id(style_id) {
-                // Apply character style formats
                 render_properties
                     .with_fill_color(style.fill_color().clone())
                     .with_stroke_color(style.stroke_color().clone())
@@ -213,19 +219,20 @@ impl TextFrame {
                     .with_auto_leading(style.auto_leading().clone());
             }
         }
+
         // Apply local character formats
         render_properties
             .with_fill_color(c_style.fill_color().clone())
             .with_stroke_color(c_style.stroke_color().clone())
+            // .with_font_name(c_style.properties().clone())
             .with_font_style(c_style.font_style().clone())
             .with_font_size(c_style.point_size().clone());
 
         if let Some(contents) = c_style.contents() {
             for content in contents {
-                &self.render_story_contents(
+                &self.render_story_content(
                     content,
                     &render_properties,
-                    idml_resources,
                     parent_transform,
                     pdf_doc,
                     font_lib,
@@ -236,11 +243,10 @@ impl TextFrame {
         Ok(())
     }
 
-    pub fn render_story_contents(
+    pub fn render_story_content(
         &self,
         content: &StoryContent,
-        parent_properties: &RenderProperties,
-        _idml_resources: &IDMLResources,
+        render_properties: &RenderProperties,
         parent_transform: &Transform,
         pdf_doc: HPDF_Doc,
         font_lib: &FontLibrary,
@@ -250,38 +256,47 @@ impl TextFrame {
             match content {
                 StoryContent::Content(text) => {
                     // Font and size
-                    let font = match (&parent_properties.font_name, &parent_properties.font_style) {
+                    let font = match (&render_properties.font_name, &render_properties.font_style) {
                         (Some(f_name), Some(f_style)) => {
                             font_lib.get_font(&f_name, &f_style).unwrap()
                         }
+                        // TODO: Maybe change deafult to output an error in the future
                         _ => HPDF_GetFont(
                             pdf_doc,
-                            CString::new("Helvetica").unwrap().as_ptr(),
+                            CString::new("ZapfDingbats").unwrap().as_ptr(),
                             ptr::null_mut(),
                         ),
                     };
                     HPDF_Page_SetFontAndSize(
                         current_page,
                         font,
-                        parent_properties.font_size.unwrap_or(200_f64) as f32,
+                        render_properties.font_size.unwrap() as f32,
                     );
 
+                    // Color
+                    if let Some(color) = render_properties.fill_color {
+                        set_fill_color(current_page, color);
+                    }
+                    if let Some(color) = render_properties.stroke_color {
+                        set_stroke_color(current_page, color);
+                    }
+
                     // Leading
-                    let leading = parent_properties.auto_leading.unwrap() / 100_f64
-                        * parent_properties.font_size.unwrap();
+                    let leading = render_properties.auto_leading.unwrap() / 100_f64
+                        * render_properties.font_size.unwrap();
                     HPDF_Page_SetTextLeading(current_page, leading as f32);
 
-                    let (_left, right, _top, bottom) = boundingbox(&self, parent_transform);
+                    let bb = boundingbox(&self, parent_transform);
                     let mut text_remaining: &str = text;
                     while text_remaining.len() > 0 {
                         let pos = HPDF_Page_GetCurrentTextPos(current_page);
-                        if (pos.y as f64) < bottom {
+                        if (pos.y as f64) < bb.bottom {
                             break;
                         }
                         let available_chars = HPDF_Page_MeasureText(
                             current_page,
                             CString::new(text_remaining.clone()).unwrap().as_ptr(),
-                            (right as f32) - pos.x,
+                            (bb.right as f32) - pos.x,
                             HPDF_TRUE,
                             ptr::null_mut(),
                         );

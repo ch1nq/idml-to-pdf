@@ -1,9 +1,8 @@
-use crate::idml_parser::fonts_parser::Font;
+use crate::idml_parser::fonts_parser::{Font, FontType};
 use crate::idml_parser::IDMLResources;
 use dirs;
 use libharu_sys::*;
 use std::cell::Cell;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs;
@@ -39,29 +38,34 @@ impl<'a> FontLibrary<'a> {
         };
         match self.fonts.get(&id) {
             Some(cell) => match cell.get() {
+                FontStatus::Initialized(pdf_font) => Ok(pdf_font),
                 FontStatus::Uninitialized(idml_font) => {
-                    if let Ok(pdf_font) = self.load_font_from_id(idml_font.post_script_name()) {
+                    let load_font = |id| self.load_font_from_id(id, idml_font.font_type());
+                    if let Ok(pdf_font) = load_font(idml_font.post_script_name()) {
                         cell.set(FontStatus::Initialized(pdf_font));
                         Ok(pdf_font)
-                    } else if let Ok(pdf_font) =
-                        self.load_font_from_id(idml_font.full_name_native())
-                    {
+                    } else if let Ok(pdf_font) = load_font(idml_font.full_name_native()) {
+                        cell.set(FontStatus::Initialized(pdf_font));
+                        Ok(pdf_font)
+                    } else if let Ok(pdf_font) = load_font(idml_font.full_name()) {
+                        cell.set(FontStatus::Initialized(pdf_font));
+                        Ok(pdf_font)
+                    } else if let Ok(pdf_font) = load_font(idml_font.name()) {
                         cell.set(FontStatus::Initialized(pdf_font));
                         Ok(pdf_font)
                     } else {
                         println!("No font matched: {:#?}", id);
-                        // Return fallback font
                         unsafe {
+                            // Return default font
                             let font = HPDF_GetFont(
                                 self.pdf_doc,
-                                CString::new("ZapfDingbats").unwrap().as_ptr(),
+                                CString::new("Helvetica").unwrap().as_ptr(),
                                 ptr::null_mut(),
                             );
                             Ok(font)
                         }
                     }
                 }
-                FontStatus::Initialized(font) => Ok(font),
             },
             None => Err(format!(
                 "Font not declared in resources: {} {}",
@@ -101,39 +105,64 @@ impl<'a> FontLibrary<'a> {
 
         Ok(font_lib)
     }
-    fn load_font_from_id(&self, id: &str) -> Result<HPDF_Font, String> {
+
+    fn load_font_from_id(&self, id: &str, font_type: &FontType) -> Result<HPDF_Font, String> {
         let mut font_lookup = vec![];
+
         // Search in provided font directory
         if let Some(font_dir) = self.resource_dir {
             font_lookup.append(&mut find_font_in_dir(id, &font_dir));
         }
+
         // Search in the OS font directory
         if let Some(font_dir) = dirs::font_dir() {
             font_lookup.append(&mut find_font_in_dir(id, &font_dir));
         }
+
+        match &font_lookup[..] {
+            [] => Err(format!("No font matched: {}", id)),
+            [font_path] => self.load_font_from_path(font_path, font_type),
+            [font_path, ..] => self.load_font_from_path(font_path, font_type),
+        }
+    }
+
+    fn load_font_from_path(
+        &self,
+        font_path: &PathBuf,
+        font_type: &FontType,
+    ) -> Result<HPDF_Font, String> {
         unsafe {
-            match &font_lookup[..] {
-                [] => Err(format!("No font matched: {}", id)),
-                [font_path] => {
-                    let font_name = HPDF_LoadTTFontFromFile(
+            let font_name = match font_type {
+                FontType::TrueType => HPDF_LoadTTFontFromFile(
+                    self.pdf_doc,
+                    CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
+                    HPDF_FALSE,
+                ),
+                FontType::OpenTypeTT => HPDF_LoadTTFontFromFile(
+                    self.pdf_doc,
+                    CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
+                    HPDF_FALSE,
+                ),
+                FontType::Type1 => {
+                    // Assuming .afm and .fpb have the same file name
+                    let acm = font_path.with_extension("afm");
+                    let pfb = font_path.with_extension("pfb");
+                    HPDF_LoadType1FontFromFile(
                         self.pdf_doc,
-                        CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
-                        HPDF_TRUE,
-                    );
-                    // println!("{:?}: {:#?}", id, font_path);
-                    let font = HPDF_GetFont(self.pdf_doc, font_name, ptr::null_mut());
-                    Ok(font)
+                        CString::new(acm.to_str().unwrap()).unwrap().as_ptr(),
+                        CString::new(pfb.to_str().unwrap()).unwrap().as_ptr(),
+                    )
                 }
-                [font_path, ..] => {
-                    let font_name = HPDF_LoadTTFontFromFile(
-                        self.pdf_doc,
-                        CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
-                        HPDF_FALSE,
-                    );
-                    let font = HPDF_GetFont(self.pdf_doc, font_name, ptr::null_mut());
-                    Ok(font)
+                _ => {
+                    return Err(format!(
+                        "Font with path \"{:?}\" and type \"{:?}\" not implemented yet.",
+                        font_path, font_type
+                    )
+                    .to_string())
                 }
-            }
+            };
+            let font = HPDF_GetFont(self.pdf_doc, font_name, ptr::null_mut());
+            Ok(font)
         }
     }
 }
@@ -143,12 +172,6 @@ fn find_font_in_dir(font_name: &str, dir: &PathBuf) -> Vec<PathBuf> {
     fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
-        .filter(|path| {
-            path.file_stem()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .contains(font_name)
-        })
+        .filter(|path| path.file_stem().unwrap().to_str().unwrap().eq(font_name))
         .collect()
 }

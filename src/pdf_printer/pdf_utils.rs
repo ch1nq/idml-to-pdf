@@ -1,5 +1,5 @@
 use crate::idml_parser::spread_parser::TextFrame;
-use crate::pdf_printer::color_manager::{Color, *};
+use crate::pdf_printer::color_manager::Color;
 use crate::pdf_printer::transforms::{self, *};
 use libharu_sys::*;
 
@@ -31,7 +31,15 @@ pub fn set_stroke_color(page: HPDF_Page, stroke_color: Color) {
     }
 }
 
-pub fn boundingbox(textframe: &TextFrame, parent_transform: &Transform) -> (f64, f64, f64, f64) {
+#[derive(Debug, Clone)]
+pub struct BoundingBox {
+    pub left: f64,
+    pub right: f64,
+    pub top: f64,
+    pub bottom: f64,
+}
+
+pub fn boundingbox(textframe: &TextFrame, parent_transform: &Transform) -> BoundingBox {
     let item_transform = transforms::from_vec(textframe.item_transform());
 
     let points: Vec<(f64, f64)> = textframe
@@ -59,22 +67,27 @@ pub fn boundingbox(textframe: &TextFrame, parent_transform: &Transform) -> (f64,
         .collect();
 
     // Left, right, top and bottom coordinates
-    let &(l, _) = points
+    let &(left, _) = points
         .iter()
         .min_by(|(x1, _), (x2, _)| x1.partial_cmp(&x2).unwrap())
         .unwrap();
-    let &(r, _) = points
+    let &(right, _) = points
         .iter()
         .max_by(|(x1, _), (x2, _)| x1.partial_cmp(&x2).unwrap())
         .unwrap();
-    let &(_, t) = points
+    let &(_, top) = points
         .iter()
         .max_by(|(_, y1), (_, y2)| y1.partial_cmp(&y2).unwrap())
         .unwrap();
-    let &(_, b) = points
+    let &(_, bottom) = points
         .iter()
         .min_by(|(_, y1), (_, y2)| y1.partial_cmp(&y2).unwrap())
         .unwrap();
 
-    (l, r, t, b)
+    BoundingBox {
+        left,
+        right,
+        top,
+        bottom,
+    }
 }
