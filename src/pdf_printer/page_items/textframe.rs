@@ -1,411 +1,336 @@
 use crate::idml_parser::{
     spread_parser::*,
-    story_parser::{
-        CharacterStyleRange,
-        ParagraphStyleRange,
-        Story,
-        // Content,
-        StoryContent,
+    story_parser::*,
+    styles::{
+        character_style::{self},
+        paragraph_style::{self},
     },
-    // styles_parser,
-    styles::{character_style::CharacterStyle, paragraph_style::ParagraphStyle},
-    IDMLPackage,
-    IDMLResources,
+    IDMLPackage, IDMLResources,
 };
+use crate::pdf_printer::pdf_utils::*;
 use crate::pdf_printer::{
-    color_manager::{self, ColorError},
-    pdf_utils,
-    transforms::{self, Transform},
-    FontLibrary,
+    color_manager::{self, Color, *},
+    font_manager::FontLibrary,
+    transforms::*,
 };
-use printpdf::indices::{PdfLayerIndex, PdfPageIndex};
-use printpdf::{
-    IndirectFontRef, Mm, PdfDocumentReference, PdfLayerReference, Pt, TextRenderingMode,
-};
+use libharu_sys::*;
+use std::ffi::CString;
+use std::ptr;
 
-#[derive(Debug, Default, Clone)]
-pub struct TextRenderSettings {
+#[derive(Debug, Clone)]
+pub struct RenderProperties<'a> {
+    idml_resources: &'a IDMLResources,
     font_name: Option<String>,
     font_style: Option<String>,
     font_size: Option<f64>,
-    font: Option<IndirectFontRef>,
-    fill_color: Option<printpdf::Color>,
-    stroke_color: Option<printpdf::Color>,
+    auto_leading: Option<f64>,
+    stroke_color: Option<Color>,
+    fill_color: Option<Color>,
 }
 
-impl TextRenderSettings {
-    fn apply_to_layer(&mut self, layer: &PdfLayerReference, font_library: &FontLibrary) {
-        // If name, style and size are some, then set font
-        match (&self.font_name, &self.font_style, self.font_size) {
-            (Some(name), Some(style), Some(size)) => {
-                if let Some(font) = font_library.font_from_idml_name_and_style(name, style) {
-                    layer.set_font(font, size);
-                    self.font = Some(font.clone());
-                }
-            }
-            _ => {}
-        }
+trait StyleProperties {
+    fn get_applied_font(self) -> Option<String>;
+}
 
-        // Fill color
-        if let Some(color) = &self.fill_color {
-            layer.set_fill_color(color.clone());
-        }
+impl StyleProperties for paragraph_style::ParagraphProperties {
+    fn get_applied_font(self) -> Option<String> {
+        self.applied_font().clone()
+    }
+}
 
-        // Stroke color
-        if let Some(color) = &self.stroke_color {
-            layer.set_outline_color(color.clone());
-        }
+impl StyleProperties for character_style::CharacterProperties {
+    fn get_applied_font(self) -> Option<String> {
+        self.applied_font().clone()
+    }
+}
 
-        match (&self.stroke_color, &self.fill_color) {
-            (Some(_), Some(_)) => layer.set_text_rendering_mode(TextRenderingMode::FillStroke),
-            (Some(_), None) => layer.set_text_rendering_mode(TextRenderingMode::Stroke),
-            (None, Some(_)) => layer.set_text_rendering_mode(TextRenderingMode::Fill),
-            (None, None) => layer.set_text_rendering_mode(TextRenderingMode::Invisible), // <- This might not be the right choice
+impl<'a> RenderProperties<'a> {
+    fn new(idml_resources: &'a IDMLResources) -> Self {
+        RenderProperties {
+            idml_resources,
+            font_name: None,
+            font_style: None,
+            font_size: None,
+            auto_leading: None,
+            stroke_color: None,
+            fill_color: None,
         }
     }
 
-    fn write_text(&mut self, layer: &PdfLayerReference, font_library: &FontLibrary, text: &str) {
-        &self.apply_to_layer(layer, font_library);
-
-        layer.set_line_height(10.0);
-
-        // If name, style and size are some, then we can write the given text
-        if let Some(font) = &self.font {
-            layer.write_text(text, font);
+    fn with_font_name(&mut self, style_properties: Option<impl StyleProperties>) -> &mut Self {
+        if let Some(p) = style_properties {
+            let font_name = p.get_applied_font();
+            if font_name.is_some() {
+                self.font_name = font_name.clone();
+            }
         }
+        self
+    }
+
+    fn with_font_style(&mut self, font_style: Option<String>) -> &mut Self {
+        if font_style.is_some() {
+            self.font_style = font_style.clone();
+        }
+        self
+    }
+
+    fn with_font_size(&mut self, font_size: Option<f64>) -> &mut Self {
+        if font_size.is_some() {
+            self.font_size = font_size.clone();
+        }
+        self
+    }
+
+    fn with_auto_leading(&mut self, auto_leading: Option<f64>) -> &mut Self {
+        if auto_leading.is_some() {
+            self.auto_leading = auto_leading.clone();
+        }
+        self
+    }
+
+    fn with_stroke_color(&mut self, stroke_color: Option<String>) -> &mut Self {
+        if let Some(color_id) = stroke_color {
+            let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
+                Ok(c) => Some(c),
+                Err(ColorError::ColorNotImplemented) => None,
+                Err(_) => None,
+            };
+            self.stroke_color = color;
+        };
+        self
+    }
+
+    fn with_fill_color(&mut self, fill_color: Option<String>) -> &mut Self {
+        if let Some(color_id) = fill_color {
+            let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
+                Ok(c) => Some(c),
+                Err(ColorError::ColorNotImplemented) => None,
+                Err(_) => None,
+            };
+            self.fill_color = color;
+        };
+        self
     }
 }
 
 impl TextFrame {
     pub fn render_story(
         &self,
-        parent_transform: &Transform,
-        pdf_doc: &PdfDocumentReference,
         idml_package: &IDMLPackage,
-        font_library: &FontLibrary,
-        page_index: &Option<PdfPageIndex>,
-        layer_index: &Option<PdfLayerIndex>,
+        parent_transform: &mut Transform,
+        pdf_doc: HPDF_Doc,
+        font_lib: &FontLibrary,
+        current_page: HPDF_Page,
     ) -> Result<(), String> {
-        // Get the current layer of the PDF we are working on
-        let layer = pdf_utils::layer_from_index(pdf_doc, page_index, layer_index)?;
-
-        // Keeps track of changes to things like fonts, colors, stroke width etc.
-        let mut settings = TextRenderSettings::default();
-
-        if let Some(story_id) = &self.parent_story() {
-            if let Some(story) = idml_package.story_from_id(story_id) {
-                // Create a text section in the pdf for the textframe
-                layer.begin_text_section();
-                {
-                    let (x_min, y_min) = &self.topleft_point(parent_transform);
-                    layer.set_text_cursor(*x_min, *y_min);
-
-                    &self.render_paragraph_styles(
-                        story,
-                        &layer,
-                        idml_package.resources(),
-                        font_library,
-                        settings.clone(),
-                        parent_transform,
-                        pdf_doc,
-                    )?;
-                }
-                layer.end_text_section();
-            }
-        }
-
-        settings.apply_to_layer(&layer, font_library);
-
-        Ok(())
-    }
-
-    fn topleft_point(&self, parent_transform: &Transform) -> (Mm, Mm) {
-        let item_transform = transforms::from_vec(&self.item_transform());
-
-        let points: Vec<(Mm, Mm)> = self
-            .properties()
-            .into_iter()
-            .filter_map(|point| point.path_geometry().as_ref())
-            .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
-            .flat_map(|path_point_arrays| {
-                path_point_arrays
-                    .into_iter()
-                    .flat_map(|path_point_array| {
-                        path_point_array
-                            .path_point_array()
-                            .into_iter()
-                            .filter_map(|path_point_type| path_point_type.anchor().as_ref())
-                            .map(|point| {
-                                item_transform
-                                    .combine_with(&parent_transform)
-                                    .apply_to_point(&point[0], &point[1])
-                            })
-                            .map(|point| (Mm::from(Pt(point[0])), Mm::from(Pt(point[1]))))
-                    })
-                    .into_iter()
-            })
-            .collect();
-
-        // Get leftmost x
-        let &(x, _) = points
-            .iter()
-            .min_by(|(x1, _), (x2, _)| x1.partial_cmp(&x2).unwrap())
-            .unwrap();
-
-        // Get uppermost y
-        let &(_, y) = points
-            .iter()
-            .max_by(|(_, y1), (_, y2)| y1.partial_cmp(&y2).unwrap())
-            .unwrap();
-
-        (x, y)
-    }
-
-    pub fn render_paragraph_styles(
-        &self,
-        story: &Story,
-        layer: &PdfLayerReference,
-        idml_resources: &IDMLResources,
-        font_library: &FontLibrary,
-        parent_settings: TextRenderSettings,
-        parent_transform: &Transform,
-        pdf_doc: &PdfDocumentReference,
-    ) -> Result<(), String> {
-        let mut settings = parent_settings;
-
-        match story.paragraph_style_ranges() {
-            Some(p_styles) => {
-                for p_style in p_styles {
-                    if let Some(style_id) = p_style.applied_paragraph_style() {
-                        if let Some(style) =
-                            idml_resources.styles().paragraph_style_from_id(style_id)
-                        {
-                            // Apply paragraph style formats
-                            &self.apply_paragraph_style(
-                                &style,
-                                layer,
-                                idml_resources,
-                                font_library,
-                                &mut settings,
+        if let Some(story_id) = self.parent_story() {
+            if let Ok(story) = idml_package.story_from_id(story_id) {
+                let render_properties = RenderProperties::new(idml_package.resources());
+                let bb = boundingbox(&self, parent_transform);
+                unsafe {
+                    HPDF_Page_GSave(current_page);
+                    HPDF_Page_BeginText(current_page);
+                    HPDF_Page_MoveTextPos(current_page, bb.left as f32, bb.top as f32);
+                    if let Some(p_styles) = story.paragraph_style_ranges() {
+                        for p_style in p_styles {
+                            &self.render_paragraph_style(
+                                p_style,
+                                &render_properties,
+                                idml_package.resources(),
                                 parent_transform,
                                 pdf_doc,
+                                font_lib,
+                                current_page,
                             )?;
                         }
                     }
-
-                    // TODO: Apply local paragraph formats
-
-                    &self.render_character_styles(
-                        p_style,
-                        layer,
-                        idml_resources,
-                        font_library,
-                        settings.clone(),
-                        parent_transform,
-                        pdf_doc,
-                    )?;
+                    HPDF_Page_EndText(current_page);
+                    HPDF_Page_GRestore(current_page);
                 }
             }
-            None => {}
         }
-
         Ok(())
     }
 
-    fn apply_paragraph_style(
+    pub fn render_paragraph_style(
         &self,
-        p_style: &ParagraphStyle,
-        layer: &PdfLayerReference,
+        p_style: &ParagraphStyleRange,
+        parent_properties: &RenderProperties,
         idml_resources: &IDMLResources,
-        font_library: &FontLibrary,
-        settings: &mut TextRenderSettings,
-        _parent_transform: &Transform,
-        _pdf_doc: &PdfDocumentReference,
-    ) -> Result<(), String> {
-        // Fill color
-        if let Some(color_id) = p_style.fill_color() {
-            let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => Some(c),
-                Err(ColorError::ColorNotImplemented) => None,
-                _ => return Err("Color error".to_string()),
-            };
-            // layer.set_fill_color(color);
-            settings.fill_color = color;
-        };
-
-        // Stroke color
-        if let Some(color_id) = p_style.stroke_color() {
-            let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => Some(c),
-                Err(ColorError::ColorNotImplemented) => None,
-                _ => return Err("Color error".to_string()),
-            };
-            // layer.set_outline_color(color);
-            settings.stroke_color = color;
-        };
-
-        // Font name
-        if let Some(p) = p_style.properties() {
-            settings.font_name = p.applied_font().clone();
-        }
-
-        // Font style
-        if p_style.font_style().is_some() {
-            settings.font_style = p_style.font_style().clone();
-        }
-
-        // Font size
-        if p_style.point_size().is_some() {
-            settings.font_size = p_style.point_size().clone();
-        }
-
-        Ok(())
-    }
-
-    pub fn render_character_styles(
-        &self,
-        paragraph_style: &ParagraphStyleRange,
-        layer: &PdfLayerReference,
-        idml_resources: &IDMLResources,
-        font_library: &FontLibrary,
-        parent_settings: TextRenderSettings,
         parent_transform: &Transform,
-        pdf_doc: &PdfDocumentReference,
+        pdf_doc: HPDF_Doc,
+        font_lib: &FontLibrary,
+        current_page: HPDF_Page,
     ) -> Result<(), String> {
-        let mut settings = parent_settings;
+        let mut render_properties = parent_properties.clone();
 
-        match paragraph_style.character_style_ranges() {
-            Some(c_styles) => {
-                for c_style in c_styles {
-                    if let Some(style_id) = c_style.applied_character_style() {
-                        if let Some(style) =
-                            idml_resources.styles().character_style_from_id(style_id)
-                        {
-                            // Apply character style formats
-                            &self.apply_character_style(
-                                &style,
-                                layer,
-                                idml_resources,
-                                font_library,
-                                &mut settings,
-                                parent_transform,
-                                pdf_doc,
-                            );
-                        }
-                    }
-
-                    // TODO: Apply local character formats
-
-                    &self.render_story_contents(
-                        c_style,
-                        layer,
-                        idml_resources,
-                        font_library,
-                        settings.clone(),
-                        parent_transform,
-                        pdf_doc,
-                    );
-                }
+        // Apply paragraph style formats
+        if let Some(style_id) = p_style.applied_paragraph_style() {
+            if let Some(style) = idml_resources.styles().paragraph_style_from_id(style_id) {
+                render_properties
+                    .with_fill_color(style.fill_color().clone())
+                    .with_stroke_color(style.stroke_color().clone())
+                    .with_font_name(style.properties().clone())
+                    .with_font_style(style.font_style().clone())
+                    .with_font_size(style.point_size().clone())
+                    .with_auto_leading(style.auto_leading().clone());
             }
-            None => {}
+        }
+
+        // TODO: Apply local paragraph formats
+
+        if let Some(c_styles) = p_style.character_style_ranges() {
+            for c_style in c_styles {
+                &self.render_character_style(
+                    c_style,
+                    &render_properties,
+                    idml_resources,
+                    parent_transform,
+                    pdf_doc,
+                    font_lib,
+                    current_page,
+                )?;
+            }
         }
 
         Ok(())
     }
 
-    fn apply_character_style(
+    pub fn render_character_style(
         &self,
-        c_style: &CharacterStyle,
-        layer: &PdfLayerReference,
+        c_style: &CharacterStyleRange,
+        parent_properties: &RenderProperties,
         idml_resources: &IDMLResources,
-        font_library: &FontLibrary,
-        settings: &mut TextRenderSettings,
-        _parent_transform: &Transform,
-        _pdf_doc: &PdfDocumentReference,
+        parent_transform: &Transform,
+        pdf_doc: HPDF_Doc,
+        font_lib: &FontLibrary,
+        current_page: HPDF_Page,
     ) -> Result<(), String> {
-        // Fill color
-        if let Some(color_id) = c_style.fill_color() {
-            let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => Some(c),
-                Err(ColorError::ColorNotImplemented) => None,
-                _ => return Err("Color error".to_string()),
-            };
-            // layer.set_fill_color(color);
-            settings.fill_color = color;
-        };
+        let mut render_properties = parent_properties.clone();
 
-        // Stroke color
-        if let Some(color_id) = c_style.stroke_color() {
-            let color = match color_manager::color_from_id(idml_resources, color_id) {
-                Ok(c) => Some(c),
-                Err(ColorError::ColorNotImplemented) => None,
-                _ => return Err("Color error".to_string()),
-            };
-            // layer.set_outline_color(color);
-            settings.stroke_color = color;
-        };
-
-        // Font name
-        if let Some(p) = c_style.properties() {
-            settings.font_name = p.applied_font().clone();
+        // Apply character style formats
+        if let Some(style_id) = c_style.applied_character_style() {
+            if let Some(style) = idml_resources.styles().character_style_from_id(style_id) {
+                render_properties
+                    .with_fill_color(style.fill_color().clone())
+                    .with_stroke_color(style.stroke_color().clone())
+                    .with_font_name(style.properties().clone())
+                    .with_font_style(style.font_style().clone())
+                    .with_font_size(style.point_size().clone())
+                    .with_auto_leading(style.auto_leading().clone());
+            }
         }
 
-        // Font style
-        if c_style.font_style().is_some() {
-            settings.font_style = c_style.font_style().clone();
-        }
+        // Apply local character formats
+        render_properties
+            .with_fill_color(c_style.fill_color().clone())
+            .with_stroke_color(c_style.stroke_color().clone())
+            // .with_font_name(c_style.properties().clone())
+            .with_font_style(c_style.font_style().clone())
+            .with_font_size(c_style.point_size().clone());
 
-        // Font size
-        if c_style.point_size().is_some() {
-            settings.font_size = c_style.point_size().clone();
+        if let Some(contents) = c_style.contents() {
+            for content in contents {
+                &self.render_story_content(
+                    content,
+                    &render_properties,
+                    parent_transform,
+                    pdf_doc,
+                    font_lib,
+                    current_page,
+                );
+            }
         }
-
         Ok(())
     }
 
-    pub fn render_story_contents(
+    pub fn render_story_content(
         &self,
-        character_style: &CharacterStyleRange,
-        layer: &PdfLayerReference,
-        _idml_resources: &IDMLResources,
-        font_library: &FontLibrary,
-        parent_settings: TextRenderSettings,
-        _parent_transform: &Transform,
-        _pdf_doc: &PdfDocumentReference,
+        content: &StoryContent,
+        render_properties: &RenderProperties,
+        parent_transform: &Transform,
+        pdf_doc: HPDF_Doc,
+        font_lib: &FontLibrary,
+        current_page: HPDF_Page,
     ) -> Result<(), String> {
-        let mut settings = parent_settings.clone();
-
-        match character_style.contents() {
-            Some(contents) => {
-                for content in contents {
-                    match content {
-                        StoryContent::Content(text) => {
-                            // TODO: Actually add the correct font
-
-                            // let font = pdf_doc.add_external_font(std::fs::File::open("/Library/Fonts/Arial Unicode.ttf").unwrap()).unwrap();
-                            // layer.set_font(&font, 12.0);
-
-                            // layer.set_line_height(10.0);
-                            // layer.set_character_spacing(1.0);
-                            // layer.set_text_rendering_mode(TextRenderingMode::Fill);
-                            settings.write_text(layer, font_library, text);
+        unsafe {
+            match content {
+                StoryContent::Content(text) => {
+                    // Font and size
+                    let font = match (&render_properties.font_name, &render_properties.font_style) {
+                        (Some(f_name), Some(f_style)) => {
+                            font_lib.get_font(&f_name, &f_style).unwrap()
                         }
-                        StoryContent::Br => {
-                            layer.add_line_break();
+                        // TODO: Maybe change deafult to output an error in the future
+                        _ => HPDF_GetFont(
+                            pdf_doc,
+                            CString::new("ZapfDingbats").unwrap().as_ptr(),
+                            ptr::null_mut(),
+                        ),
+                    };
+                    HPDF_Page_SetFontAndSize(
+                        current_page,
+                        font,
+                        render_properties.font_size.unwrap() as f32,
+                    );
+
+                    // Color
+                    if let Some(color) = render_properties.fill_color {
+                        set_fill_color(current_page, color);
+                    }
+                    if let Some(color) = render_properties.stroke_color {
+                        set_stroke_color(current_page, color);
+                    }
+
+                    // Leading
+                    let leading = render_properties.auto_leading.unwrap() / 100_f64
+                        * render_properties.font_size.unwrap();
+                    HPDF_Page_SetTextLeading(current_page, leading as f32);
+
+                    let bb = boundingbox(&self, parent_transform);
+                    let mut text_remaining: &str = text;
+                    while text_remaining.len() > 0 {
+                        let pos = HPDF_Page_GetCurrentTextPos(current_page);
+                        if (pos.y as f64) < bb.bottom {
+                            break;
                         }
-                        _ => {}
+                        let available_chars = HPDF_Page_MeasureText(
+                            current_page,
+                            CString::new(text_remaining.clone()).unwrap().as_ptr(),
+                            (bb.right as f32) - pos.x,
+                            HPDF_TRUE,
+                            ptr::null_mut(),
+                        );
+                        if available_chars > 0 {
+                            let (text_to_print, remaning) =
+                                text_remaining.split_at(available_chars as usize);
+                            text_remaining = remaning;
+                            HPDF_Page_ShowText(
+                                current_page,
+                                CString::new(text_to_print).unwrap().as_ptr(),
+                            );
+                        } else {
+                            HPDF_Page_MoveToNextLine(current_page);
+                        }
                     }
                 }
+                StoryContent::Br => {
+                    HPDF_Page_MoveToNextLine(current_page);
+                }
+                _ => {}
             }
-            None => {}
         }
-
         Ok(())
     }
 }
 
+#[derive(Debug, Clone)]
+enum StoryError {
+    NoStoryMatched(String),
+    MultipleStoriesMatched(String),
+}
+
 impl IDMLPackage {
-    pub fn story_from_id(&self, id: &String) -> Option<&Story> {
+    fn story_from_id(&self, id: &str) -> Result<&Story, StoryError> {
         // Search through object styles and find one matching the given id
         // Note: Maybe more effecient to implement stories as a HashMap,
         //       to make lookups faster in the future
@@ -416,11 +341,9 @@ impl IDMLPackage {
             .collect();
 
         match stories.len() {
-            0 => None,
-            1 => Some(stories[0]),
-            _ => {
-                panic!("Multiple stories match the same id '{}' ", id);
-            }
+            0 => Err(StoryError::NoStoryMatched(id.to_string())),
+            1 => Ok(stories[0]),
+            _ => Err(StoryError::MultipleStoriesMatched(id.to_string())),
         }
     }
 }

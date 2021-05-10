@@ -33,7 +33,7 @@ pub struct Font {
     font_family: String,
     font_style_name: String,
     font_style_name_native: String,
-    font_type: FontTypes,
+    font_type: FontType,
     full_name: String,
     full_name_native: String,
     name: String,
@@ -45,7 +45,7 @@ pub struct Font {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-pub enum FontTypes {
+pub enum FontType {
     Type1,
     TrueType,
     CID,
@@ -59,9 +59,9 @@ pub enum FontTypes {
     Unknown,
 }
 
-impl Default for FontTypes {
+impl Default for FontType {
     fn default() -> Self {
-        FontTypes::Unknown
+        FontType::Unknown
     }
 }
 

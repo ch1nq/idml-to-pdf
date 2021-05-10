@@ -37,8 +37,9 @@ pub struct ParagraphStyleRange {
 pub struct CharacterStyleRange {
     applied_character_style: Option<String>,
     fill_color: Option<String>,
+    stroke_color: Option<String>,
     font_style: Option<String>,
-    point_size: Option<String>,
+    point_size: Option<f64>,
     properties: Option<Properties>,
     #[serde(rename = "$value")]
     contents: Option<Vec<StoryContent>>,

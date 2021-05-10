@@ -152,15 +152,18 @@ fn parse_stories(path: &Path) -> Result<Vec<Story>, io::Error> {
     let mut story_dir = PathBuf::from(path);
     story_dir.push("Stories");
 
-    let stories = fs::read_dir(story_dir)?
-        .map(|entry| {
-            let path = &entry.unwrap().path();
-            let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
-            story_wrapper.get_story().expect("No story found")
-        })
-        .collect();
-
-    Ok(stories)
+    if let Ok(dir) = fs::read_dir(story_dir) {
+        let stories = dir
+            .map(|entry| {
+                let path = &entry.unwrap().path();
+                let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
+                story_wrapper.get_story().expect("No story found")
+            })
+            .collect();
+        Ok(stories)
+    } else {
+        Ok(vec![])
+    }
 }
 
 fn parse_master_spreads(path: &Path) -> Result<Vec<Spread>, io::Error> {
