@@ -124,7 +124,7 @@ impl TextFrame {
                 let render_properties = RenderProperties::new(idml_package.resources());
                 if let Some(p_styles) = story.paragraph_style_ranges() {
                     for p_style in p_styles {
-                        let (left, right, top, bottom) = boundingbox(&self, parent_transform);
+                        let (left, _right, top, _bottom) = boundingbox(&self, parent_transform);
                         unsafe {
                             HPDF_Page_BeginText(current_page);
                             HPDF_Page_MoveTextPos(current_page, left as f32, top as f32);
@@ -249,14 +249,11 @@ impl TextFrame {
         unsafe {
             match content {
                 StoryContent::Content(text) => {
-                    // TODO: Actually add the correct font
-
                     // Font and size
-                    // let font =
                     let font = match (&parent_properties.font_name, &parent_properties.font_style) {
-                        (Some(f_name), Some(f_style)) => *font_lib
-                            .font_from_idml_name_and_style(&f_name, &f_style)
-                            .unwrap(),
+                        (Some(f_name), Some(f_style)) => {
+                            font_lib.get_font(&f_name, &f_style).unwrap()
+                        }
                         _ => HPDF_GetFont(
                             pdf_doc,
                             CString::new("Helvetica").unwrap().as_ptr(),
@@ -274,25 +271,31 @@ impl TextFrame {
                         * parent_properties.font_size.unwrap();
                     HPDF_Page_SetTextLeading(current_page, leading as f32);
 
-                    let (left, right, top, bottom) = boundingbox(&self, parent_transform);
+                    let (_left, right, _top, bottom) = boundingbox(&self, parent_transform);
                     let mut text_remaining: &str = text;
                     while text_remaining.len() > 0 {
-                        HPDF_Page_MoveToNextLine(current_page);
+                        let pos = HPDF_Page_GetCurrentTextPos(current_page);
+                        if (pos.y as f64) < bottom {
+                            break;
+                        }
                         let available_chars = HPDF_Page_MeasureText(
                             current_page,
                             CString::new(text_remaining.clone()).unwrap().as_ptr(),
-                            (right - left) as f32,
+                            (right as f32) - pos.x,
                             HPDF_TRUE,
                             ptr::null_mut(),
                         );
-                        let (text_to_print, remaning) =
-                            text_remaining.split_at(available_chars as usize);
-                        text_remaining = remaning;
-
-                        HPDF_Page_ShowText(
-                            current_page,
-                            CString::new(text_to_print).unwrap().as_ptr(),
-                        );
+                        if available_chars > 0 {
+                            let (text_to_print, remaning) =
+                                text_remaining.split_at(available_chars as usize);
+                            text_remaining = remaning;
+                            HPDF_Page_ShowText(
+                                current_page,
+                                CString::new(text_to_print).unwrap().as_ptr(),
+                            );
+                        } else {
+                            HPDF_Page_MoveToNextLine(current_page);
+                        }
                     }
                 }
                 StoryContent::Br => {

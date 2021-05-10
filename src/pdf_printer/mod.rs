@@ -27,24 +27,24 @@ macro_rules! cstring {
     };
 }
 
-pub struct PDFPrinter {
-    idml_package: IDMLPackage,
-    font_lib: FontLibrary,
+pub struct PDFPrinter<'a> {
+    idml_package: &'a IDMLPackage,
+    font_lib: FontLibrary<'a>,
     pdf_doc: HPDF_Doc,
 }
 
-impl PDFPrinter {
+impl<'a> PDFPrinter<'a> {
     pub fn new(
-        idml_package: IDMLPackage,
-        resource_dir: Option<PathBuf>,
-    ) -> Result<PDFPrinter, String> {
+        idml_package: &'a IDMLPackage,
+        resource_dir: &'a Option<PathBuf>,
+    ) -> Result<PDFPrinter<'a>, String> {
         unsafe {
             let pdf_doc = HPDF_New(error_handler, ptr::null_mut());
             if pdf_doc == ptr::null_mut() {
                 return Err(format!("error: cannot create PdfDoc object"));
             }
             let font_lib =
-                FontLibrary::new(&idml_package.resources(), pdf_doc, &resource_dir).unwrap();
+                FontLibrary::new(&idml_package.resources(), pdf_doc, resource_dir).unwrap();
             let printer = PDFPrinter {
                 idml_package,
                 font_lib,
