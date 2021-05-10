@@ -4,25 +4,20 @@ mod page_items;
 mod pdf_utils;
 mod transforms;
 
+use crate::idml_parser::spread_parser::*;
+use crate::idml_parser::IDMLPackage;
+use font_manager::FontLibrary;
 use libharu_sys::*;
 use page_items::polygon::RenderPolygon;
 use std::ffi::CString;
 use std::path::PathBuf;
 use std::ptr;
 use transforms::Transform;
-// use page_items::textframe;
-// use font_manager::FontLibrary;
-use crate::idml_parser::spread_parser::*;
-use crate::idml_parser::IDMLPackage;
 
-extern "C" fn error_handler(
-    error_no: HPDF_STATUS,
-    detail_no: HPDF_STATUS,
-    _user_data: HPDF_HANDLE,
-) {
+extern "C" fn error_handler(error_no: HPDF_STATUS, detail_no: HPDF_STATUS, user_data: HPDF_HANDLE) {
     println!(
-        "ERROR: error_no={:#X}, detail_no={:#X}",
-        error_no, detail_no
+        "ERROR: error_no={:#X}, detail_no={:#X}, user_data={:?}",
+        error_no, detail_no, user_data
     );
 }
 
@@ -34,21 +29,25 @@ macro_rules! cstring {
 
 pub struct PDFPrinter {
     idml_package: IDMLPackage,
+    font_lib: FontLibrary,
     pdf_doc: HPDF_Doc,
 }
 
 impl PDFPrinter {
     pub fn new(
         idml_package: IDMLPackage,
-        _resource_dir: Option<PathBuf>,
+        resource_dir: Option<PathBuf>,
     ) -> Result<PDFPrinter, String> {
         unsafe {
             let pdf_doc = HPDF_New(error_handler, ptr::null_mut());
             if pdf_doc == ptr::null_mut() {
                 return Err(format!("error: cannot create PdfDoc object"));
             }
+            let font_lib =
+                FontLibrary::new(&idml_package.resources(), pdf_doc, &resource_dir).unwrap();
             let printer = PDFPrinter {
                 idml_package,
+                font_lib,
                 pdf_doc,
             };
             Ok(printer)
@@ -137,6 +136,7 @@ impl PDFPrinter {
                     &self.idml_package,
                     page_transform,
                     self.pdf_doc,
+                    &self.font_lib,
                     current_page.expect("No page found"),
                 )
                 .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());

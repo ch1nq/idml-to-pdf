@@ -22,6 +22,7 @@ pub struct CharacterStyle {
     point_size: Option<f64>,
     stroke_weight: Option<f64>,
     stroke_color: Option<String>,
+    auto_leading: Option<f64>,
     properties: Option<CharacterProperties>,
 }
 
@@ -93,6 +94,7 @@ impl Style for CharacterStyle {
             point_size,
             stroke_color,
             stroke_weight,
+            auto_leading,
         )
     }
 }

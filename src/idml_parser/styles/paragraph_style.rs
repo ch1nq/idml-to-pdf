@@ -23,6 +23,7 @@ pub struct ParagraphStyle {
     stroke_weight: Option<f64>,
     stroke_color: Option<String>,
     point_size: Option<f64>,
+    auto_leading: Option<f64>,
     properties: Option<ParagraphProperties>,
 }
 
@@ -94,6 +95,7 @@ impl Style for ParagraphStyle {
             stroke_color,
             stroke_weight,
             point_size,
+            auto_leading,
         )
     }
 }
