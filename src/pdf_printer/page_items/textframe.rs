@@ -57,52 +57,56 @@ impl<'a> RenderProperties<'a> {
         }
     }
 
-    fn set_font_name(&mut self, style_properties: Option<impl StyleProperties>) {
+    fn with_font_name(&mut self, style_properties: Option<impl StyleProperties>) -> &mut Self {
         if let Some(p) = style_properties {
             self.font_name = p.get_applied_font();
         }
+        self
     }
 
-    fn set_font_style(&mut self, font_style: Option<String>) {
+    fn with_font_style(&mut self, font_style: Option<String>) -> &mut Self {
         if font_style.is_some() {
             self.font_style = font_style.clone();
         }
+        self
     }
 
-    fn set_font_size(&mut self, font_size: Option<f64>) {
+    fn with_font_size(&mut self, font_size: Option<f64>) -> &mut Self {
         if font_size.is_some() {
             self.font_size = font_size.clone();
         }
+        self
     }
 
-    fn set_auto_leading(&mut self, auto_leading: Option<f64>) {
+    fn with_auto_leading(&mut self, auto_leading: Option<f64>) -> &mut Self {
         if auto_leading.is_some() {
             self.auto_leading = auto_leading.clone();
         }
+        self
     }
 
-    fn set_stroke_color(&mut self, stroke_color: Option<String>) -> Result<(), ColorError> {
+    fn with_stroke_color(&mut self, stroke_color: Option<String>) -> &mut Self {
         if let Some(color_id) = stroke_color {
             let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
                 Ok(c) => Some(c),
                 Err(ColorError::ColorNotImplemented) => None,
-                Err(e) => return Err(e),
+                Err(_) => None,
             };
             self.stroke_color = color;
         };
-        Ok(())
+        self
     }
 
-    fn set_fill_color(&mut self, fill_color: Option<String>) -> Result<(), ColorError> {
+    fn with_fill_color(&mut self, fill_color: Option<String>) -> &mut Self {
         if let Some(color_id) = fill_color {
             let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
                 Ok(c) => Some(c),
                 Err(ColorError::ColorNotImplemented) => None,
-                Err(e) => return Err(e),
+                Err(_) => None,
             };
             self.fill_color = color;
         };
-        Ok(())
+        self
     }
 }
 
@@ -157,12 +161,13 @@ impl TextFrame {
         if let Some(style_id) = p_style.applied_paragraph_style() {
             if let Some(style) = idml_resources.styles().paragraph_style_from_id(style_id) {
                 // Apply paragraph style formats
-                render_properties.set_fill_color(style.fill_color().clone());
-                render_properties.set_stroke_color(style.stroke_color().clone());
-                render_properties.set_font_name(style.properties().clone());
-                render_properties.set_font_style(style.font_style().clone());
-                render_properties.set_font_size(style.point_size().clone());
-                render_properties.set_auto_leading(style.auto_leading().clone());
+                render_properties
+                    .with_fill_color(style.fill_color().clone())
+                    .with_stroke_color(style.stroke_color().clone())
+                    .with_font_name(style.properties().clone())
+                    .with_font_style(style.font_style().clone())
+                    .with_font_size(style.point_size().clone())
+                    .with_auto_leading(style.auto_leading().clone());
             }
         }
 
@@ -199,16 +204,21 @@ impl TextFrame {
         if let Some(style_id) = c_style.applied_character_style() {
             if let Some(style) = idml_resources.styles().character_style_from_id(style_id) {
                 // Apply character style formats
-                render_properties.set_fill_color(style.fill_color().clone());
-                render_properties.set_stroke_color(style.stroke_color().clone());
-                render_properties.set_font_name(style.properties().clone());
-                render_properties.set_font_style(style.font_style().clone());
-                render_properties.set_font_size(style.point_size().clone());
-                render_properties.set_auto_leading(style.auto_leading().clone());
+                render_properties
+                    .with_fill_color(style.fill_color().clone())
+                    .with_stroke_color(style.stroke_color().clone())
+                    .with_font_name(style.properties().clone())
+                    .with_font_style(style.font_style().clone())
+                    .with_font_size(style.point_size().clone())
+                    .with_auto_leading(style.auto_leading().clone());
             }
         }
-
-        // TODO: Apply local character formats
+        // Apply local character formats
+        render_properties
+            .with_fill_color(c_style.fill_color().clone())
+            .with_stroke_color(c_style.stroke_color().clone())
+            .with_font_style(c_style.font_style().clone())
+            .with_font_size(c_style.point_size().clone());
 
         if let Some(contents) = c_style.contents() {
             for content in contents {
