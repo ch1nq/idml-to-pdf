@@ -9,6 +9,7 @@ use crate::idml_parser::IDMLPackage;
 use font_manager::FontLibrary;
 use libharu_sys::*;
 use page_items::polygon::RenderPolygon;
+use std::cell::RefCell;
 use std::ffi::CString;
 use std::path::PathBuf;
 use std::ptr;
@@ -31,6 +32,7 @@ pub struct PDFPrinter<'a> {
     idml_package: &'a IDMLPackage,
     font_lib: FontLibrary<'a>,
     pdf_doc: HPDF_Doc,
+    current_page: RefCell<Option<HPDF_Page>>,
 }
 
 impl<'a> PDFPrinter<'a> {
@@ -45,18 +47,27 @@ impl<'a> PDFPrinter<'a> {
             }
             let font_lib =
                 FontLibrary::new(&idml_package.resources(), pdf_doc, resource_dir).unwrap();
+            let current_page = RefCell::default();
             let printer = PDFPrinter {
                 idml_package,
                 font_lib,
                 pdf_doc,
+                current_page,
             };
             Ok(printer)
         }
     }
 
+    /// Render each spread in the IDML Package
     pub fn render_pdf(&self) -> Result<(), String> {
-        // Render each spread
-        for spread in self.idml_package.spreads() {
+        for spread in self.idml_package.spreads().iter().rev() {
+            // Render applied master spread first
+            if let Some(master_id) = spread.applied_master() {
+                if let Some(master_spread) = self.idml_package.master_spread_with_id(master_id) {
+                    self.render_spread(&master_spread)
+                        .expect(format!("Failed to render master spread {:?}", master_id).as_str());
+                }
+            }
             self.render_spread(spread)
                 .expect(format!("Failed to render spread {:?}", spread).as_str());
         }
@@ -64,25 +75,18 @@ impl<'a> PDFPrinter<'a> {
     }
 
     fn render_spread(&self, spread: &Spread) -> Result<(), String> {
-        // References to page and layer index
-        // Udated everytime a new page is created
-        let mut current_page = None;
-
-        // Make transformation matrices
-        let invert_y_axis = transforms::from_values(1_f64, 0_f64, 0_f64, -1_f64, 0_f64, 0_f64);
-        let spread_transform =
-            transforms::from_vec(spread.item_transform()).combine_with(&invert_y_axis);
-        // let spread_transform = transforms::from_vec(spread.item_transform());
-
+        // We are setting the transpose of the spread matrix to (0,0)
+        // as the PDF does not account for the spread transpose. If we
+        // don't do this, the content of each page will most likely
+        // be rendered outside the actual PDF page.
+        let invert_y_axis = transforms::identity().with_scale(1_f64, -1_f64);
+        let spread_transform = transforms::from_vec(spread.item_transform())
+            .with_transpose(0_f64, 0_f64)
+            .combine_with(&invert_y_axis);
         let mut page_transform = transforms::identity();
 
         for content in spread.contents() {
-            self.render_spread_content(
-                content,
-                &spread_transform,
-                &mut page_transform,
-                &mut current_page,
-            )?;
+            self.render_spread_content(content, &spread_transform, &mut page_transform)?;
         }
 
         Ok(())
@@ -93,13 +97,13 @@ impl<'a> PDFPrinter<'a> {
         content: &SpreadContent,
         spread_transform: &Transform,
         page_transform: &mut Transform,
-        current_page: &mut Option<HPDF_Page>,
     ) -> Result<(), String> {
         match content {
             SpreadContent::Page(p) => {
                 // Update page tranformation matrix
-                *page_transform = transforms::from_vec(p.item_transform()).reverse();
-                *page_transform = page_transform.combine_with(spread_transform);
+                *page_transform = transforms::from_vec(p.item_transform())
+                    .reverse()
+                    .combine_with(spread_transform);
 
                 // Make a new page
                 let page = self
@@ -107,13 +111,13 @@ impl<'a> PDFPrinter<'a> {
                     .expect(format!("Failed to render page '{}'", p.id()).as_str());
 
                 // Update the current page reference
-                *current_page = Some(page);
+                self.current_page.replace(Some(page));
             }
             SpreadContent::Rectangle(r) => {
                 r.render(
                     page_transform,
                     &self.idml_package.resources(),
-                    current_page.expect("No page found"),
+                    self.current_page.borrow().expect("No page found"),
                 )
                 .expect(format!("Failed to render rectangle '{}'", r.id()).as_str());
             }
@@ -121,7 +125,7 @@ impl<'a> PDFPrinter<'a> {
                 p.render(
                     page_transform,
                     &self.idml_package.resources(),
-                    current_page.expect("No page found"),
+                    self.current_page.borrow().expect("No page found"),
                 )
                 .expect(format!("Failed to render polygon '{}'", p.id()).as_str());
             }
@@ -129,15 +133,14 @@ impl<'a> PDFPrinter<'a> {
                 t.render(
                     page_transform,
                     &self.idml_package.resources(),
-                    current_page.expect("No page found"),
+                    self.current_page.borrow().expect("No page found"),
                 )
                 .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
                 t.render_story(
                     &self.idml_package,
                     page_transform,
-                    self.pdf_doc,
                     &self.font_lib,
-                    current_page.expect("No page found"),
+                    self.current_page.borrow().expect("No page found"),
                 )
                 .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
             }
@@ -145,7 +148,7 @@ impl<'a> PDFPrinter<'a> {
                 o.render(
                     page_transform,
                     &self.idml_package.resources(),
-                    current_page.expect("No page found"),
+                    self.current_page.borrow().expect("No page found"),
                 )
                 .expect(format!("Failed to render oval '{}'", o.id()).as_str());
             }
@@ -169,8 +172,8 @@ impl<'a> PDFPrinter<'a> {
             let transpose = &transforms::from_values(1_f64, 0_f64, 0_f64, 1_f64, 0_f64, -height);
             *page_transform = page_transform.combine_with(transpose);
 
+            // Generate the page in the PDF
             unsafe {
-                // Generate the page in the PDF
                 let current_page = HPDF_AddPage(self.pdf_doc);
                 HPDF_Page_SetWidth(current_page, width.abs() as f32);
                 HPDF_Page_SetHeight(current_page, height.abs() as f32);

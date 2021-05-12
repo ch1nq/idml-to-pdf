@@ -95,6 +95,15 @@ impl IDMLPackage {
 
         Ok(idml_package)
     }
+
+    pub fn master_spread_with_id(&self, id: &str) -> Option<&Spread> {
+        for spread in self.master_spreads.iter() {
+            if spread.id().as_ref().unwrap() == id {
+                return Some(spread);
+            }
+        }
+        None
+    }
 }
 
 fn parse_design_map(path: &Path) -> Result<DesignMap, io::Error> {

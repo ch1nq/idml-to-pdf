@@ -90,7 +90,7 @@ pub struct Page {
     snapshot_blending_mode: Option<String>,
     tab_order: Option<String>,
     use_master_grid: bool,
-    margin_preference: MarginPreference,
+    // margin_preference: MarginPreference,
     properties: Properties,
 }
 
@@ -109,19 +109,19 @@ pub struct Color {
     b: f64,
 }
 
-#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
-#[serde(rename_all = "PascalCase")]
-pub struct MarginPreference {
-    column_count: i32,
-    column_gutter: i32,
-    top: i32,
-    bottom: i32,
-    left: i32,
-    right: i32,
-    column_direction: String,
-    #[serde(deserialize_with = "deserialize_space_seperated_vec")]
-    columns_positions: Vec<f64>,
-}
+// #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
+// #[serde(rename_all = "PascalCase")]
+// pub struct MarginPreference {
+//     column_count: i32, // One of these i32's causes an error when deserializing
+//     column_gutter: i32,
+//     top: i32,
+//     bottom: i32,
+//     left: i32,
+//     right: i32,
+//     column_direction: String,
+//     #[serde(deserialize_with = "deserialize_space_seperated_vec")]
+//     columns_positions: Vec<f64>,
+// }
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]

@@ -1,4 +1,4 @@
-use ndarray::{arr1, arr2, Array2};
+use ndarray::{arr1, arr2, Array2, Ix2};
 use ndarray_linalg::Inverse;
 
 #[derive(Debug)]
@@ -95,5 +95,46 @@ impl Transform {
 
     pub fn reverse(&self) -> Transform {
         reverse(&self)
+    }
+
+    fn with_updated_value_at_index(self, value: f64, index: Ix2) -> Transform {
+        let mut new_matrix = self.matrix;
+        new_matrix[index] = value;
+        Transform {
+            matrix: new_matrix,
+            inverse: None,
+        }
+    }
+
+    pub fn with_a(self, a: f64) -> Transform {
+        self.with_updated_value_at_index(a, Ix2(0, 0))
+    }
+
+    pub fn with_b(self, b: f64) -> Transform {
+        self.with_updated_value_at_index(b, Ix2(0, 1))
+    }
+
+    pub fn with_c(self, c: f64) -> Transform {
+        self.with_updated_value_at_index(c, Ix2(1, 0))
+    }
+
+    pub fn with_d(self, d: f64) -> Transform {
+        self.with_updated_value_at_index(d, Ix2(1, 1))
+    }
+
+    pub fn with_e(self, e: f64) -> Transform {
+        self.with_updated_value_at_index(e, Ix2(2, 0))
+    }
+
+    pub fn with_f(self, f: f64) -> Transform {
+        self.with_updated_value_at_index(f, Ix2(2, 1))
+    }
+
+    pub fn with_transpose(self, x: f64, y: f64) -> Transform {
+        self.with_e(x).with_f(y)
+    }
+
+    pub fn with_scale(self, x_scale: f64, y_scale: f64) -> Transform {
+        self.with_a(x_scale).with_d(y_scale)
     }
 }

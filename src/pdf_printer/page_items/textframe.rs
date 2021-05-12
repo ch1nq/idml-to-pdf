@@ -118,7 +118,6 @@ impl TextFrame {
         &self,
         idml_package: &IDMLPackage,
         parent_transform: &mut Transform,
-        pdf_doc: HPDF_Doc,
         font_lib: &FontLibrary,
         current_page: HPDF_Page,
     ) -> Result<(), String> {
@@ -130,6 +129,7 @@ impl TextFrame {
                     HPDF_Page_GSave(current_page);
                     HPDF_Page_BeginText(current_page);
                     HPDF_Page_MoveTextPos(current_page, bb.left as f32, bb.top as f32);
+                    let mut has_offset = false;
                     if let Some(p_styles) = story.paragraph_style_ranges() {
                         for p_style in p_styles {
                             &self.render_paragraph_style(
@@ -137,9 +137,9 @@ impl TextFrame {
                                 &render_properties,
                                 idml_package.resources(),
                                 parent_transform,
-                                pdf_doc,
                                 font_lib,
                                 current_page,
+                                &mut has_offset,
                             )?;
                         }
                     }
@@ -157,9 +157,9 @@ impl TextFrame {
         parent_properties: &RenderProperties,
         idml_resources: &IDMLResources,
         parent_transform: &Transform,
-        pdf_doc: HPDF_Doc,
         font_lib: &FontLibrary,
         current_page: HPDF_Page,
+        has_offset: &mut bool,
     ) -> Result<(), String> {
         let mut render_properties = parent_properties.clone();
 
@@ -185,9 +185,9 @@ impl TextFrame {
                     &render_properties,
                     idml_resources,
                     parent_transform,
-                    pdf_doc,
                     font_lib,
                     current_page,
+                    has_offset,
                 )?;
             }
         }
@@ -201,9 +201,9 @@ impl TextFrame {
         parent_properties: &RenderProperties,
         idml_resources: &IDMLResources,
         parent_transform: &Transform,
-        pdf_doc: HPDF_Doc,
         font_lib: &FontLibrary,
         current_page: HPDF_Page,
+        has_offset: &mut bool,
     ) -> Result<(), String> {
         let mut render_properties = parent_properties.clone();
 
@@ -234,9 +234,9 @@ impl TextFrame {
                     content,
                     &render_properties,
                     parent_transform,
-                    pdf_doc,
                     font_lib,
                     current_page,
+                    has_offset,
                 );
             }
         }
@@ -248,9 +248,9 @@ impl TextFrame {
         content: &StoryContent,
         render_properties: &RenderProperties,
         parent_transform: &Transform,
-        pdf_doc: HPDF_Doc,
         font_lib: &FontLibrary,
         current_page: HPDF_Page,
+        has_offset: &mut bool,
     ) -> Result<(), String> {
         unsafe {
             match content {
@@ -260,12 +260,11 @@ impl TextFrame {
                         (Some(f_name), Some(f_style)) => {
                             font_lib.get_font(&f_name, &f_style).unwrap()
                         }
-                        // TODO: Maybe change deafult to output an error in the future
-                        _ => HPDF_GetFont(
-                            pdf_doc,
-                            CString::new("ZapfDingbats").unwrap().as_ptr(),
-                            ptr::null_mut(),
-                        ),
+                        _ => {
+                            return Err(format!(
+                                "Cannot print text. Please set font name and style"
+                            ))
+                        }
                     };
                     HPDF_Page_SetFontAndSize(
                         current_page,
@@ -285,6 +284,11 @@ impl TextFrame {
                     let leading = render_properties.auto_leading.unwrap() / 100_f64
                         * render_properties.font_size.unwrap();
                     HPDF_Page_SetTextLeading(current_page, leading as f32);
+
+                    if *has_offset == false {
+                        *has_offset = true;
+                        HPDF_Page_MoveToNextLine(current_page);
+                    }
 
                     let bb = boundingbox(&self, parent_transform);
                     let mut text_remaining: &str = text;
