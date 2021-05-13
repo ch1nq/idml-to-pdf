@@ -122,7 +122,7 @@ impl TextFrame {
         current_page: HPDF_Page,
     ) -> Result<(), String> {
         if let Some(story_id) = self.parent_story() {
-            if let Ok(story) = idml_package.story_from_id(story_id) {
+            if let Some(story) = idml_package.stories().get(story_id) {
                 let render_properties = RenderProperties::new(idml_package.resources());
                 let bb = boundingbox(&self, parent_transform);
                 unsafe {
@@ -324,30 +324,5 @@ impl TextFrame {
             }
         }
         Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-enum StoryError {
-    NoStoryMatched(String),
-    MultipleStoriesMatched(String),
-}
-
-impl IDMLPackage {
-    fn story_from_id(&self, id: &str) -> Result<&Story, StoryError> {
-        // Search through object styles and find one matching the given id
-        // Note: Maybe more effecient to implement stories as a HashMap,
-        //       to make lookups faster in the future
-        let stories: Vec<&Story> = self
-            .stories()
-            .iter()
-            .filter(|&story| story.id() == id)
-            .collect();
-
-        match stories.len() {
-            0 => Err(StoryError::NoStoryMatched(id.to_string())),
-            1 => Ok(stories[0]),
-            _ => Err(StoryError::MultipleStoriesMatched(id.to_string())),
-        }
     }
 }

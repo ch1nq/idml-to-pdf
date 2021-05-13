@@ -60,7 +60,8 @@ impl<'a> PDFPrinter<'a> {
 
     /// Render each spread in the IDML Package
     pub fn render_pdf(&self) -> Result<(), String> {
-        for spread in self.idml_package.spreads().iter().rev() {
+        for spread_id in self.idml_package.designmap().spread_ids() {
+            let spread = self.idml_package.spreads().get(spread_id).unwrap();
             // Render applied master spread first
             if let Some(master_id) = spread.applied_master() {
                 if let Some(master_spread) = self.idml_package.master_spread_with_id(master_id) {

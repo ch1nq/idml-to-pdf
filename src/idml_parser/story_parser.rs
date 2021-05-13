@@ -69,8 +69,6 @@ pub struct Content {
 
 pub fn parse_story_from_path(path: &Path) -> Result<StoryWrapper, DeError> {
     let xml = std::fs::read_to_string(path).unwrap();
-
-    // serde_xml_rs::from_str(xml.as_str())
     from_str(xml.as_str())
 }
 

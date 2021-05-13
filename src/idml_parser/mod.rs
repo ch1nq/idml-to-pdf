@@ -1,3 +1,4 @@
+pub mod designmap_parser;
 pub mod fonts_parser;
 mod formats;
 pub mod graphic_parser;
@@ -9,9 +10,11 @@ pub mod styles_parser;
 use derive_getters::Getters;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
+use designmap_parser::DesignMap;
 use fonts_parser::IdPkgFonts;
 use graphic_parser::IdPkgGraphic;
 use spread_parser::Spread;
@@ -24,18 +27,11 @@ pub struct IDMLPackage {
     mimetype: String,
     designmap: DesignMap,
     resources: IDMLResources,
-    master_spreads: Vec<Spread>,
-    spreads: Vec<Spread>,
-    stories: Vec<Story>,
+    master_spreads: HashMap<String, Spread>,
+    spreads: HashMap<String, Spread>,
+    stories: HashMap<String, Story>,
     xml: IdmlXml,
     meta_inf: MetaInf,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct DesignMap {
-    master_spreads_src: HashMap<String, String>,
-    spreads_src: HashMap<String, String>,
-    stories_src: HashMap<String, String>,
 }
 
 #[derive(Deserialize, Debug, Getters)]
@@ -97,27 +93,14 @@ impl IDMLPackage {
     }
 
     pub fn master_spread_with_id(&self, id: &str) -> Option<&Spread> {
-        for spread in self.master_spreads.iter() {
-            if spread.id().as_ref().unwrap() == id {
-                return Some(spread);
-            }
-        }
-        None
+        self.master_spreads.get(id)
     }
 }
 
-fn parse_design_map(path: &Path) -> Result<DesignMap, io::Error> {
-    let mut dir = PathBuf::from(path);
-    dir.push("designmap.xml");
-
-    let design_map = DesignMap {
-        // Just dummy entries for now
-        master_spreads_src: HashMap::new(),
-        spreads_src: HashMap::new(),
-        stories_src: HashMap::new(),
-    };
-
-    Ok(design_map)
+fn parse_design_map(path: &Path) -> Result<DesignMap, quick_xml::DeError> {
+    let mut xml_path = PathBuf::from(path);
+    xml_path.push("designmap.xml");
+    designmap_parser::parse_designmap_from_path(&xml_path)
 }
 
 fn parse_resources(path: &Path) -> Result<IDMLResources, io::Error> {
@@ -157,50 +140,45 @@ fn parse_resources(path: &Path) -> Result<IDMLResources, io::Error> {
     Ok(resources)
 }
 
-fn parse_stories(path: &Path) -> Result<Vec<Story>, io::Error> {
+fn parse_stories(path: &Path) -> Result<HashMap<String, Story>, io::Error> {
     let mut story_dir = PathBuf::from(path);
     story_dir.push("Stories");
 
     if let Ok(dir) = fs::read_dir(story_dir) {
-        let stories = dir
-            .map(|entry| {
-                let path = &entry.unwrap().path();
-                let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
-                story_wrapper.get_story().expect("No story found")
-            })
-            .collect();
-        Ok(stories)
+        let stories = dir.map(|entry| {
+            let path = &entry.unwrap().path();
+            let story_wrapper = story_parser::parse_story_from_path(path).unwrap();
+            let story = story_wrapper.get_story().expect("No story found");
+            (story.id().clone(), story)
+        });
+        Ok(HashMap::from_iter(stories))
     } else {
-        Ok(vec![])
+        Ok(HashMap::default())
     }
 }
 
-fn parse_master_spreads(path: &Path) -> Result<Vec<Spread>, io::Error> {
+fn parse_master_spreads(path: &Path) -> Result<HashMap<String, Spread>, io::Error> {
     let mut spread_dir = PathBuf::from(path);
     spread_dir.push("MasterSpreads");
 
-    let master_spreads = (fs::read_dir(spread_dir)?)
-        .map(|entry| {
-            let path = &entry.unwrap().path();
-            let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
-            spread_wrapper.get_spread()
-        })
-        .collect();
-
-    Ok(master_spreads)
+    let master_spreads = (fs::read_dir(spread_dir)?).map(|entry| {
+        let path = &entry.unwrap().path();
+        let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
+        let spread = spread_wrapper.get_spread();
+        (spread.id().clone().unwrap(), spread)
+    });
+    Ok(HashMap::from_iter(master_spreads))
 }
 
-fn parse_spreads(path: &Path) -> Result<Vec<Spread>, io::Error> {
+fn parse_spreads(path: &Path) -> Result<HashMap<String, Spread>, io::Error> {
     let mut spread_dir = PathBuf::from(path);
     spread_dir.push("Spreads");
 
-    let spreads = (fs::read_dir(spread_dir)?)
-        .map(|entry| {
-            let path = &entry.unwrap().path();
-            let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
-            spread_wrapper.get_spread()
-        })
-        .collect();
-
-    Ok(spreads)
+    let spreads = (fs::read_dir(spread_dir)?).map(|entry| {
+        let path = &entry.unwrap().path();
+        let spread_wrapper = spread_parser::parse_spread_from_path(path).unwrap();
+        let spread = spread_wrapper.get_spread();
+        (spread.id().clone().unwrap(), spread)
+    });
+    Ok(HashMap::from_iter(spreads))
 }
