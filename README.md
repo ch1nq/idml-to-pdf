@@ -1,7 +1,7 @@
 # IDML parser
 An IDML parser built using Rust, that will eventually be able to produce PDFs similar to ones exported directly from InDesign. 
 
-Currenltly the parsing of IDML into Rust structures is done using [quick-xml](https://docs.rs/quick-xml/0.20.0/quick_xml/) and serde, while the generating of PDF's is done using [printpdf](https://github.com/fschutt/printpdf).
+Currenltly the parsing of IDML into Rust structures is done using [quick-xml](https://docs.rs/quick-xml/0.20.0/quick_xml/) and serde, while the generating of PDF's is done using [LibHaru](https://github.com/libharu/libharu).
 
 ## Examples
 No real examples at the moment 😢 but they will be added continuously, as more features are supported. However, take a look in the [test folder](./test), where you will find tests of generated PDFs using incomplete features. 
