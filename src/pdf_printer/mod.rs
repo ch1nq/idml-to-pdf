@@ -61,13 +61,6 @@ impl<'a> PDFPrinter<'a> {
     /// Render each spread in the IDML Package
     pub fn render_pdf(&self) -> Result<(), String> {
         for spread in self.idml_package.spreads().iter().rev() {
-            // Render applied master spread first
-            if let Some(master_id) = spread.applied_master() {
-                if let Some(master_spread) = self.idml_package.master_spread_with_id(master_id) {
-                    self.render_spread(&master_spread)
-                        .expect(format!("Failed to render master spread {:?}", master_id).as_str());
-                }
-            }
             self.render_spread(spread)
                 .expect(format!("Failed to render spread {:?}", spread).as_str());
         }
@@ -101,17 +94,25 @@ impl<'a> PDFPrinter<'a> {
         match content {
             SpreadContent::Page(p) => {
                 // Update page tranformation matrix
-                *page_transform = transforms::from_vec(p.item_transform())
-                    .reverse()
-                    .combine_with(spread_transform);
+                let master_spread: Option<&Spread> = match p.applied_master() {
+                    Some(master_id) => self.idml_package.master_spread_with_id(master_id),
+                    None => None,
+                };
 
-                // Make a new page
-                let page = self
-                    .render_blank_page(p, page_transform)
-                    .expect(format!("Failed to render page '{}'", p.id()).as_str());
-
-                // Update the current page reference
-                self.current_page.replace(Some(page));
+                // Recursively render the master spreads.
+                if let Some(spread) = master_spread {
+                    self.render_spread(spread).expect(
+                        format!("Failed to render master spread {:?}", spread.id()).as_str(),
+                    );
+                } else {
+                    // Only add a page to the PDF once we have reached
+                    // the bottom of the recursion of the master spreads
+                    let page = self
+                        .render_blank_page(p, page_transform)
+                        .expect(format!("Failed to render page '{}'", p.id()).as_str());
+                    // Update the current page reference
+                    self.current_page.replace(Some(page));
+                }
             }
             SpreadContent::Rectangle(r) => {
                 r.render(

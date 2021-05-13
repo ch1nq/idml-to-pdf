@@ -117,7 +117,7 @@ impl TextFrame {
     pub fn render_story(
         &self,
         idml_package: &IDMLPackage,
-        parent_transform: &mut Transform,
+        parent_transform: &Transform,
         font_lib: &FontLibrary,
         current_page: HPDF_Page,
     ) -> Result<(), String> {
@@ -312,6 +312,7 @@ impl TextFrame {
                                 current_page,
                                 CString::new(text_to_print).unwrap().as_ptr(),
                             );
+                            println!("{}: {:?}, {:?}", text_to_print, pos.x, pos.y);
                         } else {
                             HPDF_Page_MoveToNextLine(current_page);
                         }
