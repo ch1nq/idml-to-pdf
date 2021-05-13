@@ -40,30 +40,30 @@ impl<'a> FontLibrary<'a> {
             Some(cell) => match cell.get() {
                 FontStatus::Initialized(pdf_font) => Ok(pdf_font),
                 FontStatus::Uninitialized(idml_font) => {
-                    let load_font = |id| self.load_font_from_id(id, idml_font.font_type());
-                    if let Ok(pdf_font) = load_font(idml_font.post_script_name()) {
-                        cell.set(FontStatus::Initialized(pdf_font));
-                        Ok(pdf_font)
-                    } else if let Ok(pdf_font) = load_font(idml_font.full_name_native()) {
-                        cell.set(FontStatus::Initialized(pdf_font));
-                        Ok(pdf_font)
-                    } else if let Ok(pdf_font) = load_font(idml_font.full_name()) {
-                        cell.set(FontStatus::Initialized(pdf_font));
-                        Ok(pdf_font)
-                    } else if let Ok(pdf_font) = load_font(idml_font.name()) {
-                        cell.set(FontStatus::Initialized(pdf_font));
-                        Ok(pdf_font)
-                    } else {
-                        println!("No font matched: {:#?}", id);
-                        unsafe {
-                            // Return default font
-                            let font = HPDF_GetFont(
-                                self.pdf_doc,
-                                CString::new("Helvetica").unwrap().as_ptr(),
-                                ptr::null_mut(),
-                            );
-                            Ok(font)
+                    // Try finding a font file matching one of these names
+                    // Load the first found font file matching
+                    let possible_ids = [
+                        idml_font.post_script_name(),
+                        idml_font.full_name_native(),
+                        idml_font.full_name(),
+                        idml_font.name(),
+                    ];
+                    for id in possible_ids.iter() {
+                        if let Ok(pdf_font) = self.load_font_from_id(id, idml_font.font_type()) {
+                            cell.set(FontStatus::Initialized(pdf_font));
+                            return Ok(pdf_font);
                         }
+                    }
+
+                    // We were not able to find a font - set a default instead
+                    println!("No font matched: {:?}", id);
+                    unsafe {
+                        let font = HPDF_GetFont(
+                            self.pdf_doc,
+                            CString::new("Helvetica").unwrap().as_ptr(),
+                            ptr::null_mut(),
+                        );
+                        Ok(font)
                     }
                 }
             },
@@ -139,6 +139,11 @@ impl<'a> FontLibrary<'a> {
                     HPDF_FALSE,
                 ),
                 FontType::OpenTypeTT => HPDF_LoadTTFontFromFile(
+                    self.pdf_doc,
+                    CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
+                    HPDF_FALSE,
+                ),
+                FontType::OpenTypeCFF => HPDF_LoadTTFontFromFile(
                     self.pdf_doc,
                     CString::new(font_path.to_str().unwrap()).unwrap().as_ptr(),
                     HPDF_FALSE,
