@@ -3,9 +3,10 @@ pub mod fonts_parser;
 mod formats;
 pub mod graphic_parser;
 pub mod spread_parser;
-pub mod story_parser;
+#[macro_use]
 pub mod styles;
 pub mod styles_parser;
+pub mod story_parser;
 
 use derive_getters::Getters;
 use serde::Deserialize;

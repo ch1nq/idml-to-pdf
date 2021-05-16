@@ -1,7 +1,9 @@
+use super::formats::*;
 use derive_getters::Getters;
 use quick_xml::de::{from_str, DeError};
 use serde::Deserialize;
 use std::path::Path;
+use crate::idml_parser::styles::commom_text_properties::*;
 
 #[derive(Default, Deserialize, Debug, Getters)]
 #[serde(rename = "idPkg:Story")]
@@ -23,35 +25,28 @@ pub struct Story {
     paragraph_style_ranges: Option<Vec<ParagraphStyleRange>>,
 }
 
-#[derive(Default, Deserialize, Debug, Getters)]
-#[serde(rename_all = "PascalCase")]
-pub struct ParagraphStyleRange {
-    applied_paragraph_style: Option<String>,
-    justification: Option<String>,
-    #[serde(rename = "CharacterStyleRange")]
-    character_style_ranges: Option<Vec<CharacterStyleRange>>,
+common_text_properties_struct! {
+    ParagraphStyleRange {
+        #[serde(rename = "CharacterStyleRange")]
+        character_style_ranges: Option<Vec<CharacterStyleRange>>,
+    }
 }
 
-#[derive(Default, Deserialize, Debug, Getters)]
-#[serde(rename_all = "PascalCase")]
-pub struct CharacterStyleRange {
-    applied_character_style: Option<String>,
-    fill_color: Option<String>,
-    stroke_color: Option<String>,
-    font_style: Option<String>,
-    point_size: Option<f64>,
-    properties: Option<Properties>,
-    #[serde(rename = "$value")]
-    contents: Option<Vec<StoryContent>>,
+common_text_properties_struct! {
+    CharacterStyleRange {
+        properties: Option<Properties>,
+        #[serde(rename = "$value")]
+        contents: Option<Vec<StoryContent>>,
+    }
 }
 
-#[derive(Default, Deserialize, Debug, Getters)]
+#[derive(Default, Deserialize, Debug, Clone, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
 pub struct Properties {
     applied_font: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub enum StoryContent {
     Properties(Properties),
     Content(String),

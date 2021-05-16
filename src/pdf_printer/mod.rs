@@ -8,7 +8,6 @@ use crate::idml_parser::spread_parser::*;
 use crate::idml_parser::IDMLPackage;
 use font_manager::FontLibrary;
 use libharu_sys::*;
-use page_items::polygon::RenderPolygon;
 use std::cell::RefCell;
 use std::ffi::CString;
 use std::path::PathBuf;
@@ -114,44 +113,24 @@ impl<'a> PDFPrinter<'a> {
                 // Update the current page reference
                 self.current_page.replace(Some(page));
             }
-            SpreadContent::Rectangle(r) => {
-                r.render(
-                    page_transform,
-                    &self.idml_package.resources(),
-                    self.current_page.borrow().expect("No page found"),
-                )
-                .expect(format!("Failed to render rectangle '{}'", r.id()).as_str());
-            }
-            SpreadContent::Polygon(p) => {
-                p.render(
-                    page_transform,
-                    &self.idml_package.resources(),
-                    self.current_page.borrow().expect("No page found"),
-                )
-                .expect(format!("Failed to render polygon '{}'", p.id()).as_str());
-            }
-            SpreadContent::TextFrame(t) => {
-                t.render(
-                    page_transform,
-                    &self.idml_package.resources(),
-                    self.current_page.borrow().expect("No page found"),
-                )
-                .expect(format!("Failed to render textframe '{}'", t.id()).as_str());
-                t.render_story(
-                    &self.idml_package,
-                    page_transform,
-                    &self.font_lib,
-                    self.current_page.borrow().expect("No page found"),
-                )
-                .expect(format!("Failed to render story of textframe '{}'", t.id()).as_str());
-            }
-            SpreadContent::Oval(o) => {
-                o.render(
-                    page_transform,
-                    &self.idml_package.resources(),
-                    self.current_page.borrow().expect("No page found"),
-                )
-                .expect(format!("Failed to render oval '{}'", o.id()).as_str());
+            SpreadContent::Polygon(polygon) => {
+                polygon
+                    .render(
+                        page_transform,
+                        &self.idml_package.resources(),
+                        self.current_page.borrow().expect("No page found"),
+                    )
+                    .expect(format!("Failed to render textframe '{}'", polygon.id()).as_str());
+                polygon
+                    .render_story(
+                        &self.idml_package,
+                        page_transform,
+                        &self.font_lib,
+                        self.current_page.borrow().expect("No page found"),
+                    )
+                    .expect(
+                        format!("Failed to render story of textframe '{}'", polygon.id()).as_str(),
+                    );
             }
             _ => {}
         }

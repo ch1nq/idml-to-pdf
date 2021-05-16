@@ -1,7 +1,3 @@
-pub mod character_style;
-pub mod object_style;
-pub mod paragraph_style;
-
 use std::borrow::Cow;
 
 pub trait Style {
@@ -60,3 +56,29 @@ pub trait StyleGroup<T: Style + Clone + std::fmt::Debug> {
         Cow::Borrowed(style)
     }
 }
+
+// Macros for making a struct calling choose on every field
+#[macro_export]        
+macro_rules! choose_fields {
+    (
+        $self:ident,
+        $child:ident,
+        $parent:ident,
+        $StructName:ident { $($manual_fields:tt)* },
+        $($field:ident),+ $(,)?
+    ) => {
+        $StructName {
+            $(
+                $field: $self.choose($child.$field().clone(), $parent.$field().clone()),
+            )+
+            $($manual_fields)*,
+            ..($parent).clone()
+        }
+    }
+}
+
+#[macro_use]
+pub mod commom_text_properties;
+pub mod object_style;
+pub mod paragraph_style;
+pub mod character_style;

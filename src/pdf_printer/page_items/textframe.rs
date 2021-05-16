@@ -113,7 +113,7 @@ impl<'a> RenderProperties<'a> {
     }
 }
 
-impl TextFrame {
+impl Polygon {
     pub fn render_story(
         &self,
         idml_package: &IDMLPackage,

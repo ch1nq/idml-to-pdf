@@ -5,120 +5,18 @@ use crate::pdf_printer::color_manager::Color;
 use crate::pdf_printer::transforms::{self, Transform};
 use libharu_sys::*;
 
-pub trait IsPolygon {
-    fn get_properties(&self) -> &Option<Properties>;
-    fn get_item_transform(&self) -> &Option<Vec<f64>>;
-    fn get_fill_color(&self) -> &Option<String>;
-    fn get_stroke_color(&self) -> &Option<String>;
-    fn get_stroke_weight(&self) -> &Option<f64>;
-    fn get_object_style(&self) -> &Option<String>;
-}
-
-impl IsPolygon for Polygon {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
-    fn get_fill_color(&self) -> &Option<String> {
-        &self.fill_color()
-    }
-    fn get_stroke_color(&self) -> &Option<String> {
-        &self.stroke_color()
-    }
-    fn get_stroke_weight(&self) -> &Option<f64> {
-        &self.stroke_weight()
-    }
-    fn get_object_style(&self) -> &Option<String> {
-        &self.applied_object_style()
-    }
-}
-
-impl IsPolygon for Rectangle {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
-    fn get_fill_color(&self) -> &Option<String> {
-        &self.fill_color()
-    }
-    fn get_stroke_color(&self) -> &Option<String> {
-        &self.stroke_color()
-    }
-    fn get_stroke_weight(&self) -> &Option<f64> {
-        &self.stroke_weight()
-    }
-    fn get_object_style(&self) -> &Option<String> {
-        &self.applied_object_style()
-    }
-}
-
-impl IsPolygon for Oval {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
-    fn get_fill_color(&self) -> &Option<String> {
-        &self.fill_color()
-    }
-    fn get_stroke_color(&self) -> &Option<String> {
-        &self.stroke_color()
-    }
-    fn get_stroke_weight(&self) -> &Option<f64> {
-        &self.stroke_weight()
-    }
-    fn get_object_style(&self) -> &Option<String> {
-        &self.applied_object_style()
-    }
-}
-
-impl IsPolygon for TextFrame {
-    fn get_properties(&self) -> &Option<Properties> {
-        &self.properties()
-    }
-    fn get_item_transform(&self) -> &Option<Vec<f64>> {
-        &self.item_transform()
-    }
-    fn get_fill_color(&self) -> &Option<String> {
-        &self.fill_color()
-    }
-    fn get_stroke_color(&self) -> &Option<String> {
-        &self.stroke_color()
-    }
-    fn get_stroke_weight(&self) -> &Option<f64> {
-        &self.stroke_weight()
-    }
-    fn get_object_style(&self) -> &Option<String> {
-        &self.applied_object_style()
-    }
-}
-
-pub trait RenderPolygon {
-    fn render(
-        &self,
-        parent_transform: &Transform,
-        idml_resources: &IDMLResources,
-        current_page: HPDF_Page,
-    ) -> Result<(), String>;
-}
-
-impl<T: IsPolygon> RenderPolygon for T {
-    fn render(
+impl Polygon {
+    pub fn render(
         &self,
         parent_transform: &Transform,
         idml_resources: &IDMLResources,
         current_page: HPDF_Page,
     ) -> Result<(), String> {
-        let item_transform = transforms::from_vec(self.get_item_transform());
+        let item_transform = transforms::from_vec(self.item_transform());
 
         // Parse the points and apply the relevant transformations
         let mut points: Vec<Vec<HPDF_REAL>> = self
-            .get_properties()
+            .properties()
             .into_iter()
             .filter_map(|properties| properties.path_geometry().as_ref())
             .map(|path_geom| path_geom.geometry_path_type().path_point_arrays())
@@ -153,7 +51,7 @@ impl<T: IsPolygon> RenderPolygon for T {
         let mut stroke_weight = None;
 
         // If a graphic style is applied, then update fill and stroke color from that
-        if let Some(style_id) = self.get_object_style() {
+        if let Some(style_id) = self.applied_object_style() {
             if let Some(style) = idml_resources.styles().object_style_from_id(style_id) {
                 if let Some(id) = style.fill_color() {
                     fill_color = idml_resources.color_from_id(id);
@@ -166,21 +64,21 @@ impl<T: IsPolygon> RenderPolygon for T {
         }
 
         // Override fill color if one is available on the polygon
-        if let Some(id) = self.get_fill_color() {
+        if let Some(id) = self.fill_color() {
             fill_color = idml_resources.color_from_id(id)
         }
 
         // Override stroke color if one is available on the polygon
-        if let Some(id) = self.get_stroke_color() {
+        if let Some(id) = self.stroke_color() {
             stroke_color = idml_resources.color_from_id(id)
         }
 
         // Override stroke weight if one is available on the polygon
-        if let Some(weight) = self.get_stroke_weight() {
+        if let Some(weight) = self.stroke_weight() {
             stroke_weight = Some(weight.to_owned());
         }
 
-        let closed_path = match self.get_properties() {
+        let closed_path = match self.properties() {
             Some(properties) => {
                 if let Some(path_geom) = properties.path_geometry() {
                     !*path_geom.geometry_path_type().path_open()

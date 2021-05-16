@@ -1,4 +1,4 @@
-use crate::idml_parser::spread_parser::TextFrame;
+use crate::idml_parser::spread_parser::Polygon;
 use crate::pdf_printer::color_manager::Color;
 use crate::pdf_printer::transforms::{self, *};
 use libharu_sys::*;
@@ -39,7 +39,7 @@ pub struct BoundingBox {
     pub bottom: f64,
 }
 
-pub fn boundingbox(textframe: &TextFrame, parent_transform: &Transform) -> BoundingBox {
+pub fn boundingbox(textframe: &Polygon, parent_transform: &Transform) -> BoundingBox {
     let item_transform = transforms::from_vec(textframe.item_transform());
 
     let points: Vec<(f64, f64)> = textframe

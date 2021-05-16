@@ -43,27 +43,10 @@ impl Style for ObjectStyle {
     }
 
     fn combine_with_parent(&self, parent: &ObjectStyle) -> ObjectStyle {
-        // Macros for making a struct calling choose on every field
-        macro_rules! choose_fields {
-            (
-                $child:ident,
-                $parent:ident,
-                $StructName:ident { $($manual_fields:tt)* },
-                $($field:ident),+ $(,)?
-            ) => {
-                $StructName {
-                    $(
-                        $field: self.choose($child.$field().clone(), $parent.$field().clone()),
-                    )+
-                    $($manual_fields)*
-                    // .. *parent.clone()
-                }
-            }
-        }
-
         // Get references to property structs
         let combined_properties = match (&self.properties, &parent.properties) {
             (Some(child_props), Some(parent_props)) => Some(choose_fields!(
+                self,
                 child_props,
                 parent_props,
                 ObjectProperties {
@@ -77,6 +60,7 @@ impl Style for ObjectStyle {
         };
 
         choose_fields!(
+            self,
             self,
             parent,
             ObjectStyle {
