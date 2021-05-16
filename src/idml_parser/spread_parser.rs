@@ -21,7 +21,7 @@ pub struct Spread {
     #[serde(rename = "Self")]
     id: Option<String>,
     flattener_override: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     show_master_items: Option<bool>,
     page_count: Option<i32>,
@@ -33,8 +33,8 @@ pub struct Spread {
     base_name: Option<String>,
     page_transition_direction: Option<String>,
     page_transition_type: Option<String>,
-    // #[serde(deserialize_with="deserialize_space_seperated_opt_vec")]
-    // page_color: Option<Vec<f64>>,
+    #[serde(default, deserialize_with="deserialize_space_seperated_opt_vec")]
+    page_color: Option<Vec<f64>>,
     #[serde(rename = "$value")]
     contents: Vec<SpreadContent>,
 }
@@ -58,11 +58,14 @@ impl Spread {
 pub enum SpreadContent {
     FlattenerPreference(FlattenerPreference),
     Page(Page),
-    Rectangle(Rectangle),
+    #[serde(
+        alias = "Rectangle",
+        alias = "Oval",
+        alias = "TextFrame",
+        alias = "GraphicLine",
+    )]
     Polygon(Polygon),
-    Oval(Oval),
     Group(Group),
-    TextFrame(TextFrame),
     #[serde(other)]
     NotImplementedYet,
 }
@@ -75,13 +78,13 @@ pub struct Page {
     applied_alternate_layout: Option<String>,
     applied_master: Option<String>,
     applied_trap_preset: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_vec")]
     geometric_bounds: Vec<f64>,
     grid_starting_point: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     layout_rule: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     master_page_transform: Option<Vec<f64>>,
     name: Option<String>,
     optional_page: Option<bool>,
@@ -119,7 +122,7 @@ pub struct Color {
 //     left: i32,
 //     right: i32,
 //     column_direction: String,
-//     #[serde(deserialize_with = "deserialize_space_seperated_vec")]
+//     #[serde(default, deserialize_with = "deserialize_space_seperated_vec")]
 //     columns_positions: Vec<f64>,
 // }
 
@@ -133,39 +136,17 @@ pub struct FlattenerPreference {
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
-pub struct Rectangle {
-    #[serde(rename = "Self")]
-    id: String,
-    fill_color: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
-    item_transform: Option<Vec<f64>>,
-    properties: Option<Properties>,
-    stroke_color: Option<String>,
-    stroke_weight: Option<f64>,
-    applied_object_style: Option<String>,
-}
-
-#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
-#[serde(rename_all = "PascalCase")]
 pub struct Polygon {
     #[serde(rename = "Self")]
     id: String,
     fill_color: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
-    item_transform: Option<Vec<f64>>,
-    properties: Option<Properties>,
-    stroke_color: Option<String>,
-    stroke_weight: Option<f64>,
-    applied_object_style: Option<String>,
-}
-
-#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
-#[serde(rename_all = "PascalCase")]
-pub struct Oval {
-    #[serde(rename = "Self")]
-    id: String,
-    fill_color: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_id_string")]
+    parent_story: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_id_string")]
+    previous_text_frame: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_id_string")]
+    next_text_frame: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     item_transform: Option<Vec<f64>>,
     properties: Option<Properties>,
     stroke_color: Option<String>,
@@ -181,26 +162,6 @@ pub struct Group {
     // fill_color: Option<String>,
     // #[serde(rename="$value")]
     // contents: Vec<PageContent>
-}
-
-#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
-#[serde(rename_all = "PascalCase")]
-pub struct TextFrame {
-    #[serde(rename = "Self")]
-    id: String,
-    fill_color: Option<String>,
-    #[serde(deserialize_with = "deserialize_id_string")]
-    parent_story: Option<String>,
-    #[serde(deserialize_with = "deserialize_id_string")]
-    previous_text_frame: Option<String>,
-    #[serde(deserialize_with = "deserialize_id_string")]
-    next_text_frame: Option<String>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
-    item_transform: Option<Vec<f64>>,
-    properties: Option<Properties>,
-    stroke_color: Option<String>,
-    stroke_weight: Option<f64>,
-    applied_object_style: Option<String>,
 }
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
@@ -267,11 +228,11 @@ pub struct PathPointArray {
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
 pub struct PathPointType {
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     anchor: Option<Vec<f64>>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     left_direction: Option<Vec<f64>>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     right_direction: Option<Vec<f64>>,
 }
 

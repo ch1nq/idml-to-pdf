@@ -21,12 +21,12 @@ pub struct Color {
     #[serde(rename = "Self")]
     id: String,
     name: String,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     alternate_color_value: Option<Vec<f64>>,
     alternate_space: Option<ColorSpace>,
     base_color: Option<String>,
     color_override: Option<ColorOverride>,
-    #[serde(deserialize_with = "deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     color_value: Option<Vec<f64>>,
     model: Option<ColorModel>,
     space: Option<ColorSpace>,
