@@ -1,4 +1,4 @@
-use super::{Style, StyleGroup};
+use super::*;
 use derive_getters::Getters;
 use serde::Deserialize;
 
@@ -35,13 +35,38 @@ impl Style for ObjectStyle {
         &self.id()
     }
 
+    fn get_name(&self) -> &Option<String> {
+        &self.name()
+    }
+
     fn get_parent_id(&self) -> &Option<String> {
         match &self.properties {
             Some(properties) => &properties.based_on,
             _ => &None,
         }
     }
+}
 
+// Macros for making a struct calling choose on every field      
+macro_rules! choose_fields {
+    (
+        $self:ident,
+        $child:ident,
+        $parent:ident,
+        $StructName:ident { $($manual_fields:tt)* },
+        $($field:ident),+ $(,)?
+    ) => {
+        $StructName {
+            $(
+                $field: $self.choose($child.$field().clone(), $parent.$field().clone()),
+            )+
+            $($manual_fields)*,
+            ..($parent).clone()
+        }
+    }
+}
+
+impl CombineWithParent for ObjectStyle {
     fn combine_with_parent(&self, parent: &ObjectStyle) -> ObjectStyle {
         // Get references to property structs
         let combined_properties = match (&self.properties, &parent.properties) {

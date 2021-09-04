@@ -1,10 +1,8 @@
 use crate::idml_parser::{
     spread_parser::*,
     story_parser::*,
-    styles::{
-        character_style::{self},
-        paragraph_style::{self},
-    },
+    styles::*,
+    styles::commom_text_properties::*,
     IDMLPackage, IDMLResources,
 };
 use crate::pdf_printer::pdf_utils::*;
@@ -28,22 +26,6 @@ pub struct RenderProperties<'a> {
     fill_color: Option<Color>,
 }
 
-trait StyleProperties {
-    fn get_applied_font(self) -> Option<String>;
-}
-
-impl StyleProperties for paragraph_style::ParagraphProperties {
-    fn get_applied_font(self) -> Option<String> {
-        self.applied_font().clone()
-    }
-}
-
-impl StyleProperties for character_style::CharacterProperties {
-    fn get_applied_font(self) -> Option<String> {
-        self.applied_font().clone()
-    }
-}
-
 impl<'a> RenderProperties<'a> {
     fn new(idml_resources: &'a IDMLResources) -> Self {
         RenderProperties {
@@ -57,59 +39,46 @@ impl<'a> RenderProperties<'a> {
         }
     }
 
-    fn with_font_name(&mut self, style_properties: Option<impl StyleProperties>) -> &mut Self {
-        if let Some(p) = style_properties {
-            let font_name = p.get_applied_font();
-            if font_name.is_some() {
-                self.font_name = font_name.clone();
+    fn with_attributes(&mut self, ctp: &impl CommonTextProperties) -> &mut Self {
+        // for (key, value) in ctp.ctp_fields() {
+        for field in ctp.ctp_fields().iter() {
+            // match (key, value) {
+            match field {
+                // (CTPKey::AutoLeading, CTPValue::F64(value)) => self.auto_leading = Some(*value),
+                // (CTPKey::PointSize, CTPValue::F64(value)) => self.font_size = Some(*value),
+                // (CTPKey::FontStyle, CTPValue::String(value)) => self.font_style = Some(value.clone()),
+                // (CTPKey::FillColor, CTPValue::String(value)) => self.set_fill_color(value.clone()),
+                // (CTPKey::StrokeColor, CTPValue::String(value)) => self.set_stroke_color(value.clone()),
+                _ => {},
+
             }
         }
-        self
-    }
 
-    fn with_font_style(&mut self, font_style: Option<String>) -> &mut Self {
-        if font_style.is_some() {
-            self.font_style = font_style.clone();
+        if let Some(properties) = ctp.properties() {
+            if let Some(font) = properties.applied_font() {
+                self.font_name = Some(font.clone());
+            }
         }
+
         self
     }
 
-    fn with_font_size(&mut self, font_size: Option<f64>) -> &mut Self {
-        if font_size.is_some() {
-            self.font_size = font_size.clone();
-        }
-        self
-    }
-
-    fn with_auto_leading(&mut self, auto_leading: Option<f64>) -> &mut Self {
-        if auto_leading.is_some() {
-            self.auto_leading = auto_leading.clone();
-        }
-        self
-    }
-
-    fn with_stroke_color(&mut self, stroke_color: Option<String>) -> &mut Self {
-        if let Some(color_id) = stroke_color {
-            let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
-                Ok(c) => Some(c),
-                Err(ColorError::ColorNotImplemented) => None,
-                Err(_) => None,
-            };
-            self.stroke_color = color;
+    fn set_stroke_color(&mut self, color_id: String) {
+        let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
+            Ok(c) => Some(c),
+            Err(ColorError::ColorNotImplemented) => None,
+            Err(_) => None,
         };
-        self
+        self.stroke_color = color;
     }
 
-    fn with_fill_color(&mut self, fill_color: Option<String>) -> &mut Self {
-        if let Some(color_id) = fill_color {
-            let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
-                Ok(c) => Some(c),
-                Err(ColorError::ColorNotImplemented) => None,
-                Err(_) => None,
-            };
-            self.fill_color = color;
+    fn set_fill_color(&mut self, color_id: String) {
+        let color = match color_manager::color_from_id(self.idml_resources, &color_id) {
+            Ok(c) => Some(c),
+            Err(ColorError::ColorNotImplemented) => None,
+            Err(_) => None,
         };
-        self
+        self.fill_color = color;
     }
 }
 
@@ -164,19 +133,14 @@ impl Polygon {
         let mut render_properties = parent_properties.clone();
 
         // Apply paragraph style formats
-        if let Some(style_id) = p_style.applied_paragraph_style() {
-            if let Some(style) = idml_resources.styles().paragraph_style_from_id(style_id) {
-                render_properties
-                    .with_fill_color(style.fill_color().clone())
-                    .with_stroke_color(style.stroke_color().clone())
-                    .with_font_name(style.properties().clone())
-                    .with_font_style(style.font_style().clone())
-                    .with_font_size(style.point_size().clone())
-                    .with_auto_leading(style.auto_leading().clone());
-            }
-        }
-
-        // TODO: Apply local paragraph formats
+        // if let Some(CTPValue::String(style_id)) = p_style.ctp_fields().get(&CTPKey::AppliedCharacterStyle) {
+        //     if let Some(style) = idml_resources.styles().paragraph_style_from_id(style_id) {
+        //         render_properties.with_attributes(&style);
+        //     }
+        // }
+        
+        // Apply local paragraph formats
+        render_properties.with_attributes(p_style);
 
         if let Some(c_styles) = p_style.character_style_ranges() {
             for c_style in c_styles {
@@ -208,25 +172,14 @@ impl Polygon {
         let mut render_properties = parent_properties.clone();
 
         // Apply character style formats
-        if let Some(style_id) = c_style.applied_character_style() {
-            if let Some(style) = idml_resources.styles().character_style_from_id(style_id) {
-                render_properties
-                    .with_fill_color(style.fill_color().clone())
-                    .with_stroke_color(style.stroke_color().clone())
-                    .with_font_name(style.properties().clone())
-                    .with_font_style(style.font_style().clone())
-                    .with_font_size(style.point_size().clone())
-                    .with_auto_leading(style.auto_leading().clone());
-            }
-        }
+        // if let Some(CTPValue::String(style_id)) = c_style.ctp_fields().get(&CTPKey::AppliedCharacterStyle) {
+        //     if let Some(style) = idml_resources.styles().character_style_from_id(style_id) {
+        //         render_properties.with_attributes(&style);
+        //     }
+        // }
 
         // Apply local character formats
-        render_properties
-            .with_fill_color(c_style.fill_color().clone())
-            .with_stroke_color(c_style.stroke_color().clone())
-            // .with_font_name(c_style.properties().clone())
-            .with_font_style(c_style.font_style().clone())
-            .with_font_size(c_style.point_size().clone());
+        render_properties.with_attributes(c_style);
 
         if let Some(contents) = c_style.contents() {
             for content in contents {

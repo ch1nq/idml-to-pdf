@@ -1,8 +1,8 @@
+use super::*;
 use super::commom_text_properties::*;
-use crate::idml_parser::formats::*;
-use super::{Style, StyleGroup};
 use derive_getters::Getters;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
@@ -13,291 +13,35 @@ pub struct RootCharacterStyleGroup {
     character_styles: Option<Vec<CharacterStyle>>,
 }
 
-common_text_properties_struct! {
-    CharacterStyle {
-        #[serde(rename = "Self")]
-        id: Option<String>,
-        name: Option<String>,
-        properties: Option<CharacterProperties>,
-    }
-}
-
 #[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
 #[serde(rename_all = "PascalCase")]
-pub struct CharacterProperties {
-    based_on: Option<String>,
-    applied_font: Option<String>,
+pub struct CharacterStyle {
+    #[serde(alias="Self")]
+    id: Option<String>, 
+    name: Option<String>, 
+    properties: Option<Properties>,
+
+    #[serde(flatten)]
+    // ctp_fields: HashMap<CTPKey, CTPValue>
+    ctp_fields: CTPMap
 }
+
+impl_common_text_properties!(CharacterStyle);
 
 impl Style for CharacterStyle {
     fn get_id(&self) -> &Option<String> {
         &self.id()
     }
 
-    fn get_parent_id(&self) -> &Option<String> {
-        match &self.properties {
-            Some(properties) => &properties.based_on,
-            _ => &None,
-        }
+    fn get_name(&self) -> &Option<String> {
+        &self.name()
     }
 
-    fn combine_with_parent(&self, parent: &CharacterStyle) -> CharacterStyle {
-        // Macros for making a struct calling choose on every field
-
-        // Get references to property structs
-        let combined_properties = match (&self.properties, &parent.properties) {
-            (Some(child_props), Some(parent_props)) => Some(choose_fields!(
-                self,
-                child_props,
-                parent_props,
-                CharacterProperties {
-                    // Manually set fields
-                    based_on: self.get_parent_id().clone()
-                },
-                // Fields that can be overwritten by child properties
-                applied_font,
-            )),
-            _ => None,
-        };
-
-        choose_fields!(
-            self,
-            self,
-            parent,
-            CharacterStyle {
-                // Manually set fields
-                id: self.id.clone(),
-                properties: combined_properties
-            },
-            // Fields that can be overwritten by child
-            name,
-            applied_character_style,
-            applied_conditions,
-            applied_language,
-            applied_paragraph_style,
-            auto_leading,
-            auto_tcy,
-            auto_tcy_include_roman,
-            baseline_shift,
-            bullets_alignment,
-            bullets_and_numbering_list_type,
-            bullets_text_after,
-            bunri_kinshi,
-            captilization,
-            character_alignment,
-            character_direction,
-            character_rotation,
-            cjk_grid_tracking,
-            composer,
-            desired_word_spacing,
-            diacritic_position,
-            digits_type,
-            drop_cap_characters,
-            drop_cap_lines,
-            drop_cap_detail,
-            end_join,
-            fill_color,
-            fill_tint,
-            first_line_indent,
-            font_style,
-            glyph_form,
-            goto_next_x,
-            gradient_fill_angle,
-            gradient_fill_length,
-                        //,
-                        //,
-            gradient_stroke_angle,
-            gradient_stroke_length,
-                        //,
-                        //,
-            grid_align_first_line_only,
-            grid_alignment,
-            grid_gyoudori,
-            horizontal_scale,
-            hyphen_weight,
-            hyphenate_across_columns,
-            hyphenate_after_first,
-            hyphenate_before_last,
-            hyphenate_capitalized_words,
-            hyphenate_ladder_limit,
-            hyphenate_last_word,
-            hyphenate_words_longer_than,
-            hyphenation,
-            hyphenation_zone,
-            ignore_edge_alignment,
-            jidori,
-            justification,
-            kashidas,
-            keep_all_lines_together,
-            keep_first_lines,
-            keep_last_lines,
-            keep_lines_together,
-            keep_rule_above_in_frame,
-            keep_with_next,
-            keep_with_previous,
-            kenten_alignment,
-            kenten_custom_character,
-            kenten_font_size,
-            kenten_kind,
-            kenten_overprint_fill,
-            kenten_overprint_stroke,
-            kenten_placement,
-            kenten_position,
-            kenten_stroke_tint,
-            kenten_tint,
-            kenten_weight,
-            kenten_x_scale,
-            kenten_y_scale,
-            kerning_method,
-            kerning_value,
-            keyboard_direction,
-            kinsoku_hang_type,
-            kinsoku_type,
-            last_line_indent,
-            leading_aki,
-            leading_model,
-            left_indent,
-            ligatures,
-            link_resource_id,
-            maximum_glyph_scaling,
-            maximum_letter_spacing,
-            maximum_word_spacing,
-            minimum_glyph_scaling,
-            minimum_letter_spacing,
-            minimum_word_spacing,
-            miter_limit,
-            no_break,
-            numbering_alignment,
-            numbering_apply_restart_policy,
-            numbering_continue,
-            numbering_expression,
-            numbering_level,
-            numbering_start_at,
-            otf_contextual_alternate,
-            otf_discretionary_ligature,
-            otf_figure_style,
-            otf_fraction,
-            otf_hv_kana,
-            otf_historical,
-            otf_justification_alternate,
-            otf_locale,
-            otf_mark,
-            otf_ordinal,
-            otf_overlap_swash,
-            otf_proportional_metrics,
-            otf_roman_italics,
-            otf_slashed_zero,
-            otf_stretched_alternate,
-            otf_stylistic_alternate,
-            otf_stylistic_sets,
-            otf_swash,
-            otf_titling,
-            otf_overprint_fill,
-            otf_overprint_stroke,
-            page_number_type,
-            paragraph_direction,
-            paragraph_gyoudori,
-            paragraph_justification,
-            point_size,
-            position,
-            positional_form,
-            rensuuji,
-            right_indent,
-            rotate_single_byte_character,
-            ruby_alignment,
-            ruby_auto_align,
-            ruby_auto_scaling,
-            ruby_auto_tcy_auto_scale,
-            ruby_auto_tcy_digits,
-            ruby_auto_tcy_include_roman,
-            ruby_flag,
-            ruby_font_size,
-            ruby_open_type,
-            ruby_overhang,
-            ruby_overprint_fill,
-            ruby_overprint_stroke,
-            ruby_parent_overhang_amount,
-            ruby_parent_scaling_percent,
-            ruby_parent_spacing,
-            ruby_position,
-            ruby_string,
-            ruby_stroke_tint,
-            ruby_tint,
-            ruby_type,
-            ruby_weight,
-            ruby_x_offset,
-            ruby_x_scale,
-            ruby_y_offset,
-            ruby_y_scale,
-            rule_above,
-            rule_above_gap_overprint,
-            rule_above_gap_tint,
-            rule_above_left_indent,
-            rule_above_weight,
-            rule_above_offset,
-            rule_above_overprint,
-            rule_above_right_indent,
-            rule_above_tint,
-            rule_above_width,
-            rule_below_gap_overprint,
-            rule_below_gap_tint,
-            rule_below_left_indent,
-            rule_below_weight,
-            rule_below_offset,
-            rule_below_overprint,
-            rule_below_right_indent,
-            rule_below_tint,
-            rule_below_width,
-            scale_affects_line_height,
-            shatai_adjust_rotation,
-            shatai_adjust_tsume,
-            shatai_adjust_angle,
-            shatai_magnification,
-            single_word_justification,
-            skew,
-            space_after,
-            space_before,
-            span_column_inside_gutter,
-            span_column_outside_gutter,
-            span_column_type,
-            span_split_column_count,
-            start_paragraph,
-            strike_through_gap_overprint,
-            strike_through_gap_tint,
-            strike_through_gap_offset,
-            strike_through_overprint,
-            strike_through_tint,
-            strike_through_weight,
-            strike_thru,
-            stroke_alignment,
-            stroke_color,
-            stroke_tint,
-            stroke_weight,
-            tatechuyoko,
-            tatechuyoko_x_offset,
-            tatechuyoko_y_offset,
-            tracking,
-            trailing_aki,
-            treat_ideographic_space_as_space,
-            tsume,
-            underline,
-            underline_gap_overprint,
-            underline_gap_tint,
-            underline_gap_offset,
-            underline_overprint,
-            underline_tint,
-            underline_weight,
-            vertical_scale,
-            warichu,
-            warichu_alignment,
-            warichu_chars_after_break,
-            warichu_chars_before_break,
-            warichu_line_spacing,
-            warichu_lines,
-            warichu_size,
-            x_offset_diacritic,
-            y_offset_diacritic,
-        )
+    fn get_parent_id(&self) -> &Option<String> {
+        match &self.properties {
+            Some(properties) => &properties.based_on(),
+            _ => &None,
+        }
     }
 }
 

@@ -5,3 +5,9 @@
 /test/*/*.pdf
 !/test/*/*-expected.pdf
 /test/**/*.lst
+
+# Don't commit font files in case they are licensed. 
+# Open source fonts can always manually be added.
+*.ttf
+*.otf
+

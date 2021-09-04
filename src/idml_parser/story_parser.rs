@@ -1,9 +1,9 @@
-use super::formats::*;
+use crate::idml_parser::styles::commom_text_properties::*;
 use derive_getters::Getters;
 use quick_xml::de::{from_str, DeError};
 use serde::Deserialize;
 use std::path::Path;
-use crate::idml_parser::styles::commom_text_properties::*;
+use std::collections::HashMap;
 
 #[derive(Default, Deserialize, Debug, Getters)]
 #[serde(rename = "idPkg:Story")]
@@ -25,26 +25,33 @@ pub struct Story {
     paragraph_style_ranges: Option<Vec<ParagraphStyleRange>>,
 }
 
-common_text_properties_struct! {
-    ParagraphStyleRange {
-        #[serde(rename = "CharacterStyleRange")]
-        character_style_ranges: Option<Vec<CharacterStyleRange>>,
-    }
-}
-
-common_text_properties_struct! {
-    CharacterStyleRange {
-        properties: Option<Properties>,
-        #[serde(rename = "$value")]
-        contents: Option<Vec<StoryContent>>,
-    }
-}
-
-#[derive(Default, Deserialize, Debug, Clone, PartialEq, Getters)]
+#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
-pub struct Properties {
-    applied_font: Option<String>,
+pub struct ParagraphStyleRange {
+    #[serde(rename = "CharacterStyleRange")]
+    character_style_ranges: Option<Vec<CharacterStyleRange>>,
+    properties: Option<Properties>,
+
+    #[serde(flatten)]
+    // ctp_fields: HashMap<CTPKey, CTPValue>,
+    ctp_fields: CTPMap
 }
+
+impl_common_text_properties!(ParagraphStyleRange);
+
+#[derive(Default, Deserialize, Debug, PartialEq, Getters)]
+#[serde(rename_all = "PascalCase")]
+pub struct CharacterStyleRange {
+    #[serde(rename = "$value")]
+    contents: Option<Vec<StoryContent>>,
+    properties: Option<Properties>,
+
+    #[serde(flatten)]
+    // ctp_fields: HashMap<CTPKey, CTPValue>,
+    ctp_fields: CTPMap
+}
+
+impl_common_text_properties!(CharacterStyleRange);
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub enum StoryContent {

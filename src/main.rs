@@ -34,7 +34,11 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     // Decrompress idml file into a directory
     let idml_dir = decompressor::decompress_idml(&file_path).unwrap();
-
+    
+    if preserve_idml_dir.is_some() {
+        println!("{:?}", idml_dir);
+    }
+    
     // Parse contents of a directory into an IDML Package
     let start = Instant::now();
     let idml_package = IDMLPackage::from_dir(&idml_dir)?;

@@ -1,4 +1,6 @@
-use serde::de::{Deserialize, Deserializer};
+use std::fmt;
+use std::marker::PhantomData;
+use serde::de::{Deserialize, Deserializer, Visitor, MapAccess};
 
 /// Deserializer yielding a vec [N, N, N, N, ...] given a space seperated  string "N N N N ..."
 pub fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
@@ -61,3 +63,26 @@ where
         Err(e) => Err(e),
     }
 }
+
+// /// Deserializer that yielding valid IDML IDs. For example `"n"` will yield `None` and `"u123"` will yield `Some("u123")`
+// pub fn deserialize_ctp_fields<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+// where
+//     D: Deserializer<'de>,
+// {
+//     let result: Result<std::borrow::Cow<str>, D::Error> =
+//         serde::de::Deserialize::deserialize(deserializer);
+
+//     match result {
+//         Ok(s) => {
+//             let s_trimmed = s.trim();
+//             let id = match s_trimmed {
+//                 "" => None,
+//                 "n" => None,
+//                 _ => Some(s_trimmed.to_owned()),
+//             };
+//             Ok(id)
+//         }
+//         Err(e) => Err(e),
+//     }
+// }
+

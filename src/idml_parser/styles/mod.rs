@@ -2,8 +2,8 @@ use std::borrow::Cow;
 
 pub trait Style {
     fn get_id(&self) -> &Option<String>;
+    fn get_name(&self) -> &Option<String>;
     fn get_parent_id(&self) -> &Option<String>;
-    fn combine_with_parent(&self, parent: &Self) -> Self;
 
     /// Use this to override parent value with child value if it is specified  
     fn choose<U>(&self, child: Option<U>, parent: Option<U>) -> Option<U> {
@@ -15,8 +15,12 @@ pub trait Style {
     }
 }
 
+pub trait CombineWithParent {
+    fn combine_with_parent(&self, parent: &Self) -> Self;
+}
+
 /// Defines shared behaviour for style groups
-pub trait StyleGroup<T: Style + Clone + std::fmt::Debug> {
+pub trait StyleGroup<T: Style + Clone + std::fmt::Debug + CombineWithParent> {
     /// Returns a list of all the styles in the group
     fn get_styles(&self) -> &Option<Vec<T>>;
 
@@ -54,26 +58,6 @@ pub trait StyleGroup<T: Style + Clone + std::fmt::Debug> {
         }
 
         Cow::Borrowed(style)
-    }
-}
-
-// Macros for making a struct calling choose on every field
-#[macro_export]        
-macro_rules! choose_fields {
-    (
-        $self:ident,
-        $child:ident,
-        $parent:ident,
-        $StructName:ident { $($manual_fields:tt)* },
-        $($field:ident),+ $(,)?
-    ) => {
-        $StructName {
-            $(
-                $field: $self.choose($child.$field().clone(), $parent.$field().clone()),
-            )+
-            $($manual_fields)*,
-            ..($parent).clone()
-        }
     }
 }
 
