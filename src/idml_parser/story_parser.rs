@@ -2,8 +2,8 @@ use crate::idml_parser::styles::commom_text_properties::*;
 use derive_getters::Getters;
 use quick_xml::de::{from_str, DeError};
 use serde::Deserialize;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 
 #[derive(Default, Deserialize, Debug, Getters)]
 #[serde(rename = "idPkg:Story")]
@@ -34,7 +34,7 @@ pub struct ParagraphStyleRange {
 
     #[serde(flatten)]
     // ctp_fields: HashMap<CTPKey, CTPValue>,
-    ctp_fields: CTPMap
+    ctp_fields: CTPMap,
 }
 
 impl_common_text_properties!(ParagraphStyleRange);
@@ -48,7 +48,7 @@ pub struct CharacterStyleRange {
 
     #[serde(flatten)]
     // ctp_fields: HashMap<CTPKey, CTPValue>,
-    ctp_fields: CTPMap
+    ctp_fields: CTPMap,
 }
 
 impl_common_text_properties!(CharacterStyleRange);

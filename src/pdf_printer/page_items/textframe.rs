@@ -1,9 +1,6 @@
 use crate::idml_parser::{
-    spread_parser::*,
-    story_parser::*,
-    styles::*,
-    styles::commom_text_properties::*,
-    IDMLPackage, IDMLResources,
+    spread_parser::*, story_parser::*, styles::commom_text_properties::*, styles::*, IDMLPackage,
+    IDMLResources,
 };
 use crate::pdf_printer::pdf_utils::*;
 use crate::pdf_printer::{
@@ -49,8 +46,7 @@ impl<'a> RenderProperties<'a> {
                 // (CTPKey::FontStyle, CTPValue::String(value)) => self.font_style = Some(value.clone()),
                 // (CTPKey::FillColor, CTPValue::String(value)) => self.set_fill_color(value.clone()),
                 // (CTPKey::StrokeColor, CTPValue::String(value)) => self.set_stroke_color(value.clone()),
-                _ => {},
-
+                _ => {}
             }
         }
 
@@ -138,7 +134,7 @@ impl Polygon {
         //         render_properties.with_attributes(&style);
         //     }
         // }
-        
+
         // Apply local paragraph formats
         render_properties.with_attributes(p_style);
 

@@ -33,7 +33,7 @@ pub struct Spread {
     base_name: Option<String>,
     page_transition_direction: Option<String>,
     page_transition_type: Option<String>,
-    #[serde(default, deserialize_with="deserialize_space_seperated_opt_vec")]
+    #[serde(default, deserialize_with = "deserialize_space_seperated_opt_vec")]
     page_color: Option<Vec<f64>>,
     #[serde(rename = "$value")]
     contents: Vec<SpreadContent>,
@@ -62,7 +62,7 @@ pub enum SpreadContent {
         alias = "Rectangle",
         alias = "Oval",
         alias = "TextFrame",
-        alias = "GraphicLine",
+        alias = "GraphicLine"
     )]
     Polygon(Polygon),
     Group(Group),

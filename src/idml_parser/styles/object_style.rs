@@ -47,7 +47,7 @@ impl Style for ObjectStyle {
     }
 }
 
-// Macros for making a struct calling choose on every field      
+// Macros for making a struct calling choose on every field
 macro_rules! choose_fields {
     (
         $self:ident,

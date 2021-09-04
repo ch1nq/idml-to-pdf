@@ -63,6 +63,6 @@ pub trait StyleGroup<T: Style + Clone + std::fmt::Debug + CombineWithParent> {
 
 #[macro_use]
 pub mod commom_text_properties;
+pub mod character_style;
 pub mod object_style;
 pub mod paragraph_style;
-pub mod character_style;

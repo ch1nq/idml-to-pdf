@@ -1,17 +1,17 @@
-use serde::Deserialize;
-use derive_getters::Getters;
 use super::CombineWithParent;
+use derive_getters::Getters;
+use serde::Deserialize;
 // use std::collections::HashMap;
 use std::str::FromStr;
 
-use std::fmt;
-use std::slice::{Iter};
 use serde::de::{self, Deserializer, Visitor};
+use std::fmt;
+use std::slice::Iter;
 
 #[derive(Debug, Deserialize, Default, PartialEq, Clone)]
 pub struct CTPMap {
     #[serde(flatten)]
-    ctp_fields: Vec<CTPEnum>
+    ctp_fields: Vec<CTPEnum>,
 }
 
 impl CTPMap {
@@ -272,7 +272,7 @@ pub enum CTPKey {
     XOffsetDiacritic,
     YOffsetDiacritic,
     #[serde(other)]
-    Other
+    Other,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Clone, Hash, Eq)]
@@ -513,7 +513,6 @@ pub enum Capitalization {
     CapToSmallCap,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum CharacterAlignment {
     AlignBaseline,
@@ -524,14 +523,12 @@ pub enum CharacterAlignment {
     AlignICFBottom,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum CharacterDirection {
     DefaultDirection,
     LeftToRightDirection,
     RightToLeftDirection,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum DiacriticPosition {
@@ -543,15 +540,13 @@ pub enum DiacriticPosition {
     OpentypePositionFromBaseline,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum DigitsType {
     DefaultDigits,
     ArabicDigits,
-    HindiDigits, 
+    HindiDigits,
     FarsiDigits,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum OutlineJoin {
@@ -559,7 +554,6 @@ pub enum OutlineJoin {
     RoundEndJoin,
     BevelEndJoin,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum AlternateGlyphForms {
@@ -578,12 +572,8 @@ pub enum AlternateGlyphForms {
     FullWidthForm,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
-pub enum GotoNextX {
-
-}
-
+pub enum GotoNextX {}
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum GridAlignment {
@@ -595,7 +585,6 @@ pub enum GridAlignment {
     AlignICFTop,
     AlignICFBottom,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum Justification {
@@ -610,13 +599,11 @@ pub enum Justification {
     FromBindingSide,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum Kashidas {
     DefaultKashidas,
     KashidasOff,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum KentenAlignment {
@@ -625,9 +612,8 @@ pub enum KentenAlignment {
     ShiftJIS,
     JIS,
     Kuten,
-    Unicode
+    Unicode,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum KentenCharacter {
@@ -644,21 +630,18 @@ pub enum KentenCharacter {
     Custom,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum AdornmentOverprint {
     Auto,
     OverprintOn,
-    OverprintOff
+    OverprintOff,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum RubyKentenPosition {
     AboveRight,
     BelowLeft,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum KinsokuHangTypes {
@@ -667,7 +650,6 @@ pub enum KinsokuHangTypes {
     KinsokuHangForce,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum KinsokuType {
     KinsokuPushInFirst,
@@ -675,7 +657,6 @@ pub enum KinsokuType {
     KinsokuPushOutOnly,
     KinsokuPrioritizeAdjustmentAmount,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum LeadingModel {
@@ -686,14 +667,12 @@ pub enum LeadingModel {
     LeadingModelCenterDown,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum ListAlignment {
     LeftAlign,
     CenterAlign,
     RightAlign,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum OTFFigureStyle {
@@ -704,7 +683,6 @@ pub enum OTFFigureStyle {
     Default,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum PageNumberType {
     AutoPageNumber,
@@ -712,13 +690,11 @@ pub enum PageNumberType {
     PreviousPageNumber,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum ParagraphDirection {
     LeftToRightDirection,
     RightToLeftDirection,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum ParagraphJustification {
@@ -726,7 +702,6 @@ pub enum ParagraphJustification {
     ArabicJustification,
     NaskhJustification,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum Position {
@@ -739,7 +714,6 @@ pub enum Position {
     OTDenominator,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum PositionalForms {
     None,
@@ -747,9 +721,8 @@ pub enum PositionalForms {
     Initial,
     Medial,
     Final,
-    Isolated
+    Isolated,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum RubyAlignments {
@@ -762,7 +735,6 @@ pub enum RubyAlignments {
     Ruby1Aki,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum RubyOverhang {
     None,
@@ -773,7 +745,6 @@ pub enum RubyOverhang {
     RubyOverhangNoLimit,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum RubyParentSpacing {
     RubyParentNoAdjustment,
@@ -783,20 +754,17 @@ pub enum RubyParentSpacing {
     RubyParentFullJustify,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum RubyTypes {
     GroupRuby,
     PerCharacterRuby,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum RuleWidth {
     TextWidth,
     ColumnWidth,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum SingleWordJustification {
@@ -806,14 +774,12 @@ pub enum SingleWordJustification {
     FullyJustified,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum SpanColumnTypeOptions {
     SingleColumn,
     SpanColumns,
     SplitColumns,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum StartParagraph {
@@ -825,13 +791,11 @@ pub enum StartParagraph {
     NextEvenPage,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum TextStrokeAlign {
     CenterAlignment,
     OutsideAlignment,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 pub enum WarichuAlignment {
@@ -928,7 +892,7 @@ impl<T: CommonTextProperties + Clone> CombineWithParent for T {
 //             fn properties(&self) -> &Option<Properties> {
 //                 &self.properties
 //             }
-//         } 
+//         }
 //     };
 // }
 
@@ -945,7 +909,7 @@ macro_rules! impl_common_text_properties {
             fn properties(&self) -> &Option<Properties> {
                 &self.properties
             }
-        } 
+        }
     };
 }
 

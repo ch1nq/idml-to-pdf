@@ -1,5 +1,5 @@
-use super::*;
 use super::commom_text_properties::*;
+use super::*;
 use derive_getters::Getters;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -16,14 +16,14 @@ pub struct RootCharacterStyleGroup {
 #[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct CharacterStyle {
-    #[serde(alias="Self")]
-    id: Option<String>, 
-    name: Option<String>, 
+    #[serde(alias = "Self")]
+    id: Option<String>,
+    name: Option<String>,
     properties: Option<Properties>,
 
     #[serde(flatten)]
     // ctp_fields: HashMap<CTPKey, CTPValue>
-    ctp_fields: CTPMap
+    ctp_fields: CTPMap,
 }
 
 impl_common_text_properties!(CharacterStyle);

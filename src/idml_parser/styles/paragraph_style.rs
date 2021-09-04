@@ -1,9 +1,9 @@
-use super::*;
 use super::commom_text_properties::*;
+use super::*;
 use derive_getters::Getters;
 use serde::Deserialize;
-use std::default::Default;
 use std::collections::HashMap;
+use std::default::Default;
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters)]
 #[serde(rename_all = "PascalCase")]
@@ -23,14 +23,14 @@ impl StyleGroup<ParagraphStyle> for RootParagraphStyleGroup {
 #[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParagraphStyle {
-    #[serde(alias="Self")]
-    id: Option<String>, 
-    name: Option<String>, 
+    #[serde(alias = "Self")]
+    id: Option<String>,
+    name: Option<String>,
     properties: Option<Properties>,
 
     #[serde(flatten)]
     // ctp_fields: HashMap<CTPKey, CTPValue>
-    ctp_fields: CTPMap
+    ctp_fields: CTPMap,
 }
 
 impl_common_text_properties!(ParagraphStyle);
@@ -39,7 +39,7 @@ impl Style for ParagraphStyle {
     fn get_id(&self) -> &Option<String> {
         &self.id()
     }
-    
+
     fn get_name(&self) -> &Option<String> {
         &self.name()
     }
