@@ -11,3 +11,5 @@
 *.ttf
 *.otf
 
+# Ignore build time reports
+cargo-timing*.html
