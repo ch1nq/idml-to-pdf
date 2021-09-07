@@ -1,5 +1,5 @@
 use crate::idml_parser::graphic_parser::{Color as IdmlColor, ColorSpace, Swatch};
-use crate::idml_parser::IDMLResources;
+use crate::idml_parser::idml_package::IDMLResources;
 use derive_getters::Getters;
 
 #[derive(Debug, Clone, Copy, Getters)]

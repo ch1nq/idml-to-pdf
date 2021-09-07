@@ -5,7 +5,7 @@ mod pdf_utils;
 mod transforms;
 
 use crate::idml_parser::spread_parser::*;
-use crate::idml_parser::IDMLPackage;
+use crate::idml_parser::idml_package::IDMLPackage;
 use font_manager::FontLibrary;
 use libharu_sys::*;
 use std::cell::RefCell;

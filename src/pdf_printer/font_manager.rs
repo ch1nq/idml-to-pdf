@@ -1,5 +1,5 @@
 use crate::idml_parser::fonts_parser::{Font, FontType};
-use crate::idml_parser::IDMLResources;
+use crate::idml_parser::idml_package::IDMLResources;
 use dirs;
 use libharu_sys::*;
 use std::cell::Cell;

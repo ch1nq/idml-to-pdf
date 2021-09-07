@@ -1,5 +1,5 @@
 use crate::idml_parser::spread_parser::*;
-use crate::idml_parser::IDMLResources;
+use crate::idml_parser::idml_package::IDMLResources;
 // use crate::pdf_printer::pdf_utils;
 use crate::pdf_printer::color_manager::Color;
 use crate::pdf_printer::transforms::{self, Transform};
