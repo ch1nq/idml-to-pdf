@@ -309,7 +309,6 @@ pub enum CTPValue {
     String(String),
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum CTPEnum {
     AppliedCharacterStyle(String),
@@ -844,7 +843,6 @@ pub enum WarichuAlignment {
     RightJustified,
 }
 
-
 #[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct Properties {
@@ -854,7 +852,7 @@ pub struct Properties {
 
 impl<T: CommonTextProperties + Clone> CombineWithParent for T {
     /// Combines all the common text properties fields of the parent with the child.
-    /// 
+    ///
     fn combine_with_parent(&self, parent: &Self) -> Self {
         let mut combined = parent.clone();
         // Override

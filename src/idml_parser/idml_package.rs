@@ -1,18 +1,18 @@
-use zip_extract;
 use derive_getters::Getters;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
+use zip_extract;
 
-use super::*;
 use super::designmap_parser::DesignMap;
 use super::fonts_parser::IdPkgFonts;
 use super::graphic_parser::IdPkgGraphic;
 use super::spread_parser::Spread;
 use super::story_parser::Story;
 use super::styles_parser::IdPkgStyles;
+use super::*;
 
 #[derive(Deserialize, Debug, Getters)]
 pub struct IDMLPackage {
@@ -55,42 +55,43 @@ pub struct MetaInf {
 impl IDMLPackage {
     /// Decrompress .idml file into a directory in the OS tmp folder
     fn idml_file_to_directory(idml_path: &Path) -> Result<PathBuf, zip_extract::ZipExtractError> {
-
         // Create .zip archive from .idml file
         let mut zip_path = PathBuf::from(idml_path);
         zip_path.set_extension("zip");
         fs::copy(idml_path, &zip_path)?;
-    
+
         // Unzip into new directory in tmp
         let mut target_dir = std::env::temp_dir();
         target_dir.push("idml_extracted");
-        
+
         // Remove any old directory that might exist
         if let Ok(path) = fs::metadata(&target_dir) {
             if path.is_dir() {
                 fs::remove_dir_all(&target_dir).unwrap();
             }
         }
-    
+
         zip_extract::extract(fs::File::open(&zip_path).unwrap(), &target_dir, true)?;
         fs::remove_file(zip_path)?;
-    
+
         #[cfg(debug_assertions)]
         println!("New temporary IDML directory: {:?}", target_dir);
-        
+
         Ok(target_dir)
-    }    
+    }
 
     /// Create a IDMLPackage object from a path to a .idml file
     pub fn from_path(idml_file_path: &Path) -> Result<Self, io::Error> {
-        let idml_dir = Self::idml_file_to_directory(idml_file_path).expect("IDML directory failed to unpack");
+        let idml_dir =
+            Self::idml_file_to_directory(idml_file_path).expect("IDML directory failed to unpack");
 
         // TODO: Parse each file in parallel for speedup
 
         // Parse all components of the IDML package
         let design_map = parse_design_map(&idml_dir).expect("Failed to parse designmap");
         let resources = parse_resources(&idml_dir).expect("Failed to parse resources");
-        let master_spreads = parse_master_spreads(&idml_dir).expect("Failed to parse master spreads");
+        let master_spreads =
+            parse_master_spreads(&idml_dir).expect("Failed to parse master spreads");
         let spreads = parse_spreads(&idml_dir).expect("Failed to parse spreads");
         let stories = parse_stories(&idml_dir).expect("Failed to parse stories");
 

@@ -1,9 +1,6 @@
 use crate::idml_parser::{
-    spread_parser::*, 
-    story_parser::*, 
+    idml_package::IDMLPackage, idml_package::IDMLResources, spread_parser::*, story_parser::*,
     styles::commom_text_properties::*,
-    idml_package::IDMLPackage,
-    idml_package::IDMLResources,
 };
 use crate::pdf_printer::pdf_utils::*;
 use crate::pdf_printer::{
