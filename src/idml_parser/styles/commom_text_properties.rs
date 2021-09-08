@@ -1,232 +1,679 @@
 use serde::Deserialize;
 
 pub trait CommonTextPropertiesAttributes {
-    fn applied_character_style(&self) -> Option<String> {None}
-    fn applied_conditions(&self) -> Option<String> {None} 
-    fn applied_language(&self) -> Option<String> {None} 
-    fn applied_paragraph_style(&self) -> Option<String> {None} 
-    fn auto_leading(&self) -> Option<f64> {None} 
-    fn auto_tcy(&self) -> Option<i16> {None} 
-    fn auto_tcy_include_roman(&self) -> Option<bool> {None} 
-    fn baseline_shift(&self) -> Option<f64> {None} 
-    fn bullets_alignment(&self) -> Option<String> {None} 
-    fn bullets_and_numbering_list_type(&self) -> Option<String> {None} 
-    fn bullets_text_after(&self) -> Option<String> {None} 
-    fn bunri_kinshi(&self) -> Option<bool> {None} 
-    fn captilization(&self) -> Option<Capitalization> {None} 
-    fn character_alignment(&self) -> Option<CharacterAlignment> {None} 
-    fn character_direction(&self) -> Option<CharacterDirection> {None} 
-    fn character_rotation(&self) -> Option<f64> {None} 
-    fn cjk_grid_tracking(&self) -> Option<bool> {None} 
-    fn composer(&self) -> Option<String> {None} 
-    fn desired_word_spacing(&self) -> Option<f64> {None} 
-    fn diacritic_position(&self) -> Option<DiacriticPosition> {None} 
-    fn digits_type(&self) -> Option<DigitsType> {None} 
-    fn drop_cap_characters(&self) -> Option<i16> {None} 
-    fn drop_cap_lines(&self) -> Option<i16> {None} 
-    fn drop_cap_detail(&self) -> Option<i32> {None} 
-    fn end_join(&self) -> Option<OutlineJoin> {None} 
-    fn fill_color(&self) -> Option<String> {None} 
-    fn fill_tint(&self) -> Option<f64> {None} 
-    fn first_line_indent(&self) -> Option<f64> {None} 
-    fn font_style(&self) -> Option<String> {None} 
-    fn glyph_form(&self) -> Option<AlternateGlyphForms> {None} 
-    fn goto_next_x(&self) -> Option<GotoNextX> {None}
-    fn gradient_fill_angle(&self) -> Option<f64> {None} 
-    fn gradient_fill_length(&self) -> Option<f64> {None} 
-    fn gradient_fill_start(&self) -> Option<Vec<f64>> {None} 
-    fn gradient_stroke_angle(&self) -> Option<f64> {None} 
-    fn gradient_stroke_length(&self) -> Option<f64> {None} 
-    fn gradient_stroke_start(&self) -> Option<Vec<f64>> {None} 
-    fn grid_align_first_line_only(&self) -> Option<bool> {None}
-    fn grid_alignment(&self) -> Option<GridAlignment> {None}
-    fn grid_gyoudori(&self) -> Option<i16> {None}
-    fn horizontal_scale(&self) -> Option<f64> {None}
-    fn hyphen_weight(&self) -> Option<i16> {None}
-    fn hyphenate_across_columns(&self) -> Option<bool> {None}
-    fn hyphenate_after_first(&self) -> Option<i16> {None}
-    fn hyphenate_before_last(&self) -> Option<i16> {None}
-    fn hyphenate_capitalized_words(&self) -> Option<bool> {None}
-    fn hyphenate_ladder_limit(&self) -> Option<i16> {None}
-    fn hyphenate_last_word(&self) -> Option<bool> {None}
-    fn hyphenate_words_longer_than(&self) -> Option<i16> {None}
-    fn hyphenation(&self) -> Option<bool> {None}
-    fn hyphenation_zone(&self) -> Option<f64> {None}
-    fn ignore_edge_alignment(&self) -> Option<bool> {None}
-    fn jidori(&self) -> Option<i16> {None}
-    fn justification(&self) -> Option<Justification> {None}
-    fn kashidas(&self) -> Option<Kashidas> {None}
-    fn keep_all_lines_together(&self) -> Option<bool> {None}
-    fn keep_first_lines(&self) -> Option<i16> {None}
-    fn keep_last_lines(&self) -> Option<i16> {None}
-    fn keep_lines_together(&self) -> Option<bool> {None}
-    fn keep_rule_above_in_frame(&self) -> Option<bool> {None}
-    fn keep_with_next(&self) -> Option<bool> {None}
-    fn keep_with_previous(&self) -> Option<bool> {None}
-    fn kenten_alignment(&self) -> Option<KentenAlignment> {None}
-    fn kenten_custom_character(&self) -> Option<String> {None}
-    fn kenten_font_size(&self) -> Option<f64> {None}
-    fn kenten_kind(&self) -> Option<KentenCharacter> {None}
-    fn kenten_overprint_fill(&self) -> Option<AdornmentOverprint> {None}
-    fn kenten_overprint_stroke(&self) -> Option<AdornmentOverprint> {None}
-    fn kenten_placement(&self) -> Option<f64> {None}
-    fn kenten_position(&self) -> Option<RubyKentenPosition> {None}
-    fn kenten_stroke_tint(&self) -> Option<f64> {None}
-    fn kenten_tint(&self) -> Option<f64> {None}
-    fn kenten_weight(&self) -> Option<f64> {None}
-    fn kenten_x_scale(&self) -> Option<f64> {None}
-    fn kenten_y_scale(&self) -> Option<f64> {None}
-    fn kerning_method(&self) -> Option<String> {None}
-    fn kerning_value(&self) -> Option<f64> {None}
-    fn keyboard_direction(&self) -> Option<CharacterDirection> {None}
-    fn kinsoku_hang_type(&self) -> Option<KinsokuHangTypes> {None}
-    fn kinsoku_type(&self) -> Option<KinsokuType> {None}
-    fn last_line_indent(&self) -> Option<f64> {None}
-    fn leading_aki(&self) -> Option<f64> {None}
-    fn leading_model(&self) -> Option<LeadingModel> {None}
-    fn left_indent(&self) -> Option<f64> {None}
-    fn ligatures(&self) -> Option<bool> {None}
-    fn link_resource_id(&self) -> Option<i32> {None}
-    fn maximum_glyph_scaling(&self) -> Option<f64> {None}
-    fn maximum_letter_spacing(&self) -> Option<f64> {None}
-    fn maximum_word_spacing(&self) -> Option<f64> {None}
-    fn minimum_glyph_scaling(&self) -> Option<f64> {None}
-    fn minimum_letter_spacing(&self) -> Option<f64> {None}
-    fn minimum_word_spacing(&self) -> Option<f64> {None}
-    fn miter_limit(&self) -> Option<f64> {None}
-    fn no_break(&self) -> Option<bool> {None}
-    fn numbering_alignment(&self) -> Option<ListAlignment> {None}
-    fn numbering_apply_restart_policy(&self) -> Option<bool> {None}
-    fn numbering_continue(&self) -> Option<bool> {None}
-    fn numbering_expression(&self) -> Option<String> {None}
-    fn numbering_level(&self) -> Option<i32> {None}
-    fn numbering_start_at(&self) -> Option<i32> {None}
-    fn otf_contextual_alternate(&self) -> Option<bool> {None}
-    fn otf_discretionary_ligature(&self) -> Option<bool> {None}
-    fn otf_figure_style(&self) -> Option<OTFFigureStyle> {None}
-    fn otf_fraction(&self) -> Option<bool> {None}
-    fn otf_hv_kana(&self) -> Option<bool> {None}
-    fn otf_historical(&self) -> Option<bool> {None}
-    fn otf_justification_alternate(&self) -> Option<bool> {None}
-    fn otf_locale(&self) -> Option<bool> {None}
-    fn otf_mark(&self) -> Option<bool> {None}
-    fn otf_ordinal(&self) -> Option<bool> {None}
-    fn otf_overlap_swash(&self) -> Option<bool> {None}
-    fn otf_proportional_metrics(&self) -> Option<bool> {None}
-    fn otf_roman_italics(&self) -> Option<bool> {None}
-    fn otf_slashed_zero(&self) -> Option<bool> {None}
-    fn otf_stretched_alternate(&self) -> Option<bool> {None}
-    fn otf_stylistic_alternate(&self) -> Option<bool> {None}
-    fn otf_stylistic_sets(&self) -> Option<i32> {None}
-    fn otf_swash(&self) -> Option<bool> {None}
-    fn otf_titling(&self) -> Option<bool> {None}
-    fn otf_overprint_fill(&self) -> Option<bool> {None}
-    fn otf_overprint_stroke(&self) -> Option<bool> {None}
-    fn page_number_type(&self) -> Option<PageNumberType> {None}
-    fn paragraph_direction(&self) -> Option<ParagraphDirection> {None}
-    fn paragraph_gyoudori(&self) -> Option<bool> {None}
-    fn paragraph_justification(&self) -> Option<ParagraphJustification> {None}
-    fn point_size(&self) -> Option<f64> {None}
-    fn position(&self) -> Option<Position> {None}
-    fn positional_form(&self) -> Option<PositionalForms> {None}
-    fn rensuuji(&self) -> Option<bool> {None}
-    fn right_indent(&self) -> Option<f64> {None}
-    fn rotate_single_byte_character(&self) -> Option<bool> {None}
-    fn ruby_alignment(&self) -> Option<RubyAlignments> {None}
-    fn ruby_auto_align(&self) -> Option<bool> {None}
-    fn ruby_auto_scaling(&self) -> Option<bool> {None}
-    fn ruby_auto_tcy_auto_scale(&self) -> Option<bool> {None}
-    fn ruby_auto_tcy_digits(&self) -> Option<i16> {None}
-    fn ruby_auto_tcy_include_roman(&self) -> Option<bool> {None}
-    fn ruby_flag(&self) -> Option<i32> {None}
-    fn ruby_font_size(&self) -> Option<f64> {None}
-    fn ruby_open_type(&self) -> Option<bool> {None}
-    fn ruby_overhang(&self) -> Option<bool> {None}
-    fn ruby_overprint_fill(&self) -> Option<AdornmentOverprint> {None}
-    fn ruby_overprint_stroke(&self) -> Option<AdornmentOverprint> {None}
-    fn ruby_parent_overhang_amount(&self) -> Option<RubyOverhang> {None}
-    fn ruby_parent_scaling_percent(&self) -> Option<f64> {None}
-    fn ruby_parent_spacing(&self) -> Option<RubyParentSpacing> {None}
-    fn ruby_position(&self) -> Option<RubyKentenPosition> {None}
-    fn ruby_string(&self) -> Option<String> {None}
-    fn ruby_stroke_tint(&self) -> Option<f64> {None}
-    fn ruby_tint(&self) -> Option<f64> {None}
-    fn ruby_type(&self) -> Option<RubyTypes> {None}
-    fn ruby_weight(&self) -> Option<f64> {None}
-    fn ruby_x_offset(&self) -> Option<f64> {None}
-    fn ruby_x_scale(&self) -> Option<f64> {None}
-    fn ruby_y_offset(&self) -> Option<f64> {None}
-    fn ruby_y_scale(&self) -> Option<f64> {None}
-    fn rule_above(&self) -> Option<bool> {None}
-    fn rule_above_gap_overprint(&self) -> Option<bool> {None}
-    fn rule_above_gap_tint(&self) -> Option<f64> {None}
-    fn rule_above_left_indent(&self) -> Option<f64> {None}
-    fn rule_above_weight(&self) -> Option<f64> {None}
-    fn rule_above_offset(&self) -> Option<f64> {None}
-    fn rule_above_overprint(&self) -> Option<bool> {None}
-    fn rule_above_right_indent(&self) -> Option<f64> {None}
-    fn rule_above_tint(&self) -> Option<f64> {None}
-    fn rule_above_width(&self) -> Option<RuleWidth> {None}
-    fn rule_below_gap_overprint(&self) -> Option<bool> {None}
-    fn rule_below_gap_tint(&self) -> Option<f64> {None}
-    fn rule_below_left_indent(&self) -> Option<f64> {None}
-    fn rule_below_weight(&self) -> Option<f64> {None}
-    fn rule_below_offset(&self) -> Option<f64> {None}
-    fn rule_below_overprint(&self) -> Option<bool> {None}
-    fn rule_below_right_indent(&self) -> Option<f64> {None}
-    fn rule_below_tint(&self) -> Option<f64> {None}
-    fn rule_below_width(&self) -> Option<RuleWidth> {None}
-    fn scale_affects_line_height(&self) -> Option<bool> {None}
-    fn shatai_adjust_rotation(&self) -> Option<bool> {None}
-    fn shatai_adjust_tsume(&self) -> Option<bool> {None}
-    fn shatai_adjust_angle(&self) -> Option<f64> {None}
-    fn shatai_magnification(&self) -> Option<f64> {None}
-    fn single_word_justification(&self) -> Option<SingleWordJustification> {None}
-    fn skew(&self) -> Option<f64> {None}
-    fn space_after(&self) -> Option<f64> {None}
-    fn space_before(&self) -> Option<f64> {None}
-    fn span_column_inside_gutter(&self) -> Option<f64> {None}
-    fn span_column_outside_gutter(&self) -> Option<f64> {None}
-    fn span_column_type(&self) -> Option<SpanColumnTypeOptions> {None}
-    fn span_split_column_count(&self) -> Option<i32> {None}
-    fn start_paragraph(&self) -> Option<StartParagraph> {None}
-    fn strike_through_gap_overprint(&self) -> Option<bool> {None}
-    fn strike_through_gap_tint(&self) -> Option<f64> {None}
-    fn strike_through_gap_offset(&self) -> Option<f64> {None}
-    fn strike_through_overprint(&self) -> Option<bool> {None}
-    fn strike_through_tint(&self) -> Option<f64> {None}
-    fn strike_through_weight(&self) -> Option<f64> {None}
-    fn strike_thru(&self) -> Option<bool> {None}
-    fn stroke_alignment(&self) -> Option<TextStrokeAlign> {None}
-    fn stroke_color(&self) -> Option<String> {None}
-    fn stroke_tint(&self) -> Option<String> {None}
-    fn stroke_weight(&self) -> Option<String> {None}
-    fn tatechuyoko(&self) -> Option<bool> {None}
-    fn tatechuyoko_x_offset(&self) -> Option<f64> {None}
-    fn tatechuyoko_y_offset(&self) -> Option<f64> {None}
-    fn tracking(&self) -> Option<f64> {None}
-    fn trailing_aki(&self) -> Option<f64> {None}
-    fn treat_ideographic_space_as_space(&self) -> Option<bool> {None}
-    fn tsume(&self) -> Option<f64> {None}
-    fn underline(&self) -> Option<bool> {None}
-    fn underline_gap_overprint(&self) -> Option<bool> {None}
-    fn underline_gap_tint(&self) -> Option<f64> {None}
-    fn underline_gap_offset(&self) -> Option<bool> {None}
-    fn underline_overprint(&self) -> Option<bool> {None}
-    fn underline_tint(&self) -> Option<f64> {None}
-    fn underline_weight(&self) -> Option<f64> {None}
-    fn vertical_scale(&self) -> Option<f64> {None}
-    fn warichu(&self) -> Option<bool> {None}
-    fn warichu_alignment(&self) -> Option<WarichuAlignment> {None}
-    fn warichu_chars_after_break(&self) -> Option<i16> {None}
-    fn warichu_chars_before_break(&self) -> Option<i16> {None}
-    fn warichu_line_spacing(&self) -> Option<f64> {None}
-    fn warichu_lines(&self) -> Option<i16> {None}
-    fn warichu_size(&self) -> Option<f64> {None}
-    fn x_offset_diacritic(&self) -> Option<f64> {None}
-    fn y_offset_diacritic(&self) -> Option<f64> {None}
+    fn applied_character_style(&self) -> Option<String> {
+        None
+    }
+    fn applied_conditions(&self) -> Option<String> {
+        None
+    }
+    fn applied_language(&self) -> Option<String> {
+        None
+    }
+    fn applied_paragraph_style(&self) -> Option<String> {
+        None
+    }
+    fn auto_leading(&self) -> Option<f64> {
+        None
+    }
+    fn auto_tcy(&self) -> Option<i16> {
+        None
+    }
+    fn auto_tcy_include_roman(&self) -> Option<bool> {
+        None
+    }
+    fn baseline_shift(&self) -> Option<f64> {
+        None
+    }
+    fn bullets_alignment(&self) -> Option<String> {
+        None
+    }
+    fn bullets_and_numbering_list_type(&self) -> Option<String> {
+        None
+    }
+    fn bullets_text_after(&self) -> Option<String> {
+        None
+    }
+    fn bunri_kinshi(&self) -> Option<bool> {
+        None
+    }
+    fn captilization(&self) -> Option<Capitalization> {
+        None
+    }
+    fn character_alignment(&self) -> Option<CharacterAlignment> {
+        None
+    }
+    fn character_direction(&self) -> Option<CharacterDirection> {
+        None
+    }
+    fn character_rotation(&self) -> Option<f64> {
+        None
+    }
+    fn cjk_grid_tracking(&self) -> Option<bool> {
+        None
+    }
+    fn composer(&self) -> Option<String> {
+        None
+    }
+    fn desired_word_spacing(&self) -> Option<f64> {
+        None
+    }
+    fn diacritic_position(&self) -> Option<DiacriticPosition> {
+        None
+    }
+    fn digits_type(&self) -> Option<DigitsType> {
+        None
+    }
+    fn drop_cap_characters(&self) -> Option<i16> {
+        None
+    }
+    fn drop_cap_lines(&self) -> Option<i16> {
+        None
+    }
+    fn drop_cap_detail(&self) -> Option<i32> {
+        None
+    }
+    fn end_join(&self) -> Option<OutlineJoin> {
+        None
+    }
+    fn fill_color(&self) -> Option<String> {
+        None
+    }
+    fn fill_tint(&self) -> Option<f64> {
+        None
+    }
+    fn first_line_indent(&self) -> Option<f64> {
+        None
+    }
+    fn font_style(&self) -> Option<String> {
+        None
+    }
+    fn glyph_form(&self) -> Option<AlternateGlyphForms> {
+        None
+    }
+    fn goto_next_x(&self) -> Option<GotoNextX> {
+        None
+    }
+    fn gradient_fill_angle(&self) -> Option<f64> {
+        None
+    }
+    fn gradient_fill_length(&self) -> Option<f64> {
+        None
+    }
+    fn gradient_fill_start(&self) -> Option<Vec<f64>> {
+        None
+    }
+    fn gradient_stroke_angle(&self) -> Option<f64> {
+        None
+    }
+    fn gradient_stroke_length(&self) -> Option<f64> {
+        None
+    }
+    fn gradient_stroke_start(&self) -> Option<Vec<f64>> {
+        None
+    }
+    fn grid_align_first_line_only(&self) -> Option<bool> {
+        None
+    }
+    fn grid_alignment(&self) -> Option<GridAlignment> {
+        None
+    }
+    fn grid_gyoudori(&self) -> Option<i16> {
+        None
+    }
+    fn horizontal_scale(&self) -> Option<f64> {
+        None
+    }
+    fn hyphen_weight(&self) -> Option<i16> {
+        None
+    }
+    fn hyphenate_across_columns(&self) -> Option<bool> {
+        None
+    }
+    fn hyphenate_after_first(&self) -> Option<i16> {
+        None
+    }
+    fn hyphenate_before_last(&self) -> Option<i16> {
+        None
+    }
+    fn hyphenate_capitalized_words(&self) -> Option<bool> {
+        None
+    }
+    fn hyphenate_ladder_limit(&self) -> Option<i16> {
+        None
+    }
+    fn hyphenate_last_word(&self) -> Option<bool> {
+        None
+    }
+    fn hyphenate_words_longer_than(&self) -> Option<i16> {
+        None
+    }
+    fn hyphenation(&self) -> Option<bool> {
+        None
+    }
+    fn hyphenation_zone(&self) -> Option<f64> {
+        None
+    }
+    fn ignore_edge_alignment(&self) -> Option<bool> {
+        None
+    }
+    fn jidori(&self) -> Option<i16> {
+        None
+    }
+    fn justification(&self) -> Option<Justification> {
+        None
+    }
+    fn kashidas(&self) -> Option<Kashidas> {
+        None
+    }
+    fn keep_all_lines_together(&self) -> Option<bool> {
+        None
+    }
+    fn keep_first_lines(&self) -> Option<i16> {
+        None
+    }
+    fn keep_last_lines(&self) -> Option<i16> {
+        None
+    }
+    fn keep_lines_together(&self) -> Option<bool> {
+        None
+    }
+    fn keep_rule_above_in_frame(&self) -> Option<bool> {
+        None
+    }
+    fn keep_with_next(&self) -> Option<bool> {
+        None
+    }
+    fn keep_with_previous(&self) -> Option<bool> {
+        None
+    }
+    fn kenten_alignment(&self) -> Option<KentenAlignment> {
+        None
+    }
+    fn kenten_custom_character(&self) -> Option<String> {
+        None
+    }
+    fn kenten_font_size(&self) -> Option<f64> {
+        None
+    }
+    fn kenten_kind(&self) -> Option<KentenCharacter> {
+        None
+    }
+    fn kenten_overprint_fill(&self) -> Option<AdornmentOverprint> {
+        None
+    }
+    fn kenten_overprint_stroke(&self) -> Option<AdornmentOverprint> {
+        None
+    }
+    fn kenten_placement(&self) -> Option<f64> {
+        None
+    }
+    fn kenten_position(&self) -> Option<RubyKentenPosition> {
+        None
+    }
+    fn kenten_stroke_tint(&self) -> Option<f64> {
+        None
+    }
+    fn kenten_tint(&self) -> Option<f64> {
+        None
+    }
+    fn kenten_weight(&self) -> Option<f64> {
+        None
+    }
+    fn kenten_x_scale(&self) -> Option<f64> {
+        None
+    }
+    fn kenten_y_scale(&self) -> Option<f64> {
+        None
+    }
+    fn kerning_method(&self) -> Option<String> {
+        None
+    }
+    fn kerning_value(&self) -> Option<f64> {
+        None
+    }
+    fn keyboard_direction(&self) -> Option<CharacterDirection> {
+        None
+    }
+    fn kinsoku_hang_type(&self) -> Option<KinsokuHangTypes> {
+        None
+    }
+    fn kinsoku_type(&self) -> Option<KinsokuType> {
+        None
+    }
+    fn last_line_indent(&self) -> Option<f64> {
+        None
+    }
+    fn leading_aki(&self) -> Option<f64> {
+        None
+    }
+    fn leading_model(&self) -> Option<LeadingModel> {
+        None
+    }
+    fn left_indent(&self) -> Option<f64> {
+        None
+    }
+    fn ligatures(&self) -> Option<bool> {
+        None
+    }
+    fn link_resource_id(&self) -> Option<i32> {
+        None
+    }
+    fn maximum_glyph_scaling(&self) -> Option<f64> {
+        None
+    }
+    fn maximum_letter_spacing(&self) -> Option<f64> {
+        None
+    }
+    fn maximum_word_spacing(&self) -> Option<f64> {
+        None
+    }
+    fn minimum_glyph_scaling(&self) -> Option<f64> {
+        None
+    }
+    fn minimum_letter_spacing(&self) -> Option<f64> {
+        None
+    }
+    fn minimum_word_spacing(&self) -> Option<f64> {
+        None
+    }
+    fn miter_limit(&self) -> Option<f64> {
+        None
+    }
+    fn no_break(&self) -> Option<bool> {
+        None
+    }
+    fn numbering_alignment(&self) -> Option<ListAlignment> {
+        None
+    }
+    fn numbering_apply_restart_policy(&self) -> Option<bool> {
+        None
+    }
+    fn numbering_continue(&self) -> Option<bool> {
+        None
+    }
+    fn numbering_expression(&self) -> Option<String> {
+        None
+    }
+    fn numbering_level(&self) -> Option<i32> {
+        None
+    }
+    fn numbering_start_at(&self) -> Option<i32> {
+        None
+    }
+    fn otf_contextual_alternate(&self) -> Option<bool> {
+        None
+    }
+    fn otf_discretionary_ligature(&self) -> Option<bool> {
+        None
+    }
+    fn otf_figure_style(&self) -> Option<OTFFigureStyle> {
+        None
+    }
+    fn otf_fraction(&self) -> Option<bool> {
+        None
+    }
+    fn otf_hv_kana(&self) -> Option<bool> {
+        None
+    }
+    fn otf_historical(&self) -> Option<bool> {
+        None
+    }
+    fn otf_justification_alternate(&self) -> Option<bool> {
+        None
+    }
+    fn otf_locale(&self) -> Option<bool> {
+        None
+    }
+    fn otf_mark(&self) -> Option<bool> {
+        None
+    }
+    fn otf_ordinal(&self) -> Option<bool> {
+        None
+    }
+    fn otf_overlap_swash(&self) -> Option<bool> {
+        None
+    }
+    fn otf_proportional_metrics(&self) -> Option<bool> {
+        None
+    }
+    fn otf_roman_italics(&self) -> Option<bool> {
+        None
+    }
+    fn otf_slashed_zero(&self) -> Option<bool> {
+        None
+    }
+    fn otf_stretched_alternate(&self) -> Option<bool> {
+        None
+    }
+    fn otf_stylistic_alternate(&self) -> Option<bool> {
+        None
+    }
+    fn otf_stylistic_sets(&self) -> Option<i32> {
+        None
+    }
+    fn otf_swash(&self) -> Option<bool> {
+        None
+    }
+    fn otf_titling(&self) -> Option<bool> {
+        None
+    }
+    fn otf_overprint_fill(&self) -> Option<bool> {
+        None
+    }
+    fn otf_overprint_stroke(&self) -> Option<bool> {
+        None
+    }
+    fn page_number_type(&self) -> Option<PageNumberType> {
+        None
+    }
+    fn paragraph_direction(&self) -> Option<ParagraphDirection> {
+        None
+    }
+    fn paragraph_gyoudori(&self) -> Option<bool> {
+        None
+    }
+    fn paragraph_justification(&self) -> Option<ParagraphJustification> {
+        None
+    }
+    fn point_size(&self) -> Option<f64> {
+        None
+    }
+    fn position(&self) -> Option<Position> {
+        None
+    }
+    fn positional_form(&self) -> Option<PositionalForms> {
+        None
+    }
+    fn rensuuji(&self) -> Option<bool> {
+        None
+    }
+    fn right_indent(&self) -> Option<f64> {
+        None
+    }
+    fn rotate_single_byte_character(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_alignment(&self) -> Option<RubyAlignments> {
+        None
+    }
+    fn ruby_auto_align(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_auto_scaling(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_auto_tcy_auto_scale(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_auto_tcy_digits(&self) -> Option<i16> {
+        None
+    }
+    fn ruby_auto_tcy_include_roman(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_flag(&self) -> Option<i32> {
+        None
+    }
+    fn ruby_font_size(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_open_type(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_overhang(&self) -> Option<bool> {
+        None
+    }
+    fn ruby_overprint_fill(&self) -> Option<AdornmentOverprint> {
+        None
+    }
+    fn ruby_overprint_stroke(&self) -> Option<AdornmentOverprint> {
+        None
+    }
+    fn ruby_parent_overhang_amount(&self) -> Option<RubyOverhang> {
+        None
+    }
+    fn ruby_parent_scaling_percent(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_parent_spacing(&self) -> Option<RubyParentSpacing> {
+        None
+    }
+    fn ruby_position(&self) -> Option<RubyKentenPosition> {
+        None
+    }
+    fn ruby_string(&self) -> Option<String> {
+        None
+    }
+    fn ruby_stroke_tint(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_tint(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_type(&self) -> Option<RubyTypes> {
+        None
+    }
+    fn ruby_weight(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_x_offset(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_x_scale(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_y_offset(&self) -> Option<f64> {
+        None
+    }
+    fn ruby_y_scale(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above(&self) -> Option<bool> {
+        None
+    }
+    fn rule_above_gap_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn rule_above_gap_tint(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above_left_indent(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above_weight(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above_offset(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn rule_above_right_indent(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above_tint(&self) -> Option<f64> {
+        None
+    }
+    fn rule_above_width(&self) -> Option<RuleWidth> {
+        None
+    }
+    fn rule_below_gap_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn rule_below_gap_tint(&self) -> Option<f64> {
+        None
+    }
+    fn rule_below_left_indent(&self) -> Option<f64> {
+        None
+    }
+    fn rule_below_weight(&self) -> Option<f64> {
+        None
+    }
+    fn rule_below_offset(&self) -> Option<f64> {
+        None
+    }
+    fn rule_below_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn rule_below_right_indent(&self) -> Option<f64> {
+        None
+    }
+    fn rule_below_tint(&self) -> Option<f64> {
+        None
+    }
+    fn rule_below_width(&self) -> Option<RuleWidth> {
+        None
+    }
+    fn scale_affects_line_height(&self) -> Option<bool> {
+        None
+    }
+    fn shatai_adjust_rotation(&self) -> Option<bool> {
+        None
+    }
+    fn shatai_adjust_tsume(&self) -> Option<bool> {
+        None
+    }
+    fn shatai_adjust_angle(&self) -> Option<f64> {
+        None
+    }
+    fn shatai_magnification(&self) -> Option<f64> {
+        None
+    }
+    fn single_word_justification(&self) -> Option<SingleWordJustification> {
+        None
+    }
+    fn skew(&self) -> Option<f64> {
+        None
+    }
+    fn space_after(&self) -> Option<f64> {
+        None
+    }
+    fn space_before(&self) -> Option<f64> {
+        None
+    }
+    fn span_column_inside_gutter(&self) -> Option<f64> {
+        None
+    }
+    fn span_column_outside_gutter(&self) -> Option<f64> {
+        None
+    }
+    fn span_column_type(&self) -> Option<SpanColumnTypeOptions> {
+        None
+    }
+    fn span_split_column_count(&self) -> Option<i32> {
+        None
+    }
+    fn start_paragraph(&self) -> Option<StartParagraph> {
+        None
+    }
+    fn strike_through_gap_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn strike_through_gap_tint(&self) -> Option<f64> {
+        None
+    }
+    fn strike_through_gap_offset(&self) -> Option<f64> {
+        None
+    }
+    fn strike_through_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn strike_through_tint(&self) -> Option<f64> {
+        None
+    }
+    fn strike_through_weight(&self) -> Option<f64> {
+        None
+    }
+    fn strike_thru(&self) -> Option<bool> {
+        None
+    }
+    fn stroke_alignment(&self) -> Option<TextStrokeAlign> {
+        None
+    }
+    fn stroke_color(&self) -> Option<String> {
+        None
+    }
+    fn stroke_tint(&self) -> Option<String> {
+        None
+    }
+    fn stroke_weight(&self) -> Option<String> {
+        None
+    }
+    fn tatechuyoko(&self) -> Option<bool> {
+        None
+    }
+    fn tatechuyoko_x_offset(&self) -> Option<f64> {
+        None
+    }
+    fn tatechuyoko_y_offset(&self) -> Option<f64> {
+        None
+    }
+    fn tracking(&self) -> Option<f64> {
+        None
+    }
+    fn trailing_aki(&self) -> Option<f64> {
+        None
+    }
+    fn treat_ideographic_space_as_space(&self) -> Option<bool> {
+        None
+    }
+    fn tsume(&self) -> Option<f64> {
+        None
+    }
+    fn underline(&self) -> Option<bool> {
+        None
+    }
+    fn underline_gap_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn underline_gap_tint(&self) -> Option<f64> {
+        None
+    }
+    fn underline_gap_offset(&self) -> Option<bool> {
+        None
+    }
+    fn underline_overprint(&self) -> Option<bool> {
+        None
+    }
+    fn underline_tint(&self) -> Option<f64> {
+        None
+    }
+    fn underline_weight(&self) -> Option<f64> {
+        None
+    }
+    fn vertical_scale(&self) -> Option<f64> {
+        None
+    }
+    fn warichu(&self) -> Option<bool> {
+        None
+    }
+    fn warichu_alignment(&self) -> Option<WarichuAlignment> {
+        None
+    }
+    fn warichu_chars_after_break(&self) -> Option<i16> {
+        None
+    }
+    fn warichu_chars_before_break(&self) -> Option<i16> {
+        None
+    }
+    fn warichu_line_spacing(&self) -> Option<f64> {
+        None
+    }
+    fn warichu_lines(&self) -> Option<i16> {
+        None
+    }
+    fn warichu_size(&self) -> Option<f64> {
+        None
+    }
+    fn x_offset_diacritic(&self) -> Option<f64> {
+        None
+    }
+    fn y_offset_diacritic(&self) -> Option<f64> {
+        None
+    }
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum Capitalization {
@@ -235,7 +682,6 @@ pub enum Capitalization {
     AllCaps,
     CapToSmallCap,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum CharacterAlignment {
@@ -247,14 +693,12 @@ pub enum CharacterAlignment {
     AlignICFBottom,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum CharacterDirection {
     DefaultDirection,
     LeftToRightDirection,
     RightToLeftDirection,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum DiacriticPosition {
@@ -266,15 +710,13 @@ pub enum DiacriticPosition {
     OpentypePositionFromBaseline,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum DigitsType {
     DefaultDigits,
     ArabicDigits,
-    HindiDigits, 
+    HindiDigits,
     FarsiDigits,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum OutlineJoin {
@@ -282,7 +724,6 @@ pub enum OutlineJoin {
     RoundEndJoin,
     BevelEndJoin,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum AlternateGlyphForms {
@@ -301,12 +742,8 @@ pub enum AlternateGlyphForms {
     FullWidthForm,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub enum GotoNextX {
-
-}
-
+pub enum GotoNextX {}
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum GridAlignment {
@@ -318,7 +755,6 @@ pub enum GridAlignment {
     AlignICFTop,
     AlignICFBottom,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum Justification {
@@ -333,13 +769,11 @@ pub enum Justification {
     FromBindingSide,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum Kashidas {
     DefaultKashidas,
     KashidasOff,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum KentenAlignment {
@@ -348,9 +782,8 @@ pub enum KentenAlignment {
     ShiftJIS,
     JIS,
     Kuten,
-    Unicode
+    Unicode,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum KentenCharacter {
@@ -367,21 +800,18 @@ pub enum KentenCharacter {
     Custom,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum AdornmentOverprint {
     Auto,
     OverprintOn,
-    OverprintOff
+    OverprintOff,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum RubyKentenPosition {
     AboveRight,
     BelowLeft,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum KinsokuHangTypes {
@@ -390,7 +820,6 @@ pub enum KinsokuHangTypes {
     KinsokuHangForce,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum KinsokuType {
     KinsokuPushInFirst,
@@ -398,7 +827,6 @@ pub enum KinsokuType {
     KinsokuPushOutOnly,
     KinsokuPrioritizeAdjustmentAmount,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum LeadingModel {
@@ -409,14 +837,12 @@ pub enum LeadingModel {
     LeadingModelCenterDown,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum ListAlignment {
     LeftAlign,
     CenterAlign,
     RightAlign,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum OTFFigureStyle {
@@ -427,7 +853,6 @@ pub enum OTFFigureStyle {
     Default,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum PageNumberType {
     AutoPageNumber,
@@ -435,13 +860,11 @@ pub enum PageNumberType {
     PreviousPageNumber,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum ParagraphDirection {
     LeftToRightDirection,
     RightToLeftDirection,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum ParagraphJustification {
@@ -449,7 +872,6 @@ pub enum ParagraphJustification {
     ArabicJustification,
     NaskhJustification,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum Position {
@@ -462,7 +884,6 @@ pub enum Position {
     OTDenominator,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum PositionalForms {
     None,
@@ -470,9 +891,8 @@ pub enum PositionalForms {
     Initial,
     Medial,
     Final,
-    Isolated
+    Isolated,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum RubyAlignments {
@@ -485,7 +905,6 @@ pub enum RubyAlignments {
     Ruby1Aki,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum RubyOverhang {
     None,
@@ -496,7 +915,6 @@ pub enum RubyOverhang {
     RubyOverhangNoLimit,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum RubyParentSpacing {
     RubyParentNoAdjustment,
@@ -506,20 +924,17 @@ pub enum RubyParentSpacing {
     RubyParentFullJustify,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum RubyTypes {
     GroupRuby,
     PerCharacterRuby,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum RuleWidth {
     TextWidth,
     ColumnWidth,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum SingleWordJustification {
@@ -529,14 +944,12 @@ pub enum SingleWordJustification {
     FullyJustified,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum SpanColumnTypeOptions {
     SingleColumn,
     SpanColumns,
     SplitColumns,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum StartParagraph {
@@ -548,13 +961,11 @@ pub enum StartParagraph {
     NextEvenPage,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum TextStrokeAlign {
     CenterAlignment,
     OutsideAlignment,
 }
-
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum WarichuAlignment {
@@ -569,7 +980,7 @@ pub enum WarichuAlignment {
 }
 
 #[macro_export]
-macro_rules! common_text_properties_struct {    
+macro_rules! common_text_properties_struct {
     ($StructName:ident { $($manual_fields:tt)* }) => {
         #[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
         #[serde(rename_all = "PascalCase")]
@@ -805,42 +1216,42 @@ macro_rules! common_text_properties_struct {
 
         impl CommonTextPropertiesAttributes for $StructName {
             fn applied_character_style(&self) -> Option<String> {self.applied_character_style.clone()}
-            fn applied_conditions(&self) -> Option<String> {self.applied_conditions.clone()} 
-            fn applied_language(&self) -> Option<String> {self.applied_language.clone()} 
-            fn applied_paragraph_style(&self) -> Option<String> {self.applied_paragraph_style.clone()} 
-            fn auto_leading(&self) -> Option<f64> {self.auto_leading.clone()} 
-            fn auto_tcy(&self) -> Option<i16> {self.auto_tcy.clone()} 
-            fn auto_tcy_include_roman(&self) -> Option<bool> {self.auto_tcy_include_roman.clone()} 
-            fn baseline_shift(&self) -> Option<f64> {self.baseline_shift.clone()} 
-            fn bullets_alignment(&self) -> Option<String> {self.bullets_alignment.clone()} 
-            fn bullets_and_numbering_list_type(&self) -> Option<String> {self.bullets_and_numbering_list_type.clone()} 
-            fn bullets_text_after(&self) -> Option<String> {self.bullets_text_after.clone()} 
-            fn bunri_kinshi(&self) -> Option<bool> {self.bunri_kinshi.clone()} 
-            fn captilization(&self) -> Option<Capitalization> {self.captilization.clone()} 
-            fn character_alignment(&self) -> Option<CharacterAlignment> {self.character_alignment.clone()} 
-            fn character_direction(&self) -> Option<CharacterDirection> {self.character_direction.clone()} 
-            fn character_rotation(&self) -> Option<f64> {self.character_rotation.clone()} 
-            fn cjk_grid_tracking(&self) -> Option<bool> {self.cjk_grid_tracking.clone()} 
-            fn composer(&self) -> Option<String> {self.composer.clone()} 
-            fn desired_word_spacing(&self) -> Option<f64> {self.desired_word_spacing.clone()} 
-            fn diacritic_position(&self) -> Option<DiacriticPosition> {self.diacritic_position.clone()} 
-            fn digits_type(&self) -> Option<DigitsType> {self.digits_type.clone()} 
-            fn drop_cap_characters(&self) -> Option<i16> {self.drop_cap_characters.clone()} 
-            fn drop_cap_lines(&self) -> Option<i16> {self.drop_cap_lines.clone()} 
-            fn drop_cap_detail(&self) -> Option<i32> {self.drop_cap_detail.clone()} 
-            fn end_join(&self) -> Option<OutlineJoin> {self.end_join.clone()} 
-            fn fill_color(&self) -> Option<String> {self.fill_color.clone()} 
-            fn fill_tint(&self) -> Option<f64> {self.fill_tint.clone()} 
-            fn first_line_indent(&self) -> Option<f64> {self.first_line_indent.clone()} 
-            fn font_style(&self) -> Option<String> {self.font_style.clone()} 
-            fn glyph_form(&self) -> Option<AlternateGlyphForms> {self.glyph_form.clone()} 
+            fn applied_conditions(&self) -> Option<String> {self.applied_conditions.clone()}
+            fn applied_language(&self) -> Option<String> {self.applied_language.clone()}
+            fn applied_paragraph_style(&self) -> Option<String> {self.applied_paragraph_style.clone()}
+            fn auto_leading(&self) -> Option<f64> {self.auto_leading.clone()}
+            fn auto_tcy(&self) -> Option<i16> {self.auto_tcy.clone()}
+            fn auto_tcy_include_roman(&self) -> Option<bool> {self.auto_tcy_include_roman.clone()}
+            fn baseline_shift(&self) -> Option<f64> {self.baseline_shift.clone()}
+            fn bullets_alignment(&self) -> Option<String> {self.bullets_alignment.clone()}
+            fn bullets_and_numbering_list_type(&self) -> Option<String> {self.bullets_and_numbering_list_type.clone()}
+            fn bullets_text_after(&self) -> Option<String> {self.bullets_text_after.clone()}
+            fn bunri_kinshi(&self) -> Option<bool> {self.bunri_kinshi.clone()}
+            fn captilization(&self) -> Option<Capitalization> {self.captilization.clone()}
+            fn character_alignment(&self) -> Option<CharacterAlignment> {self.character_alignment.clone()}
+            fn character_direction(&self) -> Option<CharacterDirection> {self.character_direction.clone()}
+            fn character_rotation(&self) -> Option<f64> {self.character_rotation.clone()}
+            fn cjk_grid_tracking(&self) -> Option<bool> {self.cjk_grid_tracking.clone()}
+            fn composer(&self) -> Option<String> {self.composer.clone()}
+            fn desired_word_spacing(&self) -> Option<f64> {self.desired_word_spacing.clone()}
+            fn diacritic_position(&self) -> Option<DiacriticPosition> {self.diacritic_position.clone()}
+            fn digits_type(&self) -> Option<DigitsType> {self.digits_type.clone()}
+            fn drop_cap_characters(&self) -> Option<i16> {self.drop_cap_characters.clone()}
+            fn drop_cap_lines(&self) -> Option<i16> {self.drop_cap_lines.clone()}
+            fn drop_cap_detail(&self) -> Option<i32> {self.drop_cap_detail.clone()}
+            fn end_join(&self) -> Option<OutlineJoin> {self.end_join.clone()}
+            fn fill_color(&self) -> Option<String> {self.fill_color.clone()}
+            fn fill_tint(&self) -> Option<f64> {self.fill_tint.clone()}
+            fn first_line_indent(&self) -> Option<f64> {self.first_line_indent.clone()}
+            fn font_style(&self) -> Option<String> {self.font_style.clone()}
+            fn glyph_form(&self) -> Option<AlternateGlyphForms> {self.glyph_form.clone()}
             fn goto_next_x(&self) -> Option<GotoNextX> {self.goto_next_x.clone()}
-            fn gradient_fill_angle(&self) -> Option<f64> {self.gradient_fill_angle.clone()} 
-            fn gradient_fill_length(&self) -> Option<f64> {self.gradient_fill_length.clone()} 
-            fn gradient_fill_start(&self) -> Option<Vec<f64>> {self.gradient_fill_start.clone()} 
-            fn gradient_stroke_angle(&self) -> Option<f64> {self.gradient_stroke_angle.clone()} 
-            fn gradient_stroke_length(&self) -> Option<f64> {self.gradient_stroke_length.clone()} 
-            fn gradient_stroke_start(&self) -> Option<Vec<f64>> {self.gradient_stroke_start.clone()} 
+            fn gradient_fill_angle(&self) -> Option<f64> {self.gradient_fill_angle.clone()}
+            fn gradient_fill_length(&self) -> Option<f64> {self.gradient_fill_length.clone()}
+            fn gradient_fill_start(&self) -> Option<Vec<f64>> {self.gradient_fill_start.clone()}
+            fn gradient_stroke_angle(&self) -> Option<f64> {self.gradient_stroke_angle.clone()}
+            fn gradient_stroke_length(&self) -> Option<f64> {self.gradient_stroke_length.clone()}
+            fn gradient_stroke_start(&self) -> Option<Vec<f64>> {self.gradient_stroke_start.clone()}
             fn grid_align_first_line_only(&self) -> Option<bool> {self.grid_align_first_line_only.clone()}
             fn grid_alignment(&self) -> Option<GridAlignment> {self.grid_alignment.clone()}
             fn grid_gyoudori(&self) -> Option<i16> {self.grid_gyoudori.clone()}

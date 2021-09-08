@@ -1,6 +1,6 @@
 use super::commom_text_properties::*;
-use crate::idml_parser::formats::*;
 use super::{Style, StyleGroup};
+use crate::idml_parser::formats::*;
 use derive_getters::Getters;
 use serde::Deserialize;
 
@@ -104,12 +104,12 @@ impl Style for CharacterStyle {
             goto_next_x,
             gradient_fill_angle,
             gradient_fill_length,
-                        //,
-                        //,
+            //,
+            //,
             gradient_stroke_angle,
             gradient_stroke_length,
-                        //,
-                        //,
+            //,
+            //,
             grid_align_first_line_only,
             grid_alignment,
             grid_gyoudori,

@@ -35,7 +35,7 @@ impl Matrix3x3<f64> {
         let mut matrix: Self = Default::default();
         for i in 0..3 {
             for j in 0..3 {
-                matrix[(i,j)] = self[(j,i)];
+                matrix[(i, j)] = self[(j, i)];
             }
         }
         matrix
@@ -45,27 +45,25 @@ impl Matrix3x3<f64> {
         let mut matrix: Self = Default::default();
         for i in 0..3 {
             for j in 0..3 {
-                matrix[(i,j)] = 
-                    self[(i,0)] * rhs[(0,j)] + 
-                    self[(i,1)] * rhs[(1,j)] + 
-                    self[(i,2)] * rhs[(2,j)];
+                matrix[(i, j)] = self[(i, 0)] * rhs[(0, j)]
+                    + self[(i, 1)] * rhs[(1, j)]
+                    + self[(i, 2)] * rhs[(2, j)];
             }
         }
         matrix
     }
 
-    // Computes the inverse 
+    // Computes the inverse
     fn inverse(self) -> Self {
         let m = &self;
-        let det: f64 = 
-            m[(0, 0)] * (m[(1, 1)] * m[(2, 2)] - m[(2, 1)] * m[(1, 2)]) -
-            m[(0, 1)] * (m[(1, 0)] * m[(2, 2)] - m[(1, 2)] * m[(2, 0)]) +
-            m[(0, 2)] * (m[(1, 0)] * m[(2, 1)] - m[(1, 1)] * m[(2, 0)]);
+        let det: f64 = m[(0, 0)] * (m[(1, 1)] * m[(2, 2)] - m[(2, 1)] * m[(1, 2)])
+            - m[(0, 1)] * (m[(1, 0)] * m[(2, 2)] - m[(1, 2)] * m[(2, 0)])
+            + m[(0, 2)] * (m[(1, 0)] * m[(2, 1)] - m[(1, 1)] * m[(2, 0)]);
 
         let invdet: f64 = 1_f64 / det;
-        
+
         // inverse of matrix m
-        let mut minv: Self = Default::default(); 
+        let mut minv: Self = Default::default();
         minv[(0, 0)] = (m[(1, 1)] * m[(2, 2)] - m[(2, 1)] * m[(1, 2)]) * invdet;
         minv[(0, 1)] = (m[(0, 2)] * m[(2, 1)] - m[(0, 1)] * m[(2, 2)]) * invdet;
         minv[(0, 2)] = (m[(0, 1)] * m[(1, 2)] - m[(0, 2)] * m[(1, 1)]) * invdet;
@@ -75,7 +73,7 @@ impl Matrix3x3<f64> {
         minv[(2, 0)] = (m[(1, 0)] * m[(2, 1)] - m[(2, 0)] * m[(1, 1)]) * invdet;
         minv[(2, 1)] = (m[(2, 0)] * m[(0, 1)] - m[(0, 0)] * m[(2, 1)]) * invdet;
         minv[(2, 2)] = (m[(0, 0)] * m[(1, 1)] - m[(1, 0)] * m[(0, 1)]) * invdet;
-        
+
         minv
     }
 }

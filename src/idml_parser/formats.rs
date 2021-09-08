@@ -3,9 +3,9 @@ use serde::de::{Deserialize, Deserializer};
 /// Deserializer yielding a vec [N, N, N, N, ...] given a space seperated  string "N N N N ..."
 pub fn deserialize_space_seperated_vec<'de, D, N>(deserializer: D) -> Result<Vec<N>, D::Error>
 where
-D: Deserializer<'de>,
-N: std::str::FromStr + std::fmt::Debug,
-<N as std::str::FromStr>::Err: std::fmt::Debug,
+    D: Deserializer<'de>,
+    N: std::str::FromStr + std::fmt::Debug,
+    <N as std::str::FromStr>::Err: std::fmt::Debug,
 {
     let s: std::borrow::Cow<str> = Deserialize::deserialize(deserializer)?;
     match s.trim() {
@@ -15,11 +15,11 @@ N: std::str::FromStr + std::fmt::Debug,
                 .split(' ')
                 .map(|e| {
                     e.to_string()
-                    .parse::<N>()
-                    .expect(format!("Failed to parse string '{}' into number", e).as_str())
+                        .parse::<N>()
+                        .expect(format!("Failed to parse string '{}' into number", e).as_str())
                 })
                 .collect();
-            
+
             Ok(vec)
         }
     }

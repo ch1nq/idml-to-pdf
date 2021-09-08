@@ -1,9 +1,9 @@
 use super::formats::*;
+use crate::idml_parser::styles::commom_text_properties::*;
 use derive_getters::Getters;
 use quick_xml::de::{from_str, DeError};
 use serde::Deserialize;
 use std::path::Path;
-use crate::idml_parser::styles::commom_text_properties::*;
 
 #[derive(Default, Deserialize, Debug, Getters)]
 #[serde(rename = "idPkg:Story")]

@@ -58,7 +58,7 @@ pub trait StyleGroup<T: Style + Clone + std::fmt::Debug> {
 }
 
 // Macros for making a struct calling choose on every field
-#[macro_export]        
+#[macro_export]
 macro_rules! choose_fields {
     (
         $self:ident,
@@ -79,6 +79,6 @@ macro_rules! choose_fields {
 
 #[macro_use]
 pub mod commom_text_properties;
+pub mod character_style;
 pub mod object_style;
 pub mod paragraph_style;
-pub mod character_style;
