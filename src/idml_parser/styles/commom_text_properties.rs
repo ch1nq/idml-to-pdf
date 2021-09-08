@@ -5,7 +5,6 @@ use serde::Deserialize;
 use std::str::FromStr;
 
 use serde::de::{self, Deserializer, Visitor};
-use std::fmt;
 use std::slice::Iter;
 
 #[derive(Debug, Deserialize, Default, PartialEq, Clone)]
@@ -15,9 +14,9 @@ pub struct CTPMap {
 }
 
 impl CTPMap {
-    fn add(&mut self, item: CTPEnum) {
-        // TODO: add overwrite logic here
-        self.ctp_fields.push(item);
+    fn add_field(&mut self, field: CTPEnum) {
+        // TODO: Add overwrite logic here
+        self.ctp_fields.push(field);
     }
 
     pub fn iter(&self) -> Iter<'_, CTPEnum> {
@@ -25,21 +24,7 @@ impl CTPMap {
     }
 }
 
-// impl Into<Iter<'_, CTPEnum>> for CTPMap {
-//     fn into(self) -> Iter<'static, CTPEnum> {
-//         self.ctp_fields.iter()
-//     }
-// }
-
-// impl Into<IterMut<'_, CTPEnum>> for CTPMap {
-//     fn into(self) -> IterMut<'static, CTPEnum> {
-//         self.ctp_fields.iter_mut()
-//     }
-// }
-
 pub trait CommonTextProperties {
-    // fn ctp_fields(&self) -> &HashMap<CTPKey, CTPValue>;
-    // fn mut_ctp_fields(&mut self) -> &mut HashMap<CTPKey, CTPValue>;
     fn ctp_fields(&self) -> &CTPMap;
     fn mut_ctp_fields(&mut self) -> &mut CTPMap;
     fn properties(&self) -> &Option<Properties>;
@@ -275,232 +260,282 @@ pub enum CTPKey {
     Other,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Hash, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[serde(untagged)]
+pub enum CTPValue {
+    // Enums
+    Capitalization(Capitalization),
+    CharacterAlignment(CharacterAlignment),
+    CharacterDirection(CharacterDirection),
+    DiacriticPosition(DiacriticPosition),
+    DigitsType(DigitsType),
+    OutlineJoin(OutlineJoin),
+    AlternateGlyphForms(AlternateGlyphForms),
+    GotoNextX(GotoNextX),
+    GridAlignment(GridAlignment),
+    Justification(Justification),
+    Kashidas(Kashidas),
+    KentenAlignment(KentenAlignment),
+    KentenCharacter(KentenCharacter),
+    AdornmentOverprint(AdornmentOverprint),
+    RubyKentenPosition(RubyKentenPosition),
+    KinsokuHangTypes(KinsokuHangTypes),
+    KinsokuType(KinsokuType),
+    LeadingModel(LeadingModel),
+    ListAlignment(ListAlignment),
+    OTFFigureStyle(OTFFigureStyle),
+    PageNumberType(PageNumberType),
+    ParagraphDirection(ParagraphDirection),
+    ParagraphJustification(ParagraphJustification),
+    Position(Position),
+    PositionalForms(PositionalForms),
+    RubyAlignments(RubyAlignments),
+    RubyOverhang(RubyOverhang),
+    RubyParentSpacing(RubyParentSpacing),
+    RubyTypes(RubyTypes),
+    RuleWidth(RuleWidth),
+    SingleWordJustification(SingleWordJustification),
+    SpanColumnTypeOptions(SpanColumnTypeOptions),
+    StartParagraph(StartParagraph),
+    TextStrokeAlign(TextStrokeAlign),
+    WarichuAlignment(WarichuAlignment),
+
+    // Atomic types
+    I32(i32),
+    I64(i64),
+    F64(f64),
+    F32(f32),
+    Bool(bool),
+    String(String),
+}
+
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 pub enum CTPEnum {
     AppliedCharacterStyle(String),
     AppliedConditions(String),
     AppliedLanguage(String),
     AppliedParagraphStyle(String),
-    AutoLeading(String),
-    AutoTcy(String),
-    AutoTcyIncludeRoman(String),
-    BaselineShift(String),
+    AutoLeading(f64),
+    AutoTcy(i16),
+    AutoTcyIncludeRoman(bool),
+    BaselineShift(f64),
     BulletsAlignment(String),
     BulletsAndNumberingListType(String),
     BulletsTextAfter(String),
-    BunriKinshi(String),
-    Captilization(String),
-    CharacterAlignment(String),
-    CharacterDirection(String),
-    CharacterRotation(String),
-    CjkGridTracking(String),
+    BunriKinshi(bool),
+    Captilization(Capitalization),
+    CharacterAlignment(CharacterAlignment),
+    CharacterDirection(CharacterDirection),
+    CharacterRotation(f64),
+    CjkGridTracking(bool),
     Composer(String),
-    DesiredWordSpacing(String),
-    DiacriticPosition(String),
-    DigitsType(String),
-    DropCapCharacters(String),
-    DropCapLines(String),
-    DropCapDetail(String),
-    EndJoin(String),
+    DesiredWordSpacing(f64),
+    DiacriticPosition(DiacriticPosition),
+    DigitsType(DigitsType),
+    DropCapCharacters(i16),
+    DropCapLines(i16),
+    DropCapDetail(i32),
+    EndJoin(OutlineJoin),
     FillColor(String),
-    FillTint(String),
-    FirstLineIndent(String),
+    FillTint(f64),
+    FirstLineIndent(f64),
     FontStyle(String),
-    GlyphForm(String),
-    GotoNextX(String),
-    GradientFillAngle(String),
-    GradientFillLength(String),
-    GradientFillStart(String),
-    GradientStrokeAngle(String),
-    GradientStrokeLength(String),
-    GradientStrokeStart(String),
-    GridAlignFirstLineOnly(String),
-    GridAlignment(String),
-    GridGyoudori(String),
-    HorizontalScale(String),
-    HyphenWeight(String),
-    HyphenateAcrossColumns(String),
-    HyphenateAfterFirst(String),
-    HyphenateBeforeLast(String),
-    HyphenateCapitalizedWords(String),
-    HyphenateLadderLimit(String),
-    HyphenateLastWord(String),
-    HyphenateWordsLongerThan(String),
-    Hyphenation(String),
-    HyphenationZone(String),
-    IgnoreEdgeAlignment(String),
-    Jidori(String),
-    Justification(String),
-    Kashidas(String),
-    KeepAllLinesTogether(String),
-    KeepFirstLines(String),
-    KeepLastLines(String),
-    KeepLinesTogether(String),
-    KeepRuleAboveInFrame(String),
-    KeepWithNext(String),
-    KeepWithPrevious(String),
-    KentenAlignment(String),
+    GlyphForm(AlternateGlyphForms),
+    GotoNextX(GotoNextX),
+    GradientFillAngle(f64),
+    GradientFillLength(f64),
+    GradientFillStart(Vec<f64>),
+    GradientStrokeAngle(f64),
+    GradientStrokeLength(f64),
+    GradientStrokeStart(Vec<f64>),
+    GridAlignFirstLineOnly(bool),
+    GridAlignment(GridAlignment),
+    GridGyoudori(i16),
+    HorizontalScale(f64),
+    HyphenWeight(i16),
+    HyphenateAcrossColumns(bool),
+    HyphenateAfterFirst(i16),
+    HyphenateBeforeLast(i16),
+    HyphenateCapitalizedWords(bool),
+    HyphenateLadderLimit(i16),
+    HyphenateLastWord(bool),
+    HyphenateWordsLongerThan(i16),
+    Hyphenation(bool),
+    HyphenationZone(f64),
+    IgnoreEdgeAlignment(bool),
+    Jidori(i16),
+    Justification(Justification),
+    Kashidas(Kashidas),
+    KeepAllLinesTogether(bool),
+    KeepFirstLines(i16),
+    KeepLastLines(i16),
+    KeepLinesTogether(bool),
+    KeepRuleAboveInFrame(bool),
+    KeepWithNext(bool),
+    KeepWithPrevious(bool),
+    KentenAlignment(KentenAlignment),
     KentenCustomCharacter(String),
-    KentenFontSize(String),
-    KentenKind(String),
-    KentenOverprintFill(String),
-    KentenOverprintStroke(String),
-    KentenPlacement(String),
-    KentenPosition(String),
-    KentenStrokeTint(String),
-    KentenTint(String),
-    KentenWeight(String),
-    KentenXScale(String),
-    KentenYScale(String),
+    KentenFontSize(f64),
+    KentenKind(KentenCharacter),
+    KentenOverprintFill(AdornmentOverprint),
+    KentenOverprintStroke(AdornmentOverprint),
+    KentenPlacement(f64),
+    KentenPosition(RubyKentenPosition),
+    KentenStrokeTint(f64),
+    KentenTint(f64),
+    KentenWeight(f64),
+    KentenXScale(f64),
+    KentenYScale(f64),
     KerningMethod(String),
-    KerningValue(String),
-    KeyboardDirection(String),
-    KinsokuHangType(String),
-    KinsokuType(String),
-    LastLineIndent(String),
-    LeadingAki(String),
-    LeadingModel(String),
-    LeftIndent(String),
-    Ligatures(String),
-    LinkResourceId(String),
-    MaximumGlyphScaling(String),
-    MaximumLetterSpacing(String),
-    MaximumWordSpacing(String),
-    MinimumGlyphScaling(String),
-    MinimumLetterSpacing(String),
-    MinimumWordSpacing(String),
-    MiterLimit(String),
-    NoBreak(String),
-    NumberingAlignment(String),
-    NumberingApplyRestartPolicy(String),
-    NumberingContinue(String),
+    KerningValue(f64),
+    KeyboardDirection(CharacterDirection),
+    KinsokuHangType(KinsokuHangTypes),
+    KinsokuType(KinsokuType),
+    LastLineIndent(f64),
+    LeadingAki(f64),
+    LeadingModel(LeadingModel),
+    LeftIndent(f64),
+    Ligatures(bool),
+    LinkResourceId(i32),
+    MaximumGlyphScaling(f64),
+    MaximumLetterSpacing(f64),
+    MaximumWordSpacing(f64),
+    MinimumGlyphScaling(f64),
+    MinimumLetterSpacing(f64),
+    MinimumWordSpacing(f64),
+    MiterLimit(f64),
+    NoBreak(bool),
+    NumberingAlignment(ListAlignment),
+    NumberingApplyRestartPolicy(bool),
+    NumberingContinue(bool),
     NumberingExpression(String),
-    NumberingLevel(String),
-    NumberingStartAt(String),
-    OtfContextualAlternate(String),
-    OtfDiscretionaryLigature(String),
-    OtfFigureStyle(String),
-    OtfFraction(String),
-    OtfHvKana(String),
-    OtfHistorical(String),
-    OtfJustificationAlternate(String),
-    OtfLocale(String),
-    OtfMark(String),
-    OtfOrdinal(String),
-    OtfOverlapSwash(String),
-    OtfProportionalMetrics(String),
-    OtfRomanItalics(String),
-    OtfSlashedZero(String),
-    OtfStretchedAlternate(String),
-    OtfStylisticAlternate(String),
-    OtfStylisticSets(String),
-    OtfSwash(String),
-    OtfTitling(String),
-    OtfOverprintFill(String),
-    OtfOverprintStroke(String),
-    PageNumberType(String),
-    ParagraphDirection(String),
-    ParagraphGyoudori(String),
-    ParagraphJustification(String),
-    PointSize(String),
-    Position(String),
-    PositionalForm(String),
-    Rensuuji(String),
-    RightIndent(String),
-    RotateSingleByteCharacter(String),
-    RubyAlignment(String),
-    RubyAutoAlign(String),
-    RubyAutoScaling(String),
-    RubyAutoTcyAutoScale(String),
-    RubyAutoTcyDigits(String),
-    RubyAutoTcyIncludeRoman(String),
-    RubyFlag(String),
-    RubyFontSize(String),
-    RubyOpenType(String),
-    RubyOverhang(String),
-    RubyOverprintFill(String),
-    RubyOverprintStroke(String),
-    RubyParentOverhangAmount(String),
-    RubyParentScalingPercent(String),
-    RubyParentSpacing(String),
-    RubyPosition(String),
+    NumberingLevel(i32),
+    NumberingStartAt(i32),
+    OtfContextualAlternate(bool),
+    OtfDiscretionaryLigature(bool),
+    OtfFigureStyle(OTFFigureStyle),
+    OtfFraction(bool),
+    OtfHvKana(bool),
+    OtfHistorical(bool),
+    OtfJustificationAlternate(bool),
+    OtfLocale(bool),
+    OtfMark(bool),
+    OtfOrdinal(bool),
+    OtfOverlapSwash(bool),
+    OtfProportionalMetrics(bool),
+    OtfRomanItalics(bool),
+    OtfSlashedZero(bool),
+    OtfStretchedAlternate(bool),
+    OtfStylisticAlternate(bool),
+    OtfStylisticSets(i32),
+    OtfSwash(bool),
+    OtfTitling(bool),
+    OtfOverprintFill(bool),
+    OtfOverprintStroke(bool),
+    PageNumberType(PageNumberType),
+    ParagraphDirection(ParagraphDirection),
+    ParagraphGyoudori(bool),
+    ParagraphJustification(ParagraphJustification),
+    PointSize(f64),
+    Position(Position),
+    PositionalForm(PositionalForms),
+    Rensuuji(bool),
+    RightIndent(f64),
+    RotateSingleByteCharacter(bool),
+    RubyAlignment(RubyAlignments),
+    RubyAutoAlign(bool),
+    RubyAutoScaling(bool),
+    RubyAutoTcyAutoScale(bool),
+    RubyAutoTcyDigits(i16),
+    RubyAutoTcyIncludeRoman(bool),
+    RubyFlag(i32),
+    RubyFontSize(f64),
+    RubyOpenType(bool),
+    RubyOverhang(bool),
+    RubyOverprintFill(AdornmentOverprint),
+    RubyOverprintStroke(AdornmentOverprint),
+    RubyParentOverhangAmount(RubyOverhang),
+    RubyParentScalingPercent(f64),
+    RubyParentSpacing(RubyParentSpacing),
+    RubyPosition(RubyKentenPosition),
     RubyString(String),
-    RubyStrokeTint(String),
-    RubyTint(String),
-    RubyType(String),
-    RubyWeight(String),
-    RubyXOffset(String),
-    RubyXScale(String),
-    RubyYOffset(String),
-    RubyYScale(String),
-    RuleAbove(String),
-    RuleAboveGapOverprint(String),
-    RuleAboveGapTint(String),
-    RuleAboveLeftIndent(String),
-    RuleAboveWeight(String),
-    RuleAboveOffset(String),
-    RuleAboveOverprint(String),
-    RuleAboveRightIndent(String),
-    RuleAboveTint(String),
-    RuleAboveWidth(String),
-    RuleBelowGapOverprint(String),
-    RuleBelowGapTint(String),
-    RuleBelowLeftIndent(String),
-    RuleBelowWeight(String),
-    RuleBelowOffset(String),
-    RuleBelowOverprint(String),
-    RuleBelowRightIndent(String),
-    RuleBelowTint(String),
-    RuleBelowWidth(String),
-    ScaleAffectsLineHeight(String),
-    ShataiAdjustRotation(String),
-    ShataiAdjustTsume(String),
-    ShataiAdjustAngle(String),
-    ShataiMagnification(String),
-    SingleWordJustification(String),
-    Skew(String),
-    SpaceAfter(String),
-    SpaceBefore(String),
-    SpanColumnInsideGutter(String),
-    SpanColumnOutsideGutter(String),
-    SpanColumnType(String),
-    SpanSplitColumnCount(String),
-    StartParagraph(String),
-    StrikeThroughGapOverprint(String),
-    StrikeThroughGapTint(String),
-    StrikeThroughGapOffset(String),
-    StrikeThroughOverprint(String),
-    StrikeThroughTint(String),
-    StrikeThroughWeight(String),
-    StrikeThru(String),
-    StrokeAlignment(String),
+    RubyStrokeTint(f64),
+    RubyTint(f64),
+    RubyType(RubyTypes),
+    RubyWeight(f64),
+    RubyXOffset(f64),
+    RubyXScale(f64),
+    RubyYOffset(f64),
+    RubyYScale(f64),
+    RuleAbove(bool),
+    RuleAboveGapOverprint(bool),
+    RuleAboveGapTint(f64),
+    RuleAboveLeftIndent(f64),
+    RuleAboveWeight(f64),
+    RuleAboveOffset(f64),
+    RuleAboveOverprint(bool),
+    RuleAboveRightIndent(f64),
+    RuleAboveTint(f64),
+    RuleAboveWidth(RuleWidth),
+    RuleBelowGapOverprint(bool),
+    RuleBelowGapTint(f64),
+    RuleBelowLeftIndent(f64),
+    RuleBelowWeight(f64),
+    RuleBelowOffset(f64),
+    RuleBelowOverprint(bool),
+    RuleBelowRightIndent(f64),
+    RuleBelowTint(f64),
+    RuleBelowWidth(RuleWidth),
+    ScaleAffectsLineHeight(bool),
+    ShataiAdjustRotation(bool),
+    ShataiAdjustTsume(bool),
+    ShataiAdjustAngle(f64),
+    ShataiMagnification(f64),
+    SingleWordJustification(SingleWordJustification),
+    Skew(f64),
+    SpaceAfter(f64),
+    SpaceBefore(f64),
+    SpanColumnInsideGutter(f64),
+    SpanColumnOutsideGutter(f64),
+    SpanColumnType(SpanColumnTypeOptions),
+    SpanSplitColumnCount(i32),
+    StartParagraph(StartParagraph),
+    StrikeThroughGapOverprint(bool),
+    StrikeThroughGapTint(f64),
+    StrikeThroughGapOffset(f64),
+    StrikeThroughOverprint(bool),
+    StrikeThroughTint(f64),
+    StrikeThroughWeight(f64),
+    StrikeThru(bool),
+    StrokeAlignment(TextStrokeAlign),
     StrokeColor(String),
     StrokeTint(String),
     StrokeWeight(String),
-    Tatechuyoko(String),
-    TatechuyokoXOffset(String),
-    TatechuyokoYOffset(String),
-    Tracking(String),
-    TrailingAki(String),
-    TreatIdeographicSpaceAsSpace(String),
-    Tsume(String),
-    Underline(String),
-    UnderlineGapOverprint(String),
-    UnderlineGapTint(String),
-    UnderlineGapOffset(String),
-    UnderlineOverprint(String),
-    UnderlineTint(String),
-    UnderlineWeight(String),
-    VerticalScale(String),
-    Warichu(String),
-    WarichuAlignment(String),
-    WarichuCharsAfterBreak(String),
-    WarichuCharsBeforeBreak(String),
-    WarichuLineSpacing(String),
-    WarichuLines(String),
-    WarichuSize(String),
-    XOffsetDiacritic(String),
-    YOffsetDiacritic(String),
+    Tatechuyoko(bool),
+    TatechuyokoXOffset(f64),
+    TatechuyokoYOffset(f64),
+    Tracking(f64),
+    TrailingAki(f64),
+    TreatIdeographicSpaceAsSpace(bool),
+    Tsume(f64),
+    Underline(bool),
+    UnderlineGapOverprint(bool),
+    UnderlineGapTint(f64),
+    UnderlineGapOffset(bool),
+    UnderlineOverprint(bool),
+    UnderlineTint(f64),
+    UnderlineWeight(f64),
+    VerticalScale(f64),
+    Warichu(bool),
+    WarichuAlignment(WarichuAlignment),
+    WarichuCharsAfterBreak(i16),
+    WarichuCharsBeforeBreak(i16),
+    WarichuLineSpacing(f64),
+    WarichuLines(i16),
+    WarichuSize(f64),
+    XOffsetDiacritic(f64),
+    YOffsetDiacritic(f64),
     // #[serde(other)]
     // Other
 }
@@ -809,54 +844,6 @@ pub enum WarichuAlignment {
     RightJustified,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
-#[serde(untagged)]
-pub enum CTPValue {
-    // Enums
-    Capitalization(Capitalization),
-    CharacterAlignment(CharacterAlignment),
-    CharacterDirection(CharacterDirection),
-    DiacriticPosition(DiacriticPosition),
-    DigitsType(DigitsType),
-    OutlineJoin(OutlineJoin),
-    AlternateGlyphForms(AlternateGlyphForms),
-    GotoNextX(GotoNextX),
-    GridAlignment(GridAlignment),
-    Justification(Justification),
-    Kashidas(Kashidas),
-    KentenAlignment(KentenAlignment),
-    KentenCharacter(KentenCharacter),
-    AdornmentOverprint(AdornmentOverprint),
-    RubyKentenPosition(RubyKentenPosition),
-    KinsokuHangTypes(KinsokuHangTypes),
-    KinsokuType(KinsokuType),
-    LeadingModel(LeadingModel),
-    ListAlignment(ListAlignment),
-    OTFFigureStyle(OTFFigureStyle),
-    PageNumberType(PageNumberType),
-    ParagraphDirection(ParagraphDirection),
-    ParagraphJustification(ParagraphJustification),
-    Position(Position),
-    PositionalForms(PositionalForms),
-    RubyAlignments(RubyAlignments),
-    RubyOverhang(RubyOverhang),
-    RubyParentSpacing(RubyParentSpacing),
-    RubyTypes(RubyTypes),
-    RuleWidth(RuleWidth),
-    SingleWordJustification(SingleWordJustification),
-    SpanColumnTypeOptions(SpanColumnTypeOptions),
-    StartParagraph(StartParagraph),
-    TextStrokeAlign(TextStrokeAlign),
-    WarichuAlignment(WarichuAlignment),
-
-    // Atomic types
-    I32(i32),
-    I64(i64),
-    F64(f64),
-    F32(f32),
-    Bool(bool),
-    String(String),
-}
 
 #[derive(Default, Deserialize, Debug, PartialEq, Getters, Clone)]
 #[serde(rename_all = "PascalCase")]
@@ -866,35 +853,17 @@ pub struct Properties {
 }
 
 impl<T: CommonTextProperties + Clone> CombineWithParent for T {
+    /// Combines all the common text properties fields of the parent with the child.
+    /// 
     fn combine_with_parent(&self, parent: &Self) -> Self {
-        let mut combined = self.clone();
-
-        for field in parent.ctp_fields().iter() {
-            combined.mut_ctp_fields().add(field.clone());
+        let mut combined = parent.clone();
+        // Override
+        for p_field in self.ctp_fields().iter() {
+            combined.mut_ctp_fields().add_field(p_field.clone());
         }
-        // for (key, value) in parent.ctp_fields() {
-        //     combined.mut_ctp_fields().insert(*key, value.clone());
-        // }
         combined
     }
 }
-
-// #[macro_export]
-// macro_rules! impl_common_text_properties {
-//     ($StructName:ident) => {
-//         impl CommonTextProperties for $StructName {
-//             fn ctp_fields(&self) -> &HashMap<CTPKey, CTPValue> {
-//                 &self.ctp_fields
-//             }
-//             fn mut_ctp_fields(&mut self) -> &mut HashMap<CTPKey, CTPValue> {
-//                 &mut self.ctp_fields
-//             }
-//             fn properties(&self) -> &Option<Properties> {
-//                 &self.properties
-//             }
-//         }
-//     };
-// }
 
 #[macro_export]
 macro_rules! impl_common_text_properties {
@@ -912,231 +881,3 @@ macro_rules! impl_common_text_properties {
         }
     };
 }
-
-// TODO: DELETE ONCE WE KNOW CTP FIELDS ARE DESERIALIZED CORRECTLY:
-
-//     fn applied_character_style(&self) -> Option<String>;
-//     fn applied_conditions(&self) -> Option<String> ;
-//     fn applied_language(&self) -> Option<String> ;
-//     fn applied_paragraph_style(&self) -> Option<String> ;
-//     fn auto_leading(&self) -> Option<f64> ;
-//     fn auto_tcy(&self) -> Option<i16> ;
-//     fn auto_tcy_include_roman(&self) -> Option<bool> ;
-//     fn baseline_shift(&self) -> Option<f64> ;
-//     fn bullets_alignment(&self) -> Option<String> ;
-//     fn bullets_and_numbering_list_type(&self) -> Option<String> ;
-//     fn bullets_text_after(&self) -> Option<String> ;
-//     fn bunri_kinshi(&self) -> Option<bool> ;
-//     fn captilization(&self) -> Option<Capitalization> ;
-//     fn character_alignment(&self) -> Option<CharacterAlignment> ;
-//     fn character_direction(&self) -> Option<CharacterDirection> ;
-//     fn character_rotation(&self) -> Option<f64> ;
-//     fn cjk_grid_tracking(&self) -> Option<bool> ;
-//     fn composer(&self) -> Option<String> ;
-//     fn desired_word_spacing(&self) -> Option<f64> ;
-//     fn diacritic_position(&self) -> Option<DiacriticPosition> ;
-//     fn digits_type(&self) -> Option<DigitsType> ;
-//     fn drop_cap_characters(&self) -> Option<i16> ;
-//     fn drop_cap_lines(&self) -> Option<i16> ;
-//     fn drop_cap_detail(&self) -> Option<i32> ;
-//     fn end_join(&self) -> Option<OutlineJoin> ;
-//     fn fill_color(&self) -> Option<String> ;
-//     fn fill_tint(&self) -> Option<f64> ;
-//     fn first_line_indent(&self) -> Option<f64> ;
-//     fn font_style(&self) -> Option<String> ;
-//     fn glyph_form(&self) -> Option<AlternateGlyphForms> ;
-//     fn goto_next_x(&self) -> Option<GotoNextX>;
-//     fn gradient_fill_angle(&self) -> Option<f64> ;
-//     fn gradient_fill_length(&self) -> Option<f64> ;
-//     fn gradient_fill_start(&self) -> Option<Vec<f64>> ;
-//     fn gradient_stroke_angle(&self) -> Option<f64> ;
-//     fn gradient_stroke_length(&self) -> Option<f64> ;
-//     fn gradient_stroke_start(&self) -> Option<Vec<f64>> ;
-//     fn grid_align_first_line_only(&self) -> Option<bool>;
-//     fn grid_alignment(&self) -> Option<GridAlignment>;
-//     fn grid_gyoudori(&self) -> Option<i16>;
-//     fn horizontal_scale(&self) -> Option<f64>;
-//     fn hyphen_weight(&self) -> Option<i16>;
-//     fn hyphenate_across_columns(&self) -> Option<bool>;
-//     fn hyphenate_after_first(&self) -> Option<i16>;
-//     fn hyphenate_before_last(&self) -> Option<i16>;
-//     fn hyphenate_capitalized_words(&self) -> Option<bool>;
-//     fn hyphenate_ladder_limit(&self) -> Option<i16>;
-//     fn hyphenate_last_word(&self) -> Option<bool>;
-//     fn hyphenate_words_longer_than(&self) -> Option<i16>;
-//     fn hyphenation(&self) -> Option<bool>;
-//     fn hyphenation_zone(&self) -> Option<f64>;
-//     fn ignore_edge_alignment(&self) -> Option<bool>;
-//     fn jidori(&self) -> Option<i16>;
-//     fn justification(&self) -> Option<Justification>;
-//     fn kashidas(&self) -> Option<Kashidas>;
-//     fn keep_all_lines_together(&self) -> Option<bool>;
-//     fn keep_first_lines(&self) -> Option<i16>;
-//     fn keep_last_lines(&self) -> Option<i16>;
-//     fn keep_lines_together(&self) -> Option<bool>;
-//     fn keep_rule_above_in_frame(&self) -> Option<bool>;
-//     fn keep_with_next(&self) -> Option<bool>;
-//     fn keep_with_previous(&self) -> Option<bool>;
-//     fn kenten_alignment(&self) -> Option<KentenAlignment>;
-//     fn kenten_custom_character(&self) -> Option<String>;
-//     fn kenten_font_size(&self) -> Option<f64>;
-//     fn kenten_kind(&self) -> Option<KentenCharacter>;
-//     fn kenten_overprint_fill(&self) -> Option<AdornmentOverprint>;
-//     fn kenten_overprint_stroke(&self) -> Option<AdornmentOverprint>;
-//     fn kenten_placement(&self) -> Option<f64>;
-//     fn kenten_position(&self) -> Option<RubyKentenPosition>;
-//     fn kenten_stroke_tint(&self) -> Option<f64>;
-//     fn kenten_tint(&self) -> Option<f64>;
-//     fn kenten_weight(&self) -> Option<f64>;
-//     fn kenten_x_scale(&self) -> Option<f64>;
-//     fn kenten_y_scale(&self) -> Option<f64>;
-//     fn kerning_method(&self) -> Option<String>;
-//     fn kerning_value(&self) -> Option<f64>;
-//     fn keyboard_direction(&self) -> Option<CharacterDirection>;
-//     fn kinsoku_hang_type(&self) -> Option<KinsokuHangTypes>;
-//     fn kinsoku_type(&self) -> Option<KinsokuType>;
-//     fn last_line_indent(&self) -> Option<f64>;
-//     fn leading_aki(&self) -> Option<f64>;
-//     fn leading_model(&self) -> Option<LeadingModel>;
-//     fn left_indent(&self) -> Option<f64>;
-//     fn ligatures(&self) -> Option<bool>;
-//     fn link_resource_id(&self) -> Option<i32>;
-//     fn maximum_glyph_scaling(&self) -> Option<f64>;
-//     fn maximum_letter_spacing(&self) -> Option<f64>;
-//     fn maximum_word_spacing(&self) -> Option<f64>;
-//     fn minimum_glyph_scaling(&self) -> Option<f64>;
-//     fn minimum_letter_spacing(&self) -> Option<f64>;
-//     fn minimum_word_spacing(&self) -> Option<f64>;
-//     fn miter_limit(&self) -> Option<f64>;
-//     fn no_break(&self) -> Option<bool>;
-//     fn numbering_alignment(&self) -> Option<ListAlignment>;
-//     fn numbering_apply_restart_policy(&self) -> Option<bool>;
-//     fn numbering_continue(&self) -> Option<bool>;
-//     fn numbering_expression(&self) -> Option<String>;
-//     fn numbering_level(&self) -> Option<i32>;
-//     fn numbering_start_at(&self) -> Option<i32>;
-//     fn otf_contextual_alternate(&self) -> Option<bool>;
-//     fn otf_discretionary_ligature(&self) -> Option<bool>;
-//     fn otf_figure_style(&self) -> Option<OTFFigureStyle>;
-//     fn otf_fraction(&self) -> Option<bool>;
-//     fn otf_hv_kana(&self) -> Option<bool>;
-//     fn otf_historical(&self) -> Option<bool>;
-//     fn otf_justification_alternate(&self) -> Option<bool>;
-//     fn otf_locale(&self) -> Option<bool>;
-//     fn otf_mark(&self) -> Option<bool>;
-//     fn otf_ordinal(&self) -> Option<bool>;
-//     fn otf_overlap_swash(&self) -> Option<bool>;
-//     fn otf_proportional_metrics(&self) -> Option<bool>;
-//     fn otf_roman_italics(&self) -> Option<bool>;
-//     fn otf_slashed_zero(&self) -> Option<bool>;
-//     fn otf_stretched_alternate(&self) -> Option<bool>;
-//     fn otf_stylistic_alternate(&self) -> Option<bool>;
-//     fn otf_stylistic_sets(&self) -> Option<i32>;
-//     fn otf_swash(&self) -> Option<bool>;
-//     fn otf_titling(&self) -> Option<bool>;
-//     fn otf_overprint_fill(&self) -> Option<bool>;
-//     fn otf_overprint_stroke(&self) -> Option<bool>;
-//     fn page_number_type(&self) -> Option<PageNumberType>;
-//     fn paragraph_direction(&self) -> Option<ParagraphDirection>;
-//     fn paragraph_gyoudori(&self) -> Option<bool>;
-//     fn paragraph_justification(&self) -> Option<ParagraphJustification>;
-//     fn point_size(&self) -> Option<f64>;
-//     fn position(&self) -> Option<Position>;
-//     fn positional_form(&self) -> Option<PositionalForms>;
-//     fn rensuuji(&self) -> Option<bool>;
-//     fn right_indent(&self) -> Option<f64>;
-//     fn rotate_single_byte_character(&self) -> Option<bool>;
-//     fn ruby_alignment(&self) -> Option<RubyAlignments>;
-//     fn ruby_auto_align(&self) -> Option<bool>;
-//     fn ruby_auto_scaling(&self) -> Option<bool>;
-//     fn ruby_auto_tcy_auto_scale(&self) -> Option<bool>;
-//     fn ruby_auto_tcy_digits(&self) -> Option<i16>;
-//     fn ruby_auto_tcy_include_roman(&self) -> Option<bool>;
-//     fn ruby_flag(&self) -> Option<i32>;
-//     fn ruby_font_size(&self) -> Option<f64>;
-//     fn ruby_open_type(&self) -> Option<bool>;
-//     fn ruby_overhang(&self) -> Option<bool>;
-//     fn ruby_overprint_fill(&self) -> Option<AdornmentOverprint>;
-//     fn ruby_overprint_stroke(&self) -> Option<AdornmentOverprint>;
-//     fn ruby_parent_overhang_amount(&self) -> Option<RubyOverhang>;
-//     fn ruby_parent_scaling_percent(&self) -> Option<f64>;
-//     fn ruby_parent_spacing(&self) -> Option<RubyParentSpacing>;
-//     fn ruby_position(&self) -> Option<RubyKentenPosition>;
-//     fn ruby_string(&self) -> Option<String>;
-//     fn ruby_stroke_tint(&self) -> Option<f64>;
-//     fn ruby_tint(&self) -> Option<f64>;
-//     fn ruby_type(&self) -> Option<RubyTypes>;
-//     fn ruby_weight(&self) -> Option<f64>;
-//     fn ruby_x_offset(&self) -> Option<f64>;
-//     fn ruby_x_scale(&self) -> Option<f64>;
-//     fn ruby_y_offset(&self) -> Option<f64>;
-//     fn ruby_y_scale(&self) -> Option<f64>;
-//     fn rule_above(&self) -> Option<bool>;
-//     fn rule_above_gap_overprint(&self) -> Option<bool>;
-//     fn rule_above_gap_tint(&self) -> Option<f64>;
-//     fn rule_above_left_indent(&self) -> Option<f64>;
-//     fn rule_above_weight(&self) -> Option<f64>;
-//     fn rule_above_offset(&self) -> Option<f64>;
-//     fn rule_above_overprint(&self) -> Option<bool>;
-//     fn rule_above_right_indent(&self) -> Option<f64>;
-//     fn rule_above_tint(&self) -> Option<f64>;
-//     fn rule_above_width(&self) -> Option<RuleWidth>;
-//     fn rule_below_gap_overprint(&self) -> Option<bool>;
-//     fn rule_below_gap_tint(&self) -> Option<f64>;
-//     fn rule_below_left_indent(&self) -> Option<f64>;
-//     fn rule_below_weight(&self) -> Option<f64>;
-//     fn rule_below_offset(&self) -> Option<f64>;
-//     fn rule_below_overprint(&self) -> Option<bool>;
-//     fn rule_below_right_indent(&self) -> Option<f64>;
-//     fn rule_below_tint(&self) -> Option<f64>;
-//     fn rule_below_width(&self) -> Option<RuleWidth>;
-//     fn scale_affects_line_height(&self) -> Option<bool>;
-//     fn shatai_adjust_rotation(&self) -> Option<bool>;
-//     fn shatai_adjust_tsume(&self) -> Option<bool>;
-//     fn shatai_adjust_angle(&self) -> Option<f64>;
-//     fn shatai_magnification(&self) -> Option<f64>;
-//     fn single_word_justification(&self) -> Option<SingleWordJustification>;
-//     fn skew(&self) -> Option<f64>;
-//     fn space_after(&self) -> Option<f64>;
-//     fn space_before(&self) -> Option<f64>;
-//     fn span_column_inside_gutter(&self) -> Option<f64>;
-//     fn span_column_outside_gutter(&self) -> Option<f64>;
-//     fn span_column_type(&self) -> Option<SpanColumnTypeOptions>;
-//     fn span_split_column_count(&self) -> Option<i32>;
-//     fn start_paragraph(&self) -> Option<StartParagraph>;
-//     fn strike_through_gap_overprint(&self) -> Option<bool>;
-//     fn strike_through_gap_tint(&self) -> Option<f64>;
-//     fn strike_through_gap_offset(&self) -> Option<f64>;
-//     fn strike_through_overprint(&self) -> Option<bool>;
-//     fn strike_through_tint(&self) -> Option<f64>;
-//     fn strike_through_weight(&self) -> Option<f64>;
-//     fn strike_thru(&self) -> Option<bool>;
-//     fn stroke_alignment(&self) -> Option<TextStrokeAlign>;
-//     fn stroke_color(&self) -> Option<String>;
-//     fn stroke_tint(&self) -> Option<String>;
-//     fn stroke_weight(&self) -> Option<String>;
-//     fn tatechuyoko(&self) -> Option<bool>;
-//     fn tatechuyoko_x_offset(&self) -> Option<f64>;
-//     fn tatechuyoko_y_offset(&self) -> Option<f64>;
-//     fn tracking(&self) -> Option<f64>;
-//     fn trailing_aki(&self) -> Option<f64>;
-//     fn treat_ideographic_space_as_space(&self) -> Option<bool>;
-//     fn tsume(&self) -> Option<f64>;
-//     fn underline(&self) -> Option<bool>;
-//     fn underline_gap_overprint(&self) -> Option<bool>;
-//     fn underline_gap_tint(&self) -> Option<f64>;
-//     fn underline_gap_offset(&self) -> Option<bool>;
-//     fn underline_overprint(&self) -> Option<bool>;
-//     fn underline_tint(&self) -> Option<f64>;
-//     fn underline_weight(&self) -> Option<f64>;
-//     fn vertical_scale(&self) -> Option<f64>;
-//     fn warichu(&self) -> Option<bool>;
-//     fn warichu_alignment(&self) -> Option<WarichuAlignment>;
-//     fn warichu_chars_after_break(&self) -> Option<i16>;
-//     fn warichu_chars_before_break(&self) -> Option<i16>;
-//     fn warichu_line_spacing(&self) -> Option<f64>;
-//     fn warichu_lines(&self) -> Option<i16>;
-//     fn warichu_size(&self) -> Option<f64>;
-//     fn x_offset_diacritic(&self) -> Option<f64>;
-//     fn y_offset_diacritic(&self) -> Option<f64>;
-//     fn properties(&self) -> Option<Properties>;
