@@ -102,7 +102,7 @@ impl<'a> PDFPrinter<'a> {
             SpreadContent::Page(p) => {
                 // Update page tranformation matrix
                 *page_transform = transforms::from_vec(p.item_transform())
-                    .reverse()
+                    .inverse()
                     .combine_with(spread_transform);
 
                 // Make a new page
